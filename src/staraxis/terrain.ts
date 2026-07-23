@@ -28,7 +28,13 @@ import {
 } from 'three/webgpu';
 import { clamp, color, mix, positionWorld } from 'three/tsl';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
-import { TERRAIN_SIZE, TERRAIN_SEGMENTS, BOWL_CENTER } from './constants';
+import {
+  TERRAIN_SIZE,
+  TERRAIN_SEGMENTS,
+  BOWL_CENTER,
+  STAIR_BASE,
+  STAIR_TOP,
+} from './constants';
 import { terrainHeight } from './heightfield';
 
 // ---------------------------------------------------------------- helpers
@@ -49,7 +55,11 @@ function slopeMag(x: number, z: number): number {
 
 /** Keep-out region above the star-tunnel stair slot. */
 function inStairSlot(x: number, z: number): boolean {
-  return Math.abs(x) < 3.5 && z > -26 && z < 15;
+  return (
+    Math.abs(x) < 4.25 &&
+    z > STAIR_TOP.z - 4 &&
+    z < STAIR_BASE.z + 20
+  );
 }
 
 const _pos = new Vector3();

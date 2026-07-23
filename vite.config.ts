@@ -1,6 +1,8 @@
 import { defineConfig } from 'vite';
+import { sites } from './build/sites-vite-plugin';
 
 export default defineConfig({
+  plugins: [sites()],
   resolve: {
     // three-mesh-bvh (and three/addons) import bare 'three'; point that at
     // the webgpu build so the bundle carries a single copy of three and all

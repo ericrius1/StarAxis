@@ -26,9 +26,9 @@ Star Tunnel. Architecture is solid (capsule-vs-BVH collision via
 three-mesh-bvh), and zone captions name each of the five elements as you
 reach them — on the stair, each step advances the readout through the
 26,000-year precession cycle, Polaris's circle growing from dime-sized
-today toward the whole sky ±13,000 years out. You can step through the
-Hour Chamber's 15° slit into the dark room behind it and look back out at
-the knife of sky.
+today toward the whole sky ±13,000 years out. The Hour Chamber is a true
+passage through the Solar Pyramid: its 15° north opening frames one hour of
+Earth's rotation.
 
 | Key | Action |
 | --- | --- |
@@ -37,6 +37,8 @@ the knife of sky.
 | `F` | Toggle fly · `Space` / `Q` up/down while flying |
 | arrows | Look, for touring without a mouse |
 | **`C`** | **Switch first person ⇄ orbit** |
+| **`M`** | **Open the eight-stop guided tour** |
+| `[` / `]` | Previous / next guided-tour stop |
 | `1` | Entry channel (matches the aerial reference photo) |
 | `2` | Solar Pyramid at golden hour |
 | `3` | Top of the stair, sighting up the aperture toward Polaris |
@@ -57,23 +59,27 @@ is eased, not simulated — and scatter rocks are set dressing, not solid.
 
 URL params for scripted captures: `?nav=orbit&view=1..5&mode=day|goldenHour|night&trails=1&blockout=1`
 or a free camera `?cam=x,y,z&look=x,y,z&fov=55`. `nav=fp|orbit` picks the
-navigation mode; a free camera or blockout implies `orbit`.
+navigation mode; a free camera or blockout implies `orbit`. `?tour=1..8`
+opens the field guide at a specific stop.
 
 ## What's modeled
 
 - **Star Tunnel** — 147 instanced granite steps rising at the site latitude
   angle (34.5°) due north, parallel to Earth's axis; open causeway through
-  the excavated bowl, dark tunnel mouth at the rim, buried upper run, summit
-  headwall with a real slot and a brushed-stainless aperture tube aimed at
-  Polaris.
+  the excavated bowl and an open-to-sky upper run between tall walls, ending
+  at a summit headwall with a real slot and brushed-stainless aperture tube
+  aimed at Polaris.
 - **Crescent wall** — fieldstone rubble arc with ashlar band, granite coping,
   and twin bastion pylons, notched by the stair slot.
 - **Entry channel** — outward-leaning flagstone walls converging on the
   terrace and the A-frame triangular portal.
 - **Solar Pyramid** — solstice-sloped faces in salmon sandstone panels, a
   granite edge stair to the apex, and the **Hour Chamber**: a real 15° slit
-  (one hour of Earth's rotation) cut through the south face into a dark
-  chamber with bronze-edged reveals — enterable on foot.
+  (one hour of Earth's rotation) cut through the south and north faces as a
+  continuous, bronze-edged sightline — enterable on foot.
+- **Guided tour** — eight teleporting viewpoints for the approach,
+  Equatorial Chamber, Star Tunnel, Upper Room, Solar Pyramid, Hour Chamber,
+  and Shadow Field, with concise reference-based interpretation.
 - **Sky rig** — TSL sky dome with day/golden/night states; at night the star
   field physically rotates about the Polaris axis, with a fragment-shader
   long-exposure trail mode recreating the famous concentric-arc photograph.

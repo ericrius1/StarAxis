@@ -15,7 +15,6 @@ import {
   TRENCH_SOUTH_Z,
   STAIR_BASE,
   STAIR_TOP,
-  TUNNEL_MOUTH_T,
   PYRAMID_CENTER,
   PYRAMID_BASE_Y,
   TERRACE_STAIR_HALF_W,
@@ -129,30 +128,19 @@ export function terrainHeight(x: number, z: number): number {
     h = Math.min(h, terraceStairLineY(z) - 0.3);
   }
 
-  // --- stair slot carve: open channel only up to the tunnel mouth; the
-  // upper run is covered by the hillside (the stair goes underground and
-  // re-emerges at the headwall slab on the summit).
-  const mouthZ = STAIR_BASE.z + (STAIR_TOP.z - STAIR_BASE.z) * TUNNEL_MOUTH_T;
-  if (z > mouthZ - 1 && z < STAIR_BASE.z + 2) {
+  // --- Star Tunnel slot: the full 147-step run is open to the sky.
+  // Reference photography shows tall, parallel architectural walls around
+  // the upper run—not a hillside roof. Carving the complete slot also keeps
+  // the terrain heightfield from drawing an apparent wall across the stairs.
+  if (z > STAIR_TOP.z - 2.5 && z < STAIR_BASE.z + 2) {
     const surf = stairSurfaceY(z) - 0.5;
-    const halfW = 3.1;
-    const wallRise = Math.max(0, Math.abs(x) - halfW) * 1.4;
+    const halfW = 3.35;
+    const wallRise = Math.max(0, Math.abs(x) - halfW) * 2.15;
     const carved = Math.min(h, surf + wallRise);
-    const along = smooth01((STAIR_BASE.z + 2 - z) / 4) * smooth01((z - (mouthZ - 1)) / 3);
+    const along =
+      smooth01((STAIR_BASE.z + 2 - z) / 3.5) *
+      smooth01((z - (STAIR_TOP.z - 2.5)) / 3.0);
     h = lerp(h, carved, along);
-  }
-
-  // --- burial ridge over the covered upper run so no hood geometry
-  // pierces the hillside surface
-  const ridgeS = STAIR_BASE.z + (STAIR_TOP.z - STAIR_BASE.z) * TUNNEL_MOUTH_T - 0.5; // just north of the mouth
-  const ridgeN = STAIR_TOP.z + 2.5;
-  if (z > ridgeN && z < ridgeS && Math.abs(x) < 7) {
-    const cover = stairSurfaceY(z) + 5.9;
-    const t =
-      smooth01((7 - Math.abs(x)) / 4) *
-      smooth01((ridgeS - z) / 2.5) *
-      smooth01((z - ridgeN) / 2.5);
-    h = lerp(h, Math.max(h, cover), t);
   }
 
   // --- small dish where the headwall emerges at the summit

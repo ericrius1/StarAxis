@@ -6,6 +6,7 @@
  *   W A S D      move · Shift sprint · F fly · Space/Q up/down while flying
  *   arrows       look, for touring without a mouse
  *   Esc          release the pointer
+ *   M            open the guided field tour
  *
  * Keys:
  *   1  entry channel view (matches the aerial reference photo)
@@ -40,12 +41,23 @@ import {
   STAIR_STEP_RUN,
   STAIR_STEP_COUNT,
   PORTAL_Z,
+  PYRAMID_BASE_Y,
   PYRAMID_CENTER,
 } from './staraxis/constants';
 
 const app = document.getElementById('app') as HTMLDivElement;
 const info = document.getElementById('info') as HTMLDivElement;
 const crosshair = document.getElementById('crosshair') as HTMLDivElement | null;
+const tourToggle = document.getElementById('tour-toggle') as HTMLButtonElement | null;
+const tourPanel = document.getElementById('tour-panel') as HTMLElement | null;
+const tourClose = document.getElementById('tour-close') as HTMLButtonElement | null;
+const tourTitle = document.getElementById('tour-title') as HTMLHeadingElement | null;
+const tourDescription = document.getElementById('tour-description') as HTMLParagraphElement | null;
+const tourFact = document.getElementById('tour-fact') as HTMLDivElement | null;
+const tourStopsEl = document.getElementById('tour-stops') as HTMLDivElement | null;
+const tourProgress = document.getElementById('tour-progress') as HTMLSpanElement | null;
+const tourPrev = document.getElementById('tour-prev') as HTMLButtonElement | null;
+const tourNext = document.getElementById('tour-next') as HTMLButtonElement | null;
 
 const renderer = new WebGPURenderer({ antialias: true });
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -123,6 +135,104 @@ const PRESETS: Record<string, Preset> = {
   '5': { pos: [0, 5.5, 42], target: [0, 22, -20], fov: 70, mode: 'night' },
 };
 
+interface TourStop extends Preset {
+  label: string;
+  title: string;
+  description: string;
+  fact: string;
+}
+
+const TOUR_STOPS: TourStop[] = [
+  {
+    label: 'Overview',
+    title: 'Earth aligned to sky',
+    description:
+      'Charles Ross conceived Star Axis in 1971 as an architectonic earthwork and naked-eye observatory. Every major angle translates a relationship between Earth, sun, and stars into a space that can be crossed on foot.',
+    fact: 'Scale · 11 stories high · about one-tenth of a mile across · construction began in 1976',
+    pos: [-88, 82, 118],
+    target: [0, 12, -5],
+    fov: 50,
+    mode: 'day',
+  },
+  {
+    label: 'Approach',
+    title: 'The excavated approach',
+    description:
+      'The south approach enters a seven-story excavation in the mesa. Leaning stone walls lead toward the great curved enclosure, whose geometry evokes the sweep of Earth’s axis through the 26,000-year cycle of precession.',
+    fact: 'Move through the channel toward the triangular opening at the foot of the stair.',
+    pos: [0, 3.7, 47],
+    target: [0, 11.5, -10],
+    fov: 62,
+    mode: 'day',
+  },
+  {
+    label: 'Equatorial',
+    title: 'Equatorial Chamber',
+    description:
+      'At the entrance to the Star Tunnel, this compact chamber frames the equinox sun and stars traveling above Earth’s equator. Its celestial alignment meets the polar alignment of the stair at a right angle.',
+    fact: 'Two celestial systems meet here: the equatorial plane and Earth’s north–south axis.',
+    pos: [0, 7.7, 3.1],
+    target: [0, 12.4, -12],
+    fov: 57,
+    mode: 'day',
+  },
+  {
+    label: 'Star Tunnel',
+    title: 'Star Tunnel',
+    description:
+      'The central 147-step stair is exactly parallel to Earth’s axis. As the open-air corridor climbs toward Polaris, each step reveals a wider field of sky and corresponds to a different circumpolar orbit in the precession cycle.',
+    fact: 'Bottom view · Polaris’s orbit appears dime-sized · top view · the orbit fills human peripheral vision',
+    pos: [0, 8.2, -2.8],
+    target: [0, 29.7, STAIR_TOP.z - 1.2],
+    fov: 52,
+    mode: 'day',
+  },
+  {
+    label: 'Upper Room',
+    title: 'Upper Room & aperture',
+    description:
+      'At the final stair, a 40-inch circular oculus fills the visual field. Its axis is aimed at Polaris, framing the largest orbit in the cycle—seen approximately 13,000 years in either direction from the present.',
+    fact: 'The oculus is approximately the width of human peripheral vision when viewed at close range.',
+    pos: [0, STAIR_TOP.y + 1.75, STAIR_TOP.z + 2.8],
+    target: [0, STAIR_TOP.y + 2.75, STAIR_TOP.z - 2.4],
+    fov: 56,
+    mode: 'night',
+  },
+  {
+    label: 'Solar Pyramid',
+    title: 'Solar Pyramid',
+    description:
+      'The 55-foot granite tetrahedron is formed by the angles of the sun at the summer and winter solstices. Its exterior stair and sharp profile turn the annual solar cycle into monumental geometry.',
+    fact: 'The pyramid acts as a gnomon: its moving shadow records both daily and seasonal solar motion.',
+    pos: [24, 41, -18],
+    target: [PYRAMID_CENTER.x, PYRAMID_BASE_Y + 7, PYRAMID_CENTER.z],
+    fov: 54,
+    mode: 'goldenHour',
+  },
+  {
+    label: 'Hour Chamber',
+    title: 'Hour Chamber',
+    description:
+      'A passage through the Solar Pyramid opens to a 15-degree triangular view of the northern sky. A star entering at the west edge takes one hour to reach the east edge, while Polaris remains fixed at the apex.',
+    fact: 'Look north through the chamber: the opening makes one hour of Earth’s rotation visible.',
+    pos: [PYRAMID_CENTER.x, PYRAMID_BASE_Y + 4.8, PYRAMID_CENTER.z - 3],
+    target: [PYRAMID_CENTER.x, PYRAMID_BASE_Y + 5.8, PYRAMID_CENTER.z - 18],
+    fov: 55,
+    mode: 'night',
+  },
+  {
+    label: 'Shadow Field',
+    title: 'Shadow Field',
+    description:
+      'Beyond the Solar Pyramid, the Shadow Field is shaped by the full family of shadows the tetrahedron casts over a year—from the long reach of winter solstice to the compact shadow of summer.',
+    fact: 'The field is not a conventional dial face; its boundary is the accumulated geometry of a year of shadows.',
+    pos: [28, 59, -15],
+    target: [PYRAMID_CENTER.x, PYRAMID_BASE_Y, PYRAMID_CENTER.z - 9],
+    fov: 58,
+    mode: 'goldenHour',
+  },
+];
+
 function applyPreset(p: Preset): void {
   camera.position.set(...p.pos);
   controls.target.set(...p.target);
@@ -157,8 +267,67 @@ function setNav(next: Nav): void {
   updateInfo();
 }
 
+let tourOpen = false;
+let tourIndex = 0;
+const tourStopButtons: HTMLButtonElement[] = [];
+
+function renderTourStop(): void {
+  const stop = TOUR_STOPS[tourIndex];
+  if (tourTitle) tourTitle.textContent = stop.title;
+  if (tourDescription) tourDescription.textContent = stop.description;
+  if (tourFact) tourFact.textContent = stop.fact;
+  if (tourProgress) tourProgress.textContent = `${tourIndex + 1} / ${TOUR_STOPS.length}`;
+  tourStopButtons.forEach((button, index) => {
+    const active = index === tourIndex;
+    button.setAttribute('aria-selected', String(active));
+    button.tabIndex = active ? 0 : -1;
+  });
+}
+
+function goToTourStop(index: number): void {
+  tourIndex = (index + TOUR_STOPS.length) % TOUR_STOPS.length;
+  if (nav !== 'orbit') setNav('orbit');
+  applyPreset(TOUR_STOPS[tourIndex]);
+  renderTourStop();
+}
+
+function setTourOpen(open: boolean): void {
+  tourOpen = open;
+  if (tourPanel) {
+    tourPanel.dataset.open = String(open);
+    tourPanel.setAttribute('aria-hidden', String(!open));
+  }
+  tourToggle?.setAttribute('aria-expanded', String(open));
+  if (open) {
+    goToTourStop(tourIndex);
+    tourClose?.focus({ preventScroll: true });
+  } else {
+    tourToggle?.focus({ preventScroll: true });
+  }
+  updateInfo();
+}
+
+if (tourStopsEl) {
+  TOUR_STOPS.forEach((stop, index) => {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'tour-stop';
+    button.textContent = `${String(index + 1).padStart(2, '0')} · ${stop.label}`;
+    button.setAttribute('role', 'tab');
+    button.setAttribute('aria-label', `Go to ${stop.title}`);
+    button.addEventListener('click', () => goToTourStop(index));
+    tourStopsEl.appendChild(button);
+    tourStopButtons.push(button);
+  });
+}
+tourToggle?.addEventListener('click', () => setTourOpen(!tourOpen));
+tourClose?.addEventListener('click', () => setTourOpen(false));
+tourPrev?.addEventListener('click', () => goToTourStop(tourIndex - 1));
+tourNext?.addEventListener('click', () => goToTourStop(tourIndex + 1));
+renderTourStop();
+
 renderer.domElement.addEventListener('click', () => {
-  if (nav === 'fp') fp.lock();
+  if (nav === 'fp' && !tourOpen) fp.lock();
 });
 fp.onLockChange((locked) => {
   if (crosshair) crosshair.style.opacity = locked ? '1' : '0';
@@ -207,7 +376,32 @@ for (let i = 0; i < 40; i++) sky.update(0.25);
 
 setNav(nav);
 
+const tourParam = params.get('tour');
+if (tourParam !== null) {
+  const requestedStop = Number(tourParam);
+  if (Number.isFinite(requestedStop)) {
+    tourIndex = Math.min(TOUR_STOPS.length - 1, Math.max(0, Math.round(requestedStop) - 1));
+  }
+  setTourOpen(true);
+}
+
 window.addEventListener('keydown', (e) => {
+  if (e.key.toLowerCase() === 'm') {
+    setTourOpen(!tourOpen);
+    return;
+  }
+  if (tourOpen && e.key === 'Escape') {
+    setTourOpen(false);
+    return;
+  }
+  if (tourOpen && (e.key === ']' || e.key === 'PageDown')) {
+    goToTourStop(tourIndex + 1);
+    return;
+  }
+  if (tourOpen && (e.key === '[' || e.key === 'PageUp')) {
+    goToTourStop(tourIndex - 1);
+    return;
+  }
   // W/A/S/D and friends belong to the walker; everything else is a command.
   if (nav === 'fp' && fp.handleKey(e.code, true)) {
     if (e.code === 'Space') e.preventDefault(); // don't scroll the page
@@ -238,10 +432,12 @@ window.addEventListener('keyup', (e) => {
 
 function updateInfo(): void {
   if (!info) return;
-  const views = '1 entry · 2 pyramid · 3 tunnel · 4 aerial · 5 night';
+  const views = '1 entry · 2 pyramid · 3 tunnel · 4 aerial · 5 night · M tour';
   const light = 'D/G/N light · T trails · / stats';
   const line =
-    nav === 'fp'
+    tourOpen
+      ? 'guided tour · [ / ] previous / next · Esc close'
+      : nav === 'fp'
       ? fp.isLocked()
         ? `WASD move · Shift sprint · F ${fp.fly ? 'walk' : 'fly'}${
             fp.fly ? ' · Space/Q up/down' : ''
@@ -273,7 +469,7 @@ function zoneCaption(x: number, z: number): string {
       STAIR_STEP_COUNT,
       Math.max(1, Math.ceil((STAIR_BASE.z - z) / STAIR_STEP_RUN)),
     );
-    const year = 2026 + Math.round(((step / STAIR_STEP_COUNT) * 13000) / 50) * 50;
+    const year = 2100 + Math.round(((step / STAIR_STEP_COUNT) * 12900) / 50) * 50;
     return `Star Tunnel — parallel to Earth's axis · step ${step}/${STAIR_STEP_COUNT} · Polaris's circle in AD ${year}`;
   }
   // beneath the portal
@@ -372,6 +568,7 @@ declare global {
   interface Window {
     __capture?: () => string;
     __setView?: (key: string) => void;
+    __setTour?: (index: number) => void;
   }
 }
 window.__capture = () => {
@@ -381,6 +578,10 @@ window.__capture = () => {
 window.__setView = (key: string) => {
   const p = PRESETS[key];
   if (p) applyPreset(p);
+};
+window.__setTour = (index: number) => {
+  setTourOpen(true);
+  goToTourStop(index);
 };
 
 // Runtime introspection for the sculpt pipeline (interaction/optimization).
@@ -401,5 +602,7 @@ window.__runtime = () => ({
   mode: sky.getMode(),
   componentCount: Object.keys(monument.components).length,
   componentIds: Object.keys(monument.components).sort(),
+  tourOpen,
+  tourStop: TOUR_STOPS[tourIndex].label,
   sculptRuntime: monument.group.userData.sculptRuntime,
 });

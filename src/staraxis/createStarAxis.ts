@@ -31,7 +31,6 @@ import {
   ShapeGeometry,
   Vector3,
 } from 'three/webgpu';
-import { cameraPosition, float, positionWorld, smoothstep } from 'three/tsl';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 
 import {
@@ -47,7 +46,6 @@ import {
   HEADWALL,
   HOOD_BASE_HALF_WIDTH,
   HOOD_END_T,
-  HOOD_START_T,
   HOOD_TOP_HALF_WIDTH,
   HOOD_WALL_HEIGHT,
   HOUR_WEDGE_DEG,
@@ -481,11 +479,11 @@ function buildStarTunnel(mats: Mats): Group {
     g.add(s);
   }
 
-  // ---- tunnel hood: the covered upper run. Mostly buried in the hillside;
-  // from outside only the dark mouth face reads. Interior stays renderable
-  // for the inside-the-tunnel viewpoint.
+  // ---- open upper tunnel: tall walls continue the stair into the mesa while
+  // the entire run remains open to the sky. This is the defining sightline in
+  // the built work: the oculus stays visible as the view widens step by step.
   const hood = new Group();
-  hood.name = 'tunnel-hood';
+  hood.name = 'open-star-tunnel';
   const hoodT0 = TUNNEL_MOUTH_T;
   const hoodT1 = HOOD_END_T;
   const p0 = stairPoint(hoodT0);
@@ -501,41 +499,11 @@ function buildStarTunnel(mats: Mats): Group {
     slab.rotateZ(side * lean);
     hood.add(slab);
   }
-  const cap = shadowed(new Mesh(new BoxGeometry(HOOD_TOP_HALF_WIDTH * 2 + 1.3, 0.55, hoodLen), mats.concreteDark));
-  cap.position.set(0, hoodMid.y + HOOD_WALL_HEIGHT + 0.8, hoodMid.z);
-  cap.quaternion.setFromUnitVectors(new Vector3(0, 0, -1), slopeDir);
-  hood.add(cap);
 
-  // Mouth face: pale concrete portal frame around a dark opening where the
-  // stair enters the hill (the strongest landmark on the lower run).
-  const mouth = new Group();
-  mouth.name = 'tunnel-mouth';
-  const mouthP = stairPoint(hoodT0);
-  // Two low cheek walls flanking the slot where it pierces the rim, with a
-  // dark opening between them — reads like the reference, not a tower.
-  for (const side of [-1, 1]) {
-    const cheek = shadowed(new Mesh(new BoxGeometry(1.0, 3.4, 4.2), mats.concrete));
-    cheek.position.set(side * (STAIR_WIDTH / 2 + 0.75), mouthP.y + 1.1, mouthP.z - 0.6);
-    cheek.quaternion.setFromUnitVectors(new Vector3(0, 0, -1), slopeDir);
-    mouth.add(cheek);
-  }
-  const lintel = shadowed(new Mesh(new BoxGeometry(STAIR_WIDTH + 2.4, 0.8, 3.4), mats.concrete));
-  lintel.position.set(0, mouthP.y + 3.1, mouthP.z - 1.4);
-  lintel.quaternion.setFromUnitVectors(new Vector3(0, 0, -1), slopeDir);
-  mouth.add(lintel);
-  // Darkness panel that sells the black mouth from a distance but dissolves
-  // as the visitor approaches, so the tunnel is genuinely enterable.
-  const voidMat = new MeshStandardNodeMaterial();
-  voidMat.color.set('#0c0b0a');
-  voidMat.roughness = 1.0;
-  voidMat.transparent = true;
-  voidMat.opacityNode = smoothstep(float(7), float(14), positionWorld.sub(cameraPosition).length());
-  const voidFace = new Mesh(new BoxGeometry(STAIR_WIDTH + 0.2, 3.2, 0.4), voidMat);
-  voidFace.position.set(0, mouthP.y + 1.45, mouthP.z - 1.7);
-  voidFace.rotation.x = -LATITUDE_RAD * 0.3;
-  voidFace.userData.noCollide = true;
-  mouth.add(voidFace);
-  g.add(hood, mouth);
+  // The crescent wall is already notched around the stair. Keeping that
+  // threshold clear preserves the uninterrupted oculus sightline instead of
+  // introducing a low lintel that reads as a phantom wall.
+  g.add(hood);
 
   // ---- upper chamber: open concrete shell around the summit exit
   const chamber = new Group();
@@ -622,10 +590,10 @@ function buildSolarPyramid(mats: Mats): Group {
     new Vector3(-B * 0.9, 0, -B), // NW
   ];
 
-  // East, north and west faces plus the base as a triangle fan; the south
-  // face is built separately because it carries the real Hour Chamber slit.
+  // East and west faces plus the base as a triangle fan. The south and north
+  // faces are built separately because the Hour Chamber passes between them.
   const pos: number[] = [];
-  for (let i = 1; i < 4; i++) {
+  for (const i of [1, 3]) {
     const a = corners[i];
     const b = corners[(i + 1) % 4];
     pos.push(a.x, a.y, a.z, b.x, b.y, b.z, apex.x, apex.y, apex.z);
@@ -692,9 +660,56 @@ function buildSolarPyramid(mats: Mats): Group {
   southFace.name = 'pyramid-south-face';
   g.add(southFace);
 
-  // ---- hour chamber: the room behind the slit. Dark panels parallel to the
-  // face keep the slit reading near-black from outside; from inside, the
-  // slit frames a knife of sky and desert — one hour of Earth's rotation.
+  // ---- north face: the Hour Chamber's viewing aperture. It is another true
+  // opening, aligned with the entrance so visitors can see through the
+  // pyramid to the north rather than into a sealed dark pocket.
+  const northBase = new Vector3(0, 0, -B);
+  const northV = apex.clone().sub(northBase);
+  const northFaceLen = northV.length();
+  northV.divideScalar(northFaceLen);
+  const northNormal = new Vector3().crossVectors(northV, U).normalize();
+  const mapNorthFace = (u: number, v: number, offset = 0): Vector3 =>
+    new Vector3()
+      .copy(northBase)
+      .addScaledVector(U, u)
+      .addScaledVector(northV, v)
+      .addScaledVector(northNormal, offset);
+
+  const northOpeningV0 = 0.35;
+  const northOpeningV1 = Math.min(
+    northFaceLen - 1.1,
+    northOpeningV0 + HOUR_WEDGE_HEIGHT / northV.y,
+  );
+  const northOpeningHalfW =
+    Math.tan(((HOUR_WEDGE_DEG / 2) * Math.PI) / 180) *
+    (northOpeningV1 - northOpeningV0);
+  const northShape = new Shape();
+  northShape.moveTo(-B * 0.9, 0);
+  northShape.lineTo(B * 0.9, 0);
+  northShape.lineTo(0, northFaceLen);
+  northShape.closePath();
+  const northHole = new Shape();
+  northHole.moveTo(-northOpeningHalfW, northOpeningV0);
+  northHole.lineTo(northOpeningHalfW, northOpeningV0);
+  northHole.lineTo(0, northOpeningV1);
+  northHole.closePath();
+  northShape.holes.push(northHole);
+  const northGeo = new ShapeGeometry(northShape);
+  {
+    const p = northGeo.getAttribute('position');
+    const vtx = new Vector3();
+    for (let i = 0; i < p.count; i++) {
+      vtx.copy(mapNorthFace(p.getX(i), p.getY(i)));
+      p.setXYZ(i, vtx.x, vtx.y, vtx.z);
+    }
+    northGeo.computeVertexNormals();
+  }
+  const northFace = shadowed(new Mesh(northGeo, southMat));
+  northFace.name = 'pyramid-north-aperture';
+  g.add(northFace);
+
+  // ---- hour chamber: a darkened passage between the two apertures. The
+  // south entrance and north view remain visually connected.
   const chamber = new Group();
   chamber.name = 'hour-chamber';
   const chamberDark = new MeshStandardNodeMaterial();
@@ -720,17 +735,7 @@ function buildSolarPyramid(mats: Mats): Group {
     q.computeVertexNormals();
     return q;
   };
-  // back wall
-  chamber.add(
-    new Mesh(
-      quad(
-        mapFace(-CU, CV0, -CD), mapFace(CU, CV0, -CD),
-        mapFace(CU, CV1, -CD), mapFace(-CU, CV1, -CD),
-      ),
-      chamberDark,
-    ),
-  );
-  // side walls and ceiling connecting back wall to the face shell
+  // Side walls and ceiling shade the threshold without closing the sightline.
   chamber.add(
     new Mesh(quad(mapFace(-CU, CV0, 0), mapFace(-CU, CV0, -CD), mapFace(-CU, CV1, -CD), mapFace(-CU, CV1, 0)), chamberDark),
     new Mesh(quad(mapFace(CU, CV0, 0), mapFace(CU, CV1, 0), mapFace(CU, CV1, -CD), mapFace(CU, CV0, -CD)), chamberDark),
