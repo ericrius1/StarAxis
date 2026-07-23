@@ -107,14 +107,18 @@ export const HOOD_TOP_HALF_WIDTH = 1.6;
 
 export const HEADWALL = { w: 3.4, h: 6.8, d: 1.5 } as const;
 export const APERTURE_INNER_RADIUS = 0.51;
-export const APERTURE_WALL = 0.05;
-export const APERTURE_LENGTH = 3.4;
+export const APERTURE_WALL = 0.07;
+// The 40-inch aperture reads as a broad sky window in close photographs.
+// A long bore made the far opening collapse to a dot from the visitor route.
+export const APERTURE_LENGTH = 0.36;
 
 // ---------------------------------------------------------------- solar pyramid
 export const PYRAMID_CENTER = { x: -16, z: -47 } as const;
 export const PYRAMID_BASE_Y = 29.2; // sits proud on the summit mound
 export const PYRAMID_HEIGHT = 16.8; // ≈ 55 ft
-export const PYRAMID_BASE_HALF = 11.5;
+// The exterior reference is a tall truncated pylon, not a broad equilateral
+// pyramid. This gives the front a roughly 1:1 photographed width/height ratio.
+export const PYRAMID_BASE_HALF = 7.4;
 /** 15° wedge aperture of the Hour Chamber, cut into the north face. */
 export const HOUR_WEDGE_DEG = 15;
 export const HOUR_WEDGE_HEIGHT = 8.8;

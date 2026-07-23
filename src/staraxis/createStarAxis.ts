@@ -45,8 +45,6 @@ import {
   COPING_HEIGHT,
   ENTRY_WALL_HEIGHT,
   ENTRY_WALL_LEAN_RAD,
-  HOUR_WEDGE_DEG,
-  HOUR_WEDGE_HEIGHT,
   APERTURE_INNER_RADIUS,
   APERTURE_LENGTH,
   APERTURE_WALL,
@@ -571,7 +569,19 @@ function buildStarTunnel(mats: Mats): Group {
     ),
     tubeMat,
   );
-  tube.add(inner, outer);
+  // A thin front annulus gives the close view the broad, shallow metal lip
+  // visible in the reference instead of the former long telescope-bore look.
+  const lipShape = new Shape();
+  lipShape.absarc(0, 0, APERTURE_INNER_RADIUS + APERTURE_WALL, 0, Math.PI * 2, false);
+  const lipHole = new Path();
+  lipHole.absarc(0, 0, APERTURE_INNER_RADIUS, 0, Math.PI * 2, true);
+  lipShape.holes.push(lipHole);
+  const lip = new Mesh(new ShapeGeometry(lipShape, 48), tubeMat);
+  // The group later maps local +Y to the polar axis, so this plane belongs
+  // at the visitor-facing local -Y end of the cylinder.
+  lip.position.set(0, -APERTURE_LENGTH / 2 - 0.006, 0);
+  lip.rotation.x = -Math.PI / 2;
+  tube.add(inner, outer, lip);
   tube.quaternion.setFromUnitVectors(new Vector3(0, 1, 0), axis);
   tube.position.copy(apertureCenter);
   g.add(tube);
@@ -586,70 +596,105 @@ function buildSolarPyramid(mats: Mats): Group {
   g.name = 'solar-pyramid';
   g.position.set(PYRAMID_CENTER.x, PYRAMID_BASE_Y, PYRAMID_CENTER.z);
 
-  // Slightly south-shifted apex; square base rotated so one edge faces NE.
   const H = PYRAMID_HEIGHT;
   const B = PYRAMID_BASE_HALF;
-  const apex = new Vector3(0, H, 1.5);
-  const corners = [
-    new Vector3(-B, 0, B * 0.85), // SW
-    new Vector3(B, 0, B * 0.85), // SE
-    new Vector3(B * 0.9, 0, -B), // NE
-    new Vector3(-B * 0.9, 0, -B), // NW
-  ];
+  const TOP = 1.3;
+  const SOUTH_Z = B * 0.85;
+  const NORTH_Z = -B * 1.45;
+  const TOP_SOUTH_Z = 1.45;
+  const TOP_NORTH_Z = -1.55;
 
-  // East and west faces plus the base as a triangle fan. The south and north
-  // faces are built separately because the Hour Chamber passes between them.
-  const pos: number[] = [];
-  for (const i of [1, 3]) {
-    const a = corners[i];
-    const b = corners[(i + 1) % 4];
-    pos.push(a.x, a.y, a.z, b.x, b.y, b.z, apex.x, apex.y, apex.z);
-  }
-  pos.push(
-    corners[0].x, 0, corners[0].z,
-    corners[2].x, 0, corners[2].z,
-    corners[1].x, 0, corners[1].z,
-    corners[0].x, 0, corners[0].z,
-    corners[3].x, 0, corners[3].z,
-    corners[2].x, 0, corners[2].z,
-  );
-  const geo = new BufferGeometry();
-  geo.setAttribute('position', new BufferAttribute(new Float32Array(pos), 3));
-  geo.computeVertexNormals();
+  const southLeft = new Vector3(-B, 0, SOUTH_Z);
+  const southRight = new Vector3(B, 0, SOUTH_Z);
+  const northLeft = new Vector3(-B * 0.9, 0, NORTH_Z);
+  const northRight = new Vector3(B * 0.9, 0, NORTH_Z);
+  const topSouthLeft = new Vector3(-TOP, H, TOP_SOUTH_Z);
+  const topSouthRight = new Vector3(TOP, H, TOP_SOUTH_Z);
+  const topNorthLeft = new Vector3(-TOP, H, TOP_NORTH_Z);
+  const topNorthRight = new Vector3(TOP, H, TOP_NORTH_Z);
+
+  const quad = (a: Vector3, b: Vector3, c: Vector3, d: Vector3): BufferGeometry => {
+    const q = new BufferGeometry();
+    q.setAttribute(
+      'position',
+      new BufferAttribute(
+        new Float32Array([
+          a.x, a.y, a.z, b.x, b.y, b.z, c.x, c.y, c.z,
+          a.x, a.y, a.z, c.x, c.y, c.z, d.x, d.y, d.z,
+        ]),
+        3,
+      ),
+    );
+    q.computeVertexNormals();
+    return q;
+  };
+
   const bodyMat = mats.pyramidSandstone.clone();
   bodyMat.side = DoubleSide;
-  const body = shadowed(new Mesh(geo, bodyMat));
-  body.name = 'pyramid-body';
-  g.add(body);
+  const shadowMat = mats.pyramidSandstone.clone();
+  shadowMat.color.set('#66575a');
+  shadowMat.roughness = 0.88;
+  shadowMat.side = DoubleSide;
 
-  // ---- south face with a REAL 15° slit cut through it.
-  // Face-plane frame: origin at the base-edge midpoint, U along the base,
-  // V up the slope toward the apex. The slit is a hole in the ShapeGeometry
-  // triangulation, so sky and chamber genuinely show through it.
-  const M = new Vector3(0, 0, B * 0.85);
+  // The real object is a truncated pylon. Broad side faces and a narrow top
+  // cap replace the old point-apex triangle fan.
+  const sideBody = shadowed(
+    new Mesh(
+      mergeGeometries([
+        quad(southLeft, northLeft, topNorthLeft, topSouthLeft),
+        quad(northRight, southRight, topSouthRight, topNorthRight),
+      ]),
+      shadowMat,
+    ),
+  );
+  sideBody.name = 'pyramid-side-shells';
+  g.add(sideBody);
+
+  const summit = shadowed(
+    new Mesh(quad(topSouthLeft, topNorthLeft, topNorthRight, topSouthRight), bodyMat),
+  );
+  summit.name = 'pyramid-truncated-cap';
+  g.add(summit);
+
+  // ---- south face: a grade-level triangular entrance plus a separate,
+  // deep rectangular sight box near the summit.
+  const M = new Vector3(0, 0, SOUTH_Z);
   const U = new Vector3(1, 0, 0);
-  const Vd = apex.clone().sub(M);
+  const Vd = new Vector3(0, H, TOP_SOUTH_Z).sub(M);
   const faceLen = Vd.length();
   Vd.divideScalar(faceLen);
-  const Nf = new Vector3().crossVectors(U, Vd).normalize(); // outward (0,~0.44,~0.90)
+  const Nf = new Vector3().crossVectors(U, Vd).normalize();
   const mapFace = (u: number, v: number, offset = 0): Vector3 =>
     new Vector3().copy(M).addScaledVector(U, u).addScaledVector(Vd, v).addScaledVector(Nf, offset);
 
-  const slitV0 = 0.5; // sill just above the rubble apron
-  const slitV1 = slitV0 + HOUR_WEDGE_HEIGHT / Vd.y;
-  const slitHalfW = Math.tan(((HOUR_WEDGE_DEG / 2) * Math.PI) / 180) * (slitV1 - slitV0);
+  const entryHeight = 10.15;
+  const entryHalfW = 1.38;
+  const entryV1 = entryHeight / Vd.y;
+  const sightY0 = 13.35;
+  const sightY1 = 15.1;
+  const sightV0 = sightY0 / Vd.y;
+  const sightV1 = sightY1 / Vd.y;
+  const sightHalfW = 1.48;
 
   const faceShape = new Shape();
   faceShape.moveTo(-B, 0);
   faceShape.lineTo(B, 0);
-  faceShape.lineTo(0, faceLen);
+  faceShape.lineTo(TOP, faceLen);
+  faceShape.lineTo(-TOP, faceLen);
   faceShape.closePath();
-  const slitHole = new Shape();
-  slitHole.moveTo(-slitHalfW, slitV0);
-  slitHole.lineTo(0, slitV1);
-  slitHole.lineTo(slitHalfW, slitV0);
-  slitHole.closePath();
-  faceShape.holes.push(slitHole);
+  const entryHole = new Path();
+  entryHole.moveTo(-entryHalfW, 0.02);
+  entryHole.lineTo(0, entryV1);
+  entryHole.lineTo(entryHalfW, 0.02);
+  entryHole.closePath();
+  faceShape.holes.push(entryHole);
+  const sightHole = new Path();
+  sightHole.moveTo(-sightHalfW, sightV0);
+  sightHole.lineTo(-sightHalfW, sightV1);
+  sightHole.lineTo(sightHalfW, sightV1);
+  sightHole.lineTo(sightHalfW, sightV0);
+  sightHole.closePath();
+  faceShape.holes.push(sightHole);
 
   const southGeo = new ShapeGeometry(faceShape);
   {
@@ -669,11 +714,10 @@ function buildSolarPyramid(mats: Mats): Group {
   southFace.name = 'pyramid-south-face';
   g.add(southFace);
 
-  // ---- north face: the Hour Chamber's viewing aperture. It is another true
-  // opening, aligned with the entrance so visitors can see through the
-  // pyramid to the north rather than into a sealed dark pocket.
-  const northBase = new Vector3(0, 0, -B);
-  const northV = apex.clone().sub(northBase);
+  // ---- north face: a second true opening aligned with the entrance. The
+  // visitor can walk through and see daylight at the far end.
+  const northBase = new Vector3(0, 0, NORTH_Z);
+  const northV = new Vector3(0, H, TOP_NORTH_Z).sub(northBase);
   const northFaceLen = northV.length();
   northV.divideScalar(northFaceLen);
   const northNormal = new Vector3().crossVectors(northV, U).normalize();
@@ -684,22 +728,16 @@ function buildSolarPyramid(mats: Mats): Group {
       .addScaledVector(northV, v)
       .addScaledVector(northNormal, offset);
 
-  const northOpeningV0 = 0.35;
-  const northOpeningV1 = Math.min(
-    northFaceLen - 1.1,
-    northOpeningV0 + HOUR_WEDGE_HEIGHT / northV.y,
-  );
-  const northOpeningHalfW =
-    Math.tan(((HOUR_WEDGE_DEG / 2) * Math.PI) / 180) *
-    (northOpeningV1 - northOpeningV0);
+  const northOpeningV1 = entryHeight / northV.y;
   const northShape = new Shape();
   northShape.moveTo(-B * 0.9, 0);
   northShape.lineTo(B * 0.9, 0);
-  northShape.lineTo(0, northFaceLen);
+  northShape.lineTo(TOP, northFaceLen);
+  northShape.lineTo(-TOP, northFaceLen);
   northShape.closePath();
-  const northHole = new Shape();
-  northHole.moveTo(-northOpeningHalfW, northOpeningV0);
-  northHole.lineTo(northOpeningHalfW, northOpeningV0);
+  const northHole = new Path();
+  northHole.moveTo(-entryHalfW, 0.02);
+  northHole.lineTo(entryHalfW, 0.02);
   northHole.lineTo(0, northOpeningV1);
   northHole.closePath();
   northShape.holes.push(northHole);
@@ -717,39 +755,20 @@ function buildSolarPyramid(mats: Mats): Group {
   northFace.name = 'pyramid-north-aperture';
   g.add(northFace);
 
-  // ---- hour chamber: a complete passage between the two face apertures.
-  // The earlier five-metre shell ended before the camera reached the north
-  // half of the pyramid, which made its walls and floor disappear.
+  // ---- hour chamber: one continuous floor, two walls, and a narrow ceiling
+  // span the entire body. MeshBasic keeps the surfaces legible in deep shade.
   const chamber = new Group();
   chamber.name = 'hour-chamber';
-  // Unlit dark masonry remains legible at the night tour stop. The chamber
-  // is intentionally shadowed, but it must not read as absent geometry.
   const chamberDark = new MeshBasicNodeMaterial();
-  chamberDark.color.set('#4a3d34');
+  chamberDark.color.set('#332b28');
   chamberDark.side = DoubleSide;
-  const quad = (a: Vector3, b: Vector3, c: Vector3, d: Vector3): BufferGeometry => {
-    const q = new BufferGeometry();
-    q.setAttribute(
-      'position',
-      new BufferAttribute(
-        new Float32Array([
-          a.x, a.y, a.z, b.x, b.y, b.z, c.x, c.y, c.z,
-          a.x, a.y, a.z, c.x, c.y, c.z, d.x, d.y, d.z,
-        ]),
-        3,
-      ),
-    );
-    q.computeVertexNormals();
-    return q;
-  };
-
-  const southSurfaceZ = (y: number): number => M.z + (apex.z - M.z) * (y / H);
+  const southSurfaceZ = (y: number): number => SOUTH_Z + (TOP_SOUTH_Z - SOUTH_Z) * (y / H);
   const northSurfaceZ = (y: number): number =>
-    northBase.z + (apex.z - northBase.z) * (y / H);
-  const floorY = Math.max(Vd.y * slitV0, northV.y * northOpeningV0) + 0.08;
-  const ceilingY = Math.min(Vd.y * slitV1, northV.y * northOpeningV1) - 0.12;
-  const floorHalfW = Math.min(slitHalfW, northOpeningHalfW) - 0.06;
-  const ceilingHalfW = 0.12;
+    NORTH_Z + (TOP_NORTH_Z - NORTH_Z) * (y / H);
+  const floorY = 0.09;
+  const ceilingY = entryHeight - 0.08;
+  const floorHalfW = entryHalfW - 0.05;
+  const ceilingHalfW = 0.035;
   const southFloorZ = southSurfaceZ(floorY) - 0.08;
   const northFloorZ = northSurfaceZ(floorY) + 0.08;
   const southCeilingZ = southSurfaceZ(ceilingY) - 0.08;
@@ -807,51 +826,173 @@ function buildSolarPyramid(mats: Mats): Group {
   );
   g.add(chamber);
 
-  // Bronze edging plates along the slit reveals (the masonry thickness you
-  // see when passing through, per the interior reference photos).
-  const REVEAL = 0.85;
+  // Deep entrance reveals make the shell thickness readable on approach.
+  const REVEAL = 0.72;
   const edgeQuads: Array<[Vector3, Vector3, Vector3, Vector3]> = [
-    // left jamb, right jamb, sill
-    [mapFace(-slitHalfW, slitV0), mapFace(0, slitV1), mapFace(0, slitV1, -REVEAL), mapFace(-slitHalfW, slitV0, -REVEAL)],
-    [mapFace(slitHalfW, slitV0), mapFace(slitHalfW, slitV0, -REVEAL), mapFace(0, slitV1, -REVEAL), mapFace(0, slitV1)],
-    [mapFace(-slitHalfW, slitV0), mapFace(-slitHalfW, slitV0, -REVEAL), mapFace(slitHalfW, slitV0, -REVEAL), mapFace(slitHalfW, slitV0)],
+    [mapFace(-entryHalfW, 0.02), mapFace(0, entryV1), mapFace(0, entryV1, -REVEAL), mapFace(-entryHalfW, 0.02, -REVEAL)],
+    [mapFace(entryHalfW, 0.02), mapFace(entryHalfW, 0.02, -REVEAL), mapFace(0, entryV1, -REVEAL), mapFace(0, entryV1)],
+    [mapFace(-entryHalfW, 0.02), mapFace(-entryHalfW, 0.02, -REVEAL), mapFace(entryHalfW, 0.02, -REVEAL), mapFace(entryHalfW, 0.02)],
   ];
   for (const [a, b, c, d] of edgeQuads) {
-    const plate = new Mesh(quad(a, b, c, d), mats.bronze);
+    const plate = new Mesh(quad(a, b, c, d), chamberDark);
     plate.material.side = DoubleSide;
     chamber.add(plate);
   }
 
-  // ---- edge stair up the SE edge (facing the site approach, as in the
-  // golden-hour reference photo)
-  const neA = corners[1];
-  const edgeDir = apex.clone().sub(neA);
+  // ---- upper rectangular sight box and shallow, separately modeled oculus.
+  const sightCenterV = (sightV0 + sightV1) / 2;
+  const oculusR = 0.53;
+  const oculusWall = 0.075;
+  const oculusLength = 0.72;
+  const recess = new Shape();
+  recess.moveTo(-sightHalfW, -(sightV1 - sightV0) / 2);
+  recess.lineTo(sightHalfW, -(sightV1 - sightV0) / 2);
+  recess.lineTo(sightHalfW, (sightV1 - sightV0) / 2);
+  recess.lineTo(-sightHalfW, (sightV1 - sightV0) / 2);
+  recess.closePath();
+  const recessOculus = new Path();
+  recessOculus.absarc(0, -0.25, oculusR + 0.015, 0, Math.PI * 2, true);
+  recess.holes.push(recessOculus);
+  const recessMesh = new Mesh(new ShapeGeometry(recess, 48), chamberDark);
+  recessMesh.name = 'pyramid-upper-sight-box';
+  recessMesh.position.copy(mapFace(0, sightCenterV, -0.055));
+  recessMesh.quaternion.setFromUnitVectors(new Vector3(0, 0, 1), Nf);
+  g.add(recessMesh);
+
+  const oculusAxisCenter = mapFace(0, sightCenterV - 0.25, oculusLength / 2 - 0.04);
+  const oculusGroup = new Group();
+  oculusGroup.name = 'pyramid-solar-oculus';
+  oculusGroup.position.copy(oculusAxisCenter);
+  oculusGroup.quaternion.setFromUnitVectors(new Vector3(0, 1, 0), Nf);
+  const oculusMat = mats.stainless.clone();
+  oculusMat.side = DoubleSide;
+  const oculusInner = new Mesh(
+    new CylinderGeometry(oculusR, oculusR, oculusLength, 48, 1, true),
+    oculusMat,
+  );
+  const oculusOuter = new Mesh(
+    new CylinderGeometry(oculusR + oculusWall, oculusR + oculusWall, oculusLength, 48, 1, true),
+    oculusMat,
+  );
+  const oculusLipShape = new Shape();
+  oculusLipShape.absarc(0, 0, oculusR + oculusWall, 0, Math.PI * 2, false);
+  const oculusLipHole = new Path();
+  oculusLipHole.absarc(0, 0, oculusR, 0, Math.PI * 2, true);
+  oculusLipShape.holes.push(oculusLipHole);
+  const oculusLip = new Mesh(new ShapeGeometry(oculusLipShape, 48), oculusMat);
+  oculusLip.position.y = oculusLength / 2 + 0.006;
+  oculusLip.rotation.x = Math.PI / 2;
+  oculusGroup.add(oculusInner, oculusOuter, oculusLip);
+  g.add(oculusGroup);
+
+  // ---- irregular coursed joints. A single merged mesh replaces the old
+  // uniform runtime checker shader while retaining visible slab structure.
+  const seamGeos: BufferGeometry[] = [];
+  const faceBasis = new Matrix4().makeBasis(U, Vd, Nf);
+  faceBasis.setPosition(M.clone().addScaledVector(Nf, 0.014));
+  const addSeam = (u0: number, v0: number, u1: number, v1: number, thickness = 0.035) => {
+    const du = u1 - u0;
+    const dv = v1 - v0;
+    const length = Math.hypot(du, dv);
+    if (length < 0.08) return;
+    const line = new BoxGeometry(length, thickness, 0.025);
+    const local = new Matrix4().makeRotationZ(Math.atan2(dv, du));
+    local.setPosition((u0 + u1) / 2, (v0 + v1) / 2, 0);
+    line.applyMatrix4(local);
+    line.applyMatrix4(faceBasis);
+    seamGeos.push(line);
+  };
+  const halfAtY = (y: number) => B + (TOP - B) * (y / H);
+  const blockedAtY = (y: number): Array<[number, number]> => {
+    if (y <= entryHeight) {
+      const hw = entryHalfW * (1 - y / entryHeight);
+      return [[-hw, hw]];
+    }
+    if (y >= sightY0 && y <= sightY1) return [[-sightHalfW, sightHalfW]];
+    return [];
+  };
+  const openSegments = (minU: number, maxU: number, blocks: Array<[number, number]>) => {
+    let segments: Array<[number, number]> = [[minU, maxU]];
+    for (const [b0, b1] of blocks) {
+      segments = segments.flatMap(([a, b]) => {
+        if (b1 <= a || b0 >= b) return [[a, b] as [number, number]];
+        const pieces: Array<[number, number]> = [];
+        if (b0 > a) pieces.push([a, b0]);
+        if (b1 < b) pieces.push([b1, b]);
+        return pieces;
+      });
+    }
+    return segments;
+  };
+  const courseYs = [1.45, 3.0, 4.55, 6.15, 7.8, 9.55, 11.25, 12.85, 14.3, 15.55];
+  for (const y of courseYs) {
+    const v = y / Vd.y;
+    for (const [u0, u1] of openSegments(-halfAtY(y), halfAtY(y), blockedAtY(y))) {
+      addSeam(u0, v, u1, v, 0.045);
+    }
+  }
+  const bounds = [0, ...courseYs, H];
+  for (let row = 0; row < bounds.length - 1; row++) {
+    const y0 = bounds[row] + 0.08;
+    const y1 = bounds[row + 1] - 0.08;
+    const ym = (y0 + y1) / 2;
+    const half = halfAtY(ym);
+    const step = 2.15 + (row % 3) * 0.24;
+    const offset = ((row * 0.73) % step) - step * 0.5;
+    for (let u = -half + step + offset; u < half - 0.4; u += step) {
+      if (blockedAtY(ym).some(([a, b]) => u > a - 0.12 && u < b + 0.12)) continue;
+      const slant = (((row + Math.round(u * 3)) % 5) - 2) * 0.055;
+      addSeam(u - slant, y0 / Vd.y, u + slant, y1 / Vd.y, 0.035);
+    }
+  }
+  const seamMat = new MeshBasicNodeMaterial();
+  seamMat.color.set('#4d3732');
+  const frontJoints = new Mesh(mergeGeometries(seamGeos), seamMat);
+  frontJoints.name = 'pyramid-irregular-stone-joints';
+  frontJoints.receiveShadow = true;
+  g.add(frontJoints);
+
+  // ---- edge stair on the photographed left slope.
+  const edgeStart = northLeft;
+  const edgeEnd = topNorthLeft;
+  const edgeDir = edgeEnd.clone().sub(edgeStart);
   const edgeLen = edgeDir.length();
   edgeDir.normalize();
-  const stepCount = 64;
-  const edgeTreads = new InstancedMesh(new BoxGeometry(1.1, 0.14, 0.4), mats.granite, stepCount);
+  const stepCount = 54;
+  const edgeTreads = new InstancedMesh(new BoxGeometry(0.9, 0.14, 0.46), mats.granite, stepCount);
   edgeTreads.name = 'pyramid-edge-stair';
   const em = new Matrix4();
   const eq = new Quaternion();
   const yaw = Math.atan2(edgeDir.x, edgeDir.z);
-  eq.setFromAxisAngle(new Vector3(0, 1, 0), yaw + Math.PI);
+  eq.setFromAxisAngle(new Vector3(0, 1, 0), yaw);
   for (let i = 0; i < stepCount; i++) {
     const t = (i + 0.5) / stepCount;
-    const p = neA.clone().addScaledVector(edgeDir, t * edgeLen * 0.985);
-    em.compose(new Vector3(p.x, p.y + 0.1, p.z), eq, new Vector3(1, 1, 1));
+    const p = edgeStart.clone().addScaledVector(edgeDir, t * edgeLen * 0.985);
+    em.compose(new Vector3(p.x - 0.18, p.y + 0.1, p.z + 0.12), eq, new Vector3(1, 1, 1));
     edgeTreads.setMatrixAt(i, em);
   }
-  shadowed(edgeTreads);
+  // Keep the treads visible without projecting 54 long, corrugated shadow
+  // bands across the entire side face.
+  edgeTreads.castShadow = false;
+  edgeTreads.receiveShadow = true;
   g.add(edgeTreads);
 
-  // twin stringers flanking the edge stair
+  // Twin rails retain the stair as a legible assembly from the side.
   for (const side of [-1, 1]) {
     const s = shadowed(new Mesh(new BoxGeometry(0.35, 0.5, edgeLen * 0.99), mats.granite));
-    const midP = neA.clone().addScaledVector(edgeDir, edgeLen * 0.5);
+    const midP = edgeStart.clone().addScaledVector(edgeDir, edgeLen * 0.5);
     const perp = new Vector3(-edgeDir.z, 0, edgeDir.x).normalize();
-    s.position.copy(midP).addScaledVector(perp, side * 0.75).add(new Vector3(0, 0.15, 0));
+    s.position.copy(midP).addScaledVector(perp, side * 0.58).add(new Vector3(0, 0.12, 0));
     s.quaternion.setFromUnitVectors(new Vector3(0, 0, 1), edgeDir);
     g.add(s);
+  }
+
+  // ---- paired summit rods seen against the sky in the exterior reference.
+  for (const x of [-0.58, 0.58]) {
+    const rod = shadowed(new Mesh(new CylinderGeometry(0.045, 0.045, 0.92, 10), mats.stainless));
+    rod.position.set(x, H + 0.46, -0.1);
+    rod.name = x < 0 ? 'summit-rod-west' : 'summit-rod-east';
+    g.add(rod);
   }
 
   return g;

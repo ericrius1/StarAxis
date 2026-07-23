@@ -1,0 +1,6095 @@
+{
+  "targetName": "Star Axis Aperture and Solar Pyramid",
+  "targetId": "star-axis-aperture-and-solar-pyramid",
+  "schemaVersion": "2.1",
+  "terminologyProfile": {
+    "domain": "real-time procedural Three.js asset",
+    "geometryTerms": [
+      "silhouette",
+      "topology",
+      "primitive",
+      "bevel",
+      "chamfer",
+      "taper",
+      "bend",
+      "boolean cut",
+      "edge loop",
+      "surface normal",
+      "displacement"
+    ],
+    "materialTerms": [
+      "albedo",
+      "baseColor",
+      "roughness",
+      "metalness",
+      "normal map",
+      "bump map",
+      "ambient occlusion",
+      "cavity dirt",
+      "edge wear",
+      "clearcoat"
+    ],
+    "lightingTerms": [
+      "key light",
+      "fill light",
+      "rim light",
+      "HDRI/environment reflection",
+      "contact shadow"
+    ],
+    "descriptionRule": "Use measurable 3D graphics terms. Avoid vague words unless they are paired with concrete geometry/material/shader parameters."
+  },
+  "sourceImage": "/Users/eric/codeprojects/StarAxis/sculpt/reference-review/pyramid-reference.png",
+  "referenceCamera": {
+    "solved": false,
+    "fovDegrees": 40,
+    "aspect": 1,
+    "orientation": {
+      "yaw": 0,
+      "pitch": 0,
+      "roll": 0
+    },
+    "positionHint": [
+      0,
+      0,
+      3
+    ],
+    "note": "For likeness work, solve the reference camera (forge/stage1_intake/solve_camera_pose.py) so the review render aligns with the photo and the reference can be projected. Confirm by overlay review."
+  },
+  "suitability": "pass",
+  "scores": {
+    "object_isolation": 0,
+    "silhouette_readability": 0,
+    "depth_inference": 0,
+    "primitive_decomposition": 0,
+    "material_procedurality": 0,
+    "occlusion_risk": 0,
+    "interaction_fit": 0
+  },
+  "preSpecAssessment": {
+    "objectClass": {
+      "primaryType": "architectural observatory",
+      "primaryDomain": "object",
+      "formLanguage": [
+        "hard-surface",
+        "architectural",
+        "sculptural"
+      ],
+      "structureKind": [
+        "layered shell",
+        "compound object",
+        "repeated masonry modules"
+      ],
+      "motionPotential": [
+        "static prop",
+        "walkable environment"
+      ],
+      "materialFamilies": [
+        "granite",
+        "stone",
+        "stainless steel",
+        "dark interior masonry"
+      ],
+      "notes": "A truncated, tapered stone observatory pylon with a full-height triangular entry, an upper rectangular sight box, a protruding circular metal oculus, paired summit rods, and a repeated edge stair. The close-up aperture photo is admitted only as proportion/material evidence because it lacks an isolable object silhouette."
+    },
+    "complexity": {
+      "tier": "complex",
+      "scores": {
+        "silhouetteComplexity": 2,
+        "componentCount": 3,
+        "hierarchyDepth": 2,
+        "repetitionDensity": 2,
+        "materialLayerCount": 2,
+        "localDetailDensity": 3,
+        "occlusionRisk": 2,
+        "actionReadinessNeed": 2
+      },
+      "estimatedCounts": {
+        "macroComponents": 3,
+        "mesoComponents": 9,
+        "microFeatureGroups": 8,
+        "materialLayers": 4,
+        "repetitionSystems": 2
+      },
+      "reasoning": [
+        "The outer silhouette is a truncated pylon rather than a pointed pyramid.",
+        "Identity depends on the relationship among the triangular entry, upper rectangular opening, and protruding circular oculus.",
+        "Irregular stone courses and the repeated edge stair create high meso/micro detail density without requiring a high polygon body."
+      ]
+    },
+    "specDepthDecision": {
+      "requiredDepth": "complex",
+      "minimumComponentLevels": [
+        "macro",
+        "meso",
+        "micro"
+      ],
+      "needsRepetitionSystems": true,
+      "needsMaterialLocalOverrides": true,
+      "needsMultipleReviewViews": true,
+      "needsActionReadyHierarchy": true,
+      "rationale": "Choose simple/moderate/complex/ultra-complex from observed structure, not from a hardcoded domain."
+    },
+    "unknownsToResolveBeforeImplementation": [],
+    "detailInventory": {
+      "scanMethod": "grid-3x3",
+      "targetMinDetails": 10,
+      "note": "Enumerate every identity-defining small detail before authoring the spec. Each detail must map to a component.localFeatures entry or material.localOverrides entry, never prose only. Use forge/stage1_intake/build_detail_inventory.py to scan zones.",
+      "details": [
+        {
+          "id": "truncated-cap",
+          "kind": "contour",
+          "description": "Flat, narrow summit cap replaces a pointed apex.",
+          "mapsTo": {
+            "type": "component.localFeatures",
+            "ref": "pyramid-shell/truncated-cap"
+          }
+        },
+        {
+          "id": "summit-rods",
+          "kind": "fastener",
+          "description": "Two slim alignment rods project above the cap.",
+          "mapsTo": {
+            "type": "component.localFeatures",
+            "ref": "summit-rods/paired-rods"
+          }
+        },
+        {
+          "id": "upper-sight-box",
+          "kind": "hole",
+          "description": "Deep rectangular opening below the summit.",
+          "mapsTo": {
+            "type": "component.localFeatures",
+            "ref": "upper-sight-box/rectangular-opening"
+          }
+        },
+        {
+          "id": "upper-oculus",
+          "kind": "hole",
+          "description": "Circular metal tube protrudes from the lower half of the sight box.",
+          "mapsTo": {
+            "type": "component.localFeatures",
+            "ref": "solar-oculus/protruding-tube"
+          }
+        },
+        {
+          "id": "hour-slot",
+          "kind": "hole",
+          "description": "Tall triangular entry reaches from grade to roughly mid-height.",
+          "mapsTo": {
+            "type": "component.localFeatures",
+            "ref": "south-entrance/hour-slot"
+          }
+        },
+        {
+          "id": "stone-joints",
+          "kind": "seam",
+          "description": "Irregular polygonal and rectangular granite slab joints cover the front face.",
+          "mapsTo": {
+            "type": "component.localFeatures",
+            "ref": "stone-cladding/irregular-slab-joints"
+          }
+        },
+        {
+          "id": "edge-stair",
+          "kind": "ridge",
+          "description": "Repeated stair treads climb the left sloping edge.",
+          "mapsTo": {
+            "type": "component.localFeatures",
+            "ref": "edge-stair/repeated-treads"
+          }
+        },
+        {
+          "id": "west-shadow",
+          "kind": "stain",
+          "description": "West face reads cool and substantially darker than the sunlit front.",
+          "mapsTo": {
+            "type": "material.localOverrides",
+            "ref": "pyramid-stone/cool-shadow-face"
+          }
+        },
+        {
+          "id": "joint-cavities",
+          "kind": "linework",
+          "description": "Stone seams carry dark cavity response and remain legible in grazing light.",
+          "mapsTo": {
+            "type": "material.localOverrides",
+            "ref": "pyramid-stone/cavity-seams"
+          }
+        },
+        {
+          "id": "stone-weathering",
+          "kind": "stain",
+          "description": "Subtle vertical weathering and warm/cool slab variation break uniformity.",
+          "mapsTo": {
+            "type": "material.localOverrides",
+            "ref": "pyramid-stone/weathering"
+          }
+        }
+      ]
+    },
+    "anatomy": {
+      "applies": false,
+      "styleHeads": 0,
+      "proportions": {
+        "headUnit": 0,
+        "torso": 0,
+        "legs": 0,
+        "shoulderWidth": 0,
+        "hipWidth": 0
+      },
+      "pose": {
+        "type": "unassessed",
+        "jointAngles": {}
+      },
+      "faceLandmarks": {
+        "eyeLine": 0,
+        "eyeSpacing": 0,
+        "noseBase": 0,
+        "mouthLine": 0,
+        "hairline": 0
+      },
+      "features": [],
+      "confidence": 0,
+      "note": "Only meaningful when objectClass.primaryDomain is character or hybrid. Set applies=true and fill from forge/stage1_intake/extract_landmarks.py. See grimoire/character/reconstruction.md and grimoire/character/likeness_maximization.md."
+    },
+    "sourceImage": "/Users/eric/codeprojects/StarAxis/sculpt/reference-review/pyramid-reference.png"
+  },
+  "qualityContract": {
+    "qualityBar": "complex",
+    "definitionOfDone": [
+      "The exterior reads as the photographed truncated observatory pylon, not a pointed generic pyramid.",
+      "The south face includes the full-height narrow triangular entrance, the deep upper rectangular sight box, and a protruding circular metal oculus in the photographed proportions.",
+      "The close-up upper-room view has a shallow, broad ring whose clear sky opening occupies at least 72% of the visible outer diameter.",
+      "Irregular granite slab courses, cool shadow-side variation, paired summit rods, and the left edge stair remain legible without dropping the validated 60 FPS target.",
+      "The existing walk-through Hour Chamber remains open from south to north despite the unseen rear face being inferred."
+    ],
+    "minimumSpecDepth": {
+      "macroComponents": 3,
+      "mesoComponents": 9,
+      "microFeatureGroups": 8,
+      "materialLayers": 4,
+      "repetitionSystems": 2,
+      "reviewViewpoints": 4
+    },
+    "featureGroups": [
+      {
+        "id": "truncated-pylon-silhouette",
+        "name": "Truncated pylon silhouette and proportions",
+        "required": true,
+        "qualityCriteria": [
+          "Broad base, steep taper, flat narrow cap, and asymmetric three-quarter depth match the exterior photograph."
+        ],
+        "evidenceRefs": [
+          "full-object"
+        ],
+        "failureModes": [
+          "body terminates in a point",
+          "cap is too wide or body taper is too shallow"
+        ]
+      },
+      {
+        "id": "dual-sighting-openings",
+        "name": "Upper rectangular sight box and circular oculus",
+        "required": true,
+        "qualityCriteria": [
+          "A deep rectangular upper opening contains a separately modeled protruding circular tube and dark reveal.",
+          "The close-up aperture uses a shallow bore with a sky-to-outer-diameter ratio of at least 0.72."
+        ],
+        "evidenceRefs": [
+          "full-object"
+        ],
+        "failureModes": [
+          "upper opening is missing or rendered as a flat dark patch",
+          "tube is so deep that the clear sky opening reads as a small dot"
+        ]
+      },
+      {
+        "id": "hour-chamber-entry",
+        "name": "Triangular Hour Chamber entry and through-passage",
+        "required": true,
+        "qualityCriteria": [
+          "The south opening rises from grade as a narrow triangle and connects continuously to the north opening with complete floor, walls, and ceiling."
+        ],
+        "evidenceRefs": [
+          "full-object"
+        ],
+        "failureModes": [
+          "entry becomes a short floating slit",
+          "interior walls disappear or the far opening is sealed"
+        ]
+      },
+      {
+        "id": "granite-cladding-system",
+        "name": "Irregular granite slab cladding",
+        "required": true,
+        "qualityCriteria": [
+          "Front and side faces use irregular nonuniform slab joints rather than a uniform checker grid.",
+          "Seams are cavity-darkened and slab values vary subtly across macro, meso, and micro scales.",
+          "Independent albedo, roughness, normal, and AO evidence is retained from the admitted stone crop."
+        ],
+        "evidenceRefs": [
+          "full-object"
+        ],
+        "failureModes": [
+          "surface reads as a flat procedural checkerboard",
+          "all slabs have identical size, value, and seam spacing"
+        ]
+      },
+      {
+        "id": "edge-stair-and-summit",
+        "name": "Left edge stair, summit cap, and rods",
+        "required": true,
+        "qualityCriteria": [
+          "A repeated tread system climbs the photographed left sloping edge.",
+          "The flat summit carries two thin, separately attached rods.",
+          "All repeated parts are stable child nodes or instanced systems."
+        ],
+        "evidenceRefs": [
+          "full-object"
+        ],
+        "failureModes": [
+          "edge stair is absent or placed on the wrong silhouette",
+          "summit resolves to a point or lacks the paired rods"
+        ]
+      }
+    ],
+    "visualDeltaChecks": [
+      "silhouette and negative-space delta",
+      "component hierarchy depth delta",
+      "repetition density and distribution delta",
+      "material albedo/roughness/normal response delta",
+      "local feature placement and scale delta"
+    ],
+    "antiShallowSpecRules": [
+      "Do not proceed to code if qualityContract.qualityBar is unassessed.",
+      "Do not proceed to code if the spec only contains a root component for a moderate or complex object.",
+      "Do not proceed to code if required featureGroups are not represented by componentTree, materials, or repetitionSystems.",
+      "Do not proceed to code if visible local features are described only in prose and not attached to components/materials/evidenceRefs.",
+      "Do not proceed past structural-pass if attached child parts lack attachment.parentSocket, localStart, localEnd, embedDepth/overlap, and gapTolerance.",
+      "Do not pass material look-dev when albedo is reused as roughness, height, normal, or AO.",
+      "Do not pass material look-dev without macro, meso, and micro surface frequency bands for close-up materials.",
+      "Do not pass reference-fidelity material look-dev from a source image without usable referencePbr maps or an explicit documented limitation.",
+      "Do not patch a spec with extracted PBR maps when extraction confidence is below the target threshold unless the user explicitly accepts lower fidelity."
+    ]
+  },
+  "qualityTargets": {
+    "targetFidelity": 0.7,
+    "mustMatch": [
+      "macro silhouette and proportions",
+      "primary material albedo/roughness response",
+      "reference-derived PBR material response at or above 0.7 confidence when source pixels are usable",
+      "most recognizable local features"
+    ],
+    "niceToHave": [
+      "micro scratches, stains, chips, and dirt masks",
+      "secondary lighting match"
+    ],
+    "fpsTarget": 60,
+    "reviewViewpoints": [
+      "front-three-quarter exterior",
+      "south-entry walk-up",
+      "aperture close-up from visitor eye height",
+      "interior through-passage toward north daylight"
+    ]
+  },
+  "selfCorrectLoop": {
+    "enabled": true,
+    "visualAcceptance": {
+      "reviewer": "ai-vision",
+      "threshold": 0.7,
+      "comparisonArtifactRequired": true,
+      "layerScoresRequired": true,
+      "codePixelDiffIsAcceptanceAuthority": false,
+      "scoringRule": "AI vision must inspect a side-by-side reference/render sheet and score the current pass from 0 to 1. Pixel-diff code may assist diagnostics but cannot approve a pass.",
+      "requiredLayerScores": [
+        "silhouetteProportion",
+        "componentStructure",
+        "formDetail",
+        "materialSurface",
+        "lightingCamera"
+      ],
+      "featureReviewPolicy": {
+        "enabled": true,
+        "reviewUnit": "semantic-subsystem",
+        "maxCriticalFeaturesPerPass": 5,
+        "maxImportantFeaturesPerPass": 3,
+        "criticalDefaultThreshold": 0.8,
+        "importantAverageThreshold": 0.65,
+        "adaptiveEscalation": true,
+        "singleImagePairOnly": true,
+        "selectionRule": "Choose only the most visually salient, identity-defining, user-prioritized, or high-risk semantic systems. Group repeated parts instead of reviewing every mesh. AI vision scores every selected feature from the same full reference/render pair."
+      }
+    },
+    "reviewAfterPasses": [
+      "blockout",
+      "structural-pass",
+      "form-refinement",
+      "material-pass",
+      "surface-pass",
+      "lighting-pass",
+      "interaction-pass",
+      "optimization-pass"
+    ],
+    "allowedActions": [
+      "continue",
+      "refine-spec",
+      "refine-code",
+      "request-input",
+      "stop"
+    ],
+    "specRefineTriggers": [
+      "missing component",
+      "wrong primitive family",
+      "wrong proportions",
+      "material layer under-specified",
+      "local feature not traceable to viewEvidence",
+      "reference ambiguity discovered during implementation"
+    ],
+    "codeRefineTriggers": [
+      "spec is adequate but generated geometry/material does not match",
+      "browser render differs from reference",
+      "performance budget exceeded",
+      "lighting hides geometry or material response"
+    ],
+    "stopCriteria": [
+      "target fidelity reached or user accepts current approximation",
+      "remaining gaps require new reference images or manual art"
+    ],
+    "screenshotPolicy": {
+      "requiredForPasses": [
+        "blockout",
+        "structural-pass",
+        "form-refinement",
+        "material-pass",
+        "surface-pass",
+        "lighting-pass",
+        "interaction-pass"
+      ],
+      "preferredCapture": "in-app-browser-screenshot",
+      "fallbackCapture": "user-supplied-screenshot-path",
+      "minimumEvidence": "Each visual pass needs a reference image, rendered screenshot, side-by-side comparison sheet, AI vision score, layer scores, and critique before choosing continue.",
+      "reviewPairRule": "Compare the same camera/viewpoint whenever possible; do not judge a front reference against a random render angle.",
+      "acceptanceAuthority": "AI vision review of the comparison sheet. Code-generated pixel similarity is not sufficient evidence."
+    }
+  },
+  "featureReviewTargets": [
+    {
+      "id": "truncated-pylon-silhouette",
+      "name": "Truncated pylon silhouette and flat summit",
+      "tier": "critical",
+      "passIds": [
+        "blockout"
+      ],
+      "minimumScore": 0.8,
+      "mustPass": true,
+      "componentRefs": [
+        "pyramid-shell"
+      ],
+      "evidenceRefs": [
+        "full-object"
+      ]
+    },
+    {
+      "id": "dual-sighting-openings",
+      "name": "Rectangular sight box and shallow circular oculus",
+      "tier": "critical",
+      "passIds": [
+        "structural-pass",
+        "form-refinement"
+      ],
+      "minimumScore": 0.8,
+      "mustPass": true,
+      "componentRefs": [
+        "upper-sight-box",
+        "solar-oculus",
+        "star-tunnel"
+      ],
+      "evidenceRefs": [
+        "full-object"
+      ]
+    },
+    {
+      "id": "hour-chamber-entry",
+      "name": "Triangular entry and complete through-passage",
+      "tier": "critical",
+      "passIds": [
+        "structural-pass",
+        "interaction-pass"
+      ],
+      "minimumScore": 0.8,
+      "mustPass": true,
+      "componentRefs": [
+        "south-entrance",
+        "hour-chamber"
+      ],
+      "evidenceRefs": [
+        "full-object"
+      ]
+    },
+    {
+      "id": "granite-cladding-system",
+      "name": "Irregular coursed granite cladding",
+      "tier": "important",
+      "passIds": [
+        "material-pass",
+        "surface-pass"
+      ],
+      "minimumScore": 0.72,
+      "mustPass": true,
+      "componentRefs": [
+        "stone-cladding",
+        "west-shell"
+      ],
+      "evidenceRefs": [
+        "full-object"
+      ]
+    },
+    {
+      "id": "edge-stair-and-summit",
+      "name": "Left edge stair and paired summit rods",
+      "tier": "important",
+      "passIds": [
+        "form-refinement"
+      ],
+      "minimumScore": 0.72,
+      "mustPass": true,
+      "componentRefs": [
+        "edge-stair",
+        "summit-rods"
+      ],
+      "evidenceRefs": [
+        "full-object"
+      ]
+    }
+  ],
+  "sculptPipeline": {
+    "passGateMode": "locked-sequential",
+    "passOrder": [
+      "blockout",
+      "structural-pass",
+      "form-refinement",
+      "material-pass",
+      "surface-pass",
+      "lighting-pass",
+      "interaction-pass",
+      "optimization-pass"
+    ],
+    "currentPass": "complete",
+    "completedPasses": [
+      "blockout",
+      "structural-pass",
+      "form-refinement",
+      "material-pass",
+      "surface-pass",
+      "lighting-pass",
+      "interaction-pass",
+      "optimization-pass"
+    ],
+    "lastCompletedPass": "optimization-pass",
+    "blockedReason": "all build passes completed",
+    "nextRequiredEvidence": []
+  },
+  "lookDevTargets": {
+    "qualityPriority": "reference-fidelity",
+    "materialPass": {
+      "albedoPaletteRequired": true,
+      "roughnessVariationRequired": true,
+      "normalOrBumpRequired": true,
+      "localOverridesRequired": true,
+      "minimumTextureResolution": 1024,
+      "preferredTextureResolution": 2048,
+      "independentMapChannels": [
+        "albedo",
+        "roughness",
+        "height",
+        "normal",
+        "ambient-occlusion"
+      ],
+      "requiredSurfaceFrequencyBands": [
+        "macro",
+        "meso",
+        "micro"
+      ],
+      "geometryReliefRequiredWhenSilhouetteAffected": true,
+      "referencePbrExtraction": {
+        "requiredWhenSourceImagePresent": true,
+        "targetThreshold": 0.7,
+        "stopOnLowConfidence": true,
+        "script": "forge/stage1_intake/extract_pbr_evidence.py",
+        "acceptedLimitation": "single-image extraction is reference-derived inference, not exact photogrammetry"
+      },
+      "mustAvoid": [
+        "single flat albedo per material",
+        "uniform roughness",
+        "albedo texture reused as roughness/height/normal/AO",
+        "single-frequency random noise",
+        "plastic-looking smooth bark, stone, cloth, foliage, or aged material",
+        "local color/detail described only in prose without material masks",
+        "claiming exact PBR recovery when confidence is below the target threshold"
+      ]
+    },
+    "lightingPass": {
+      "requiredTerms": [
+        "key light",
+        "fill light",
+        "rim or environment light",
+        "exposure",
+        "tone mapping",
+        "background",
+        "contact shadow"
+      ],
+      "mustAvoid": [
+        "ambient-only lighting",
+        "flat value range",
+        "missing contact shadow",
+        "reference lighting copied without separating material readability"
+      ]
+    },
+    "screenshotReview": [
+      "Compare albedo palette and local color zones.",
+      "Compare roughness/normal/bump response under light.",
+      "Compare cavity dirt, edge wear, stains, moss, scratches, or other local masks.",
+      "Compare key/fill/rim structure, exposure, tone mapping, background, and contact shadows.",
+      "Capture a neutral-light render to verify material readability without reference lighting.",
+      "Capture a grazing-light close-up to expose flat normals, uniform roughness, tiling, and plastic highlights.",
+      "Capture a reference-matched render from the same camera framing as the source."
+    ]
+  },
+  "actionReadiness": {
+    "contract": "Every macro/meso component should be generated as a stable named Object3D pivot node with a mesh child, action metadata, optional sockets, collider proxy, and destruction metadata.",
+    "defaultRigType": "action-ready-static-rig",
+    "rootMotionNode": "root",
+    "requiredComponentFields": [
+      "id",
+      "parent",
+      "transform",
+      "attachment for child appendages, connectors, limbs, tubes, handles, legs, horns, wings, branches, or cables",
+      "actionProfile.animationRole",
+      "actionProfile.pivot",
+      "actionProfile.collider",
+      "actionProfile.destruction"
+    ],
+    "transformChannels": [
+      "translate",
+      "rotate",
+      "scale",
+      "bend",
+      "twist",
+      "detach",
+      "visibility",
+      "material-state"
+    ],
+    "authoringRules": [
+      "Do not collapse independently movable parts into one mesh.",
+      "Put transforms on component pivot groups, not only on raw meshes.",
+      "For attached child parts, put the pivot at the semantic root/socket and build visible geometry from localStart to localEnd.",
+      "Represent hinge, socket, detachable, and breakable intent even when no animation is implemented yet.",
+      "Use simplified collider proxies for runtime physics instead of visual mesh colliders by default."
+    ],
+    "destructionPolicy": {
+      "defaultBreakable": false,
+      "fractureGroupNaming": "Use stable semantic names such as body-shell, left-hinge, glass-panel, branch-segment.",
+      "debrisStrategy": "Prefer detachable component groups and a small number of procedural fragments over random mesh explosion."
+    }
+  },
+  "assumptions": [
+    "Rear-face geometry is inferred as a matching tapered shell so the established south-to-north visitor passage remains complete.",
+    "Existing site scale is retained while photograph-visible ratios control the new silhouette.",
+    "The oculus close-up is used for shallow-bore framing and metal response, while the exterior photo controls placement and outer scale."
+  ],
+  "coordinateFrame": {
+    "front": "camera-facing side in the reference image",
+    "up": "image up direction",
+    "scaleReference": "unit scale; adjust after first browser render"
+  },
+  "silhouette": {
+    "boundingShape": "tall truncated trapezoidal pylon with a narrow flat summit",
+    "aspectRatios": [
+      "height:base-width approximately 1.45:1",
+      "top-width:base-width approximately 0.18:1"
+    ],
+    "symmetry": "near bilateral symmetry about the south-north axis with an edge stair on the photographed left slope",
+    "dominantCurves": [
+      "circular oculus rim contrasts with planar tapered stone faces"
+    ],
+    "negativeSpaces": [
+      "grade-to-midheight triangular entry",
+      "upper rectangular sight box",
+      "circular sky aperture"
+    ],
+    "landmarks": [
+      "flat summit cap",
+      "paired summit rods",
+      "protruding steel oculus",
+      "left sloping edge stair"
+    ]
+  },
+  "viewEvidence": [
+    {
+      "id": "full-object",
+      "view": "primary",
+      "imageRegion": {
+        "x": 0,
+        "y": 0,
+        "width": 1,
+        "height": 1,
+        "units": "normalized"
+      },
+      "observations": [
+        "The body terminates at a narrow flat summit rather than an apex.",
+        "A deep rectangular opening contains a short protruding circular metal sight tube.",
+        "The triangular entrance begins at grade and extends to around mid-height.",
+        "Irregular coursed granite slabs and a left edge stair create the dominant surface and silhouette detail."
+      ],
+      "confidence": 0.86
+    }
+  ],
+  "componentTree": [
+    {
+      "id": "site-root",
+      "name": "Star Axis site assembly",
+      "level": "macro",
+      "role": "surface",
+      "importance": 1,
+      "confidence": 0.5,
+      "primitive": "box",
+      "topologyClass": "assembled-solid",
+      "topologyRationale": "Stable scene root groups the observatory and walkable visitor spaces.",
+      "geometryDescriptor": {
+        "topologyIntent": "low-poly blockout with bevel-ready edges",
+        "edgeTreatment": {
+          "type": "none",
+          "bevelRadius": 0,
+          "segments": 1
+        },
+        "deformationStack": [],
+        "uvStrategy": "generated procedural coordinates",
+        "normalStrategy": "vertex normals from generated geometry"
+      },
+      "parent": null,
+      "attachment": null,
+      "dimensions": {
+        "width": 24,
+        "height": 18,
+        "depth": 24,
+        "units": "meters",
+        "confidence": 0.76
+      },
+      "transform": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "actionProfile": {
+        "animationRole": "root",
+        "pivot": {
+          "mode": "center",
+          "localPosition": [
+            0,
+            0,
+            0
+          ],
+          "axis": [
+            0,
+            1,
+            0
+          ],
+          "confidence": 0.5
+        },
+        "transformChannels": {
+          "translate": true,
+          "rotate": true,
+          "scale": true,
+          "bend": false,
+          "twist": false,
+          "detach": false,
+          "visibility": true,
+          "materialState": true
+        },
+        "sockets": [],
+        "collider": {
+          "type": "box",
+          "offset": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "isTrigger": false,
+          "notes": "Replace with sphere/capsule/compound proxy when the object shape demands it."
+        },
+        "constraints": [],
+        "destruction": {
+          "breakable": false,
+          "fractureGroup": "root",
+          "seamRefs": [],
+          "detachableFragments": [],
+          "breakImpulse": 0,
+          "debrisMaterial": "pyramid-stone"
+        }
+      },
+      "material": "pyramid-stone",
+      "materialLayers": [
+        "pyramid-stone"
+      ],
+      "deformations": [],
+      "joints": [],
+      "seams": [],
+      "localFeatures": [],
+      "surfaceDetail": {
+        "macroRoughness": 0.18,
+        "microRoughness": 0.11,
+        "bumpAmplitude": 0.035,
+        "normalPattern": "irregular granite grain",
+        "displacementPattern": "",
+        "occlusionPattern": "contact and cavity darkening",
+        "edgeWearPattern": "subtle exposed-edge lightening",
+        "notes": "Observed surface response is explicit but kept GPU-cheap for the 60fps target."
+      },
+      "evidenceRefs": [
+        "full-object"
+      ],
+      "details": [],
+      "fidelityTier": "blockout",
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(157, 125, 108, 1.0)",
+        "secondaryAlbedo": "rgba(111, 87, 78, 1.0)",
+        "materialClass": "stone",
+        "materialClassConfidence": 0.92
+      }
+    },
+    {
+      "id": "pyramid-shell",
+      "name": "Truncated solar pylon shell",
+      "level": "macro",
+      "role": "surface",
+      "importance": 1,
+      "confidence": 0.5,
+      "primitive": "extrude",
+      "topologyClass": "conforming-shell",
+      "topologyRationale": "Four planar tapered faces terminate at a visibly flat cap rather than an apex.",
+      "geometryDescriptor": {
+        "topologyIntent": "low-poly blockout with bevel-ready edges",
+        "edgeTreatment": {
+          "type": "none",
+          "bevelRadius": 0,
+          "segments": 1
+        },
+        "deformationStack": [],
+        "uvStrategy": "generated procedural coordinates",
+        "normalStrategy": "vertex normals from generated geometry"
+      },
+      "parent": "site-root",
+      "attachment": null,
+      "dimensions": {
+        "width": 23,
+        "height": 16.8,
+        "depth": 19,
+        "units": "meters",
+        "confidence": 0.76
+      },
+      "transform": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "actionProfile": {
+        "animationRole": "static",
+        "pivot": {
+          "mode": "center",
+          "localPosition": [
+            0,
+            0,
+            0
+          ],
+          "axis": [
+            0,
+            1,
+            0
+          ],
+          "confidence": 0.5
+        },
+        "transformChannels": {
+          "translate": true,
+          "rotate": true,
+          "scale": true,
+          "bend": false,
+          "twist": false,
+          "detach": false,
+          "visibility": true,
+          "materialState": true
+        },
+        "sockets": [],
+        "collider": {
+          "type": "box",
+          "offset": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "isTrigger": false,
+          "notes": "Replace with sphere/capsule/compound proxy when the object shape demands it."
+        },
+        "constraints": [],
+        "destruction": {
+          "breakable": false,
+          "fractureGroup": "root",
+          "seamRefs": [],
+          "detachableFragments": [],
+          "breakImpulse": 0,
+          "debrisMaterial": "pyramid-stone"
+        }
+      },
+      "material": "pyramid-stone",
+      "materialLayers": [
+        "pyramid-stone"
+      ],
+      "deformations": [],
+      "joints": [],
+      "seams": [],
+      "localFeatures": [
+        {
+          "id": "truncated-cap",
+          "type": "reference-observed",
+          "evidenceRefs": [
+            "full-object"
+          ]
+        }
+      ],
+      "surfaceDetail": {
+        "macroRoughness": 0.18,
+        "microRoughness": 0.11,
+        "bumpAmplitude": 0.035,
+        "normalPattern": "irregular granite grain",
+        "displacementPattern": "",
+        "occlusionPattern": "contact and cavity darkening",
+        "edgeWearPattern": "subtle exposed-edge lightening",
+        "notes": "Observed surface response is explicit but kept GPU-cheap for the 60fps target."
+      },
+      "evidenceRefs": [
+        "full-object"
+      ],
+      "details": [],
+      "fidelityTier": "blockout",
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(157, 125, 108, 1.0)",
+        "secondaryAlbedo": "rgba(111, 87, 78, 1.0)",
+        "materialClass": "stone",
+        "materialClassConfidence": 0.92
+      }
+    },
+    {
+      "id": "star-tunnel",
+      "name": "Star Tunnel sightline assembly",
+      "level": "macro",
+      "role": "surface",
+      "importance": 1,
+      "confidence": 0.5,
+      "primitive": "extrude",
+      "topologyClass": "assembled-solid",
+      "topologyRationale": "Walkable stair, trench walls, headwall, and steel sight tube form one aligned visitor route.",
+      "geometryDescriptor": {
+        "topologyIntent": "low-poly blockout with bevel-ready edges",
+        "edgeTreatment": {
+          "type": "none",
+          "bevelRadius": 0,
+          "segments": 1
+        },
+        "deformationStack": [],
+        "uvStrategy": "generated procedural coordinates",
+        "normalStrategy": "vertex normals from generated geometry"
+      },
+      "parent": "site-root",
+      "attachment": null,
+      "dimensions": {
+        "width": 8,
+        "height": 12,
+        "depth": 44,
+        "units": "meters",
+        "confidence": 0.76
+      },
+      "transform": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "actionProfile": {
+        "animationRole": "static",
+        "pivot": {
+          "mode": "center",
+          "localPosition": [
+            0,
+            0,
+            0
+          ],
+          "axis": [
+            0,
+            1,
+            0
+          ],
+          "confidence": 0.5
+        },
+        "transformChannels": {
+          "translate": true,
+          "rotate": true,
+          "scale": true,
+          "bend": false,
+          "twist": false,
+          "detach": false,
+          "visibility": true,
+          "materialState": true
+        },
+        "sockets": [],
+        "collider": {
+          "type": "box",
+          "offset": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "isTrigger": false,
+          "notes": "Replace with sphere/capsule/compound proxy when the object shape demands it."
+        },
+        "constraints": [],
+        "destruction": {
+          "breakable": false,
+          "fractureGroup": "root",
+          "seamRefs": [],
+          "detachableFragments": [],
+          "breakImpulse": 0,
+          "debrisMaterial": "shadow-stone"
+        }
+      },
+      "material": "shadow-stone",
+      "materialLayers": [
+        "shadow-stone"
+      ],
+      "deformations": [],
+      "joints": [],
+      "seams": [],
+      "localFeatures": [],
+      "surfaceDetail": {
+        "macroRoughness": 0.18,
+        "microRoughness": 0.11,
+        "bumpAmplitude": 0.035,
+        "normalPattern": "irregular granite grain",
+        "displacementPattern": "",
+        "occlusionPattern": "contact and cavity darkening",
+        "edgeWearPattern": "subtle exposed-edge lightening",
+        "notes": "Observed surface response is explicit but kept GPU-cheap for the 60fps target."
+      },
+      "evidenceRefs": [
+        "full-object"
+      ],
+      "details": [],
+      "fidelityTier": "blockout",
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(69, 63, 65, 1.0)",
+        "secondaryAlbedo": "rgba(99, 82, 76, 1.0)",
+        "materialClass": "stone",
+        "materialClassConfidence": 0.86
+      }
+    },
+    {
+      "id": "hour-chamber",
+      "name": "Complete Hour Chamber through-passage",
+      "level": "meso",
+      "role": "surface",
+      "importance": 1,
+      "confidence": 0.5,
+      "primitive": "extrude",
+      "topologyClass": "conforming-shell",
+      "topologyRationale": "Floor, walls, and ceiling form a continuous south-to-north chamber around the triangular void.",
+      "geometryDescriptor": {
+        "topologyIntent": "low-poly blockout with bevel-ready edges",
+        "edgeTreatment": {
+          "type": "none",
+          "bevelRadius": 0,
+          "segments": 1
+        },
+        "deformationStack": [],
+        "uvStrategy": "generated procedural coordinates",
+        "normalStrategy": "vertex normals from generated geometry"
+      },
+      "parent": "site-root",
+      "attachment": null,
+      "dimensions": {
+        "width": 4.8,
+        "height": 9.6,
+        "depth": 18,
+        "units": "meters",
+        "confidence": 0.76
+      },
+      "transform": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "actionProfile": {
+        "animationRole": "static",
+        "pivot": {
+          "mode": "center",
+          "localPosition": [
+            0,
+            0,
+            0
+          ],
+          "axis": [
+            0,
+            1,
+            0
+          ],
+          "confidence": 0.5
+        },
+        "transformChannels": {
+          "translate": true,
+          "rotate": true,
+          "scale": true,
+          "bend": false,
+          "twist": false,
+          "detach": false,
+          "visibility": true,
+          "materialState": true
+        },
+        "sockets": [],
+        "collider": {
+          "type": "compound",
+          "offset": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "isTrigger": false,
+          "notes": "Replace with sphere/capsule/compound proxy when the object shape demands it."
+        },
+        "constraints": [],
+        "destruction": {
+          "breakable": false,
+          "fractureGroup": "root",
+          "seamRefs": [],
+          "detachableFragments": [],
+          "breakImpulse": 0,
+          "debrisMaterial": "chamber-dark"
+        }
+      },
+      "material": "chamber-dark",
+      "materialLayers": [
+        "chamber-dark"
+      ],
+      "deformations": [],
+      "joints": [],
+      "seams": [],
+      "localFeatures": [],
+      "surfaceDetail": {
+        "macroRoughness": 0.04,
+        "microRoughness": 0.03,
+        "bumpAmplitude": 0.006,
+        "normalPattern": "fine brushed response",
+        "displacementPattern": "",
+        "occlusionPattern": "contact and cavity darkening",
+        "edgeWearPattern": "subtle exposed-edge lightening",
+        "notes": "Observed surface response is explicit but kept GPU-cheap for the 60fps target."
+      },
+      "evidenceRefs": [
+        "full-object"
+      ],
+      "details": [],
+      "fidelityTier": "blockout",
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(28, 24, 22, 1.0)",
+        "secondaryAlbedo": "rgba(48, 39, 34, 1.0)",
+        "materialClass": "stone",
+        "materialClassConfidence": 0.82
+      }
+    },
+    {
+      "id": "south-entrance",
+      "name": "South triangular entrance",
+      "level": "meso",
+      "role": "surface",
+      "importance": 1,
+      "confidence": 0.5,
+      "primitive": "extrude",
+      "topologyClass": "conforming-shell",
+      "topologyRationale": "A tall narrow triangular opening is cut from grade through the south face.",
+      "geometryDescriptor": {
+        "topologyIntent": "low-poly blockout with bevel-ready edges",
+        "edgeTreatment": {
+          "type": "none",
+          "bevelRadius": 0,
+          "segments": 1
+        },
+        "deformationStack": [],
+        "uvStrategy": "generated procedural coordinates",
+        "normalStrategy": "vertex normals from generated geometry"
+      },
+      "parent": "site-root",
+      "attachment": null,
+      "dimensions": {
+        "width": 3.2,
+        "height": 9.4,
+        "depth": 0.8,
+        "units": "meters",
+        "confidence": 0.76
+      },
+      "transform": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "actionProfile": {
+        "animationRole": "static",
+        "pivot": {
+          "mode": "center",
+          "localPosition": [
+            0,
+            0,
+            0
+          ],
+          "axis": [
+            0,
+            1,
+            0
+          ],
+          "confidence": 0.5
+        },
+        "transformChannels": {
+          "translate": true,
+          "rotate": true,
+          "scale": true,
+          "bend": false,
+          "twist": false,
+          "detach": false,
+          "visibility": true,
+          "materialState": true
+        },
+        "sockets": [],
+        "collider": {
+          "type": "box",
+          "offset": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "isTrigger": false,
+          "notes": "Replace with sphere/capsule/compound proxy when the object shape demands it."
+        },
+        "constraints": [],
+        "destruction": {
+          "breakable": false,
+          "fractureGroup": "root",
+          "seamRefs": [],
+          "detachableFragments": [],
+          "breakImpulse": 0,
+          "debrisMaterial": "chamber-dark"
+        }
+      },
+      "material": "chamber-dark",
+      "materialLayers": [
+        "chamber-dark"
+      ],
+      "deformations": [],
+      "joints": [],
+      "seams": [],
+      "localFeatures": [
+        {
+          "id": "hour-slot",
+          "type": "reference-observed",
+          "evidenceRefs": [
+            "full-object"
+          ]
+        },
+        {
+          "id": "entry-reveals",
+          "type": "reference-observed",
+          "evidenceRefs": [
+            "full-object"
+          ]
+        }
+      ],
+      "surfaceDetail": {
+        "macroRoughness": 0.04,
+        "microRoughness": 0.03,
+        "bumpAmplitude": 0.006,
+        "normalPattern": "fine brushed response",
+        "displacementPattern": "",
+        "occlusionPattern": "contact and cavity darkening",
+        "edgeWearPattern": "subtle exposed-edge lightening",
+        "notes": "Observed surface response is explicit but kept GPU-cheap for the 60fps target."
+      },
+      "evidenceRefs": [
+        "full-object"
+      ],
+      "details": [],
+      "fidelityTier": "blockout",
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(28, 24, 22, 1.0)",
+        "secondaryAlbedo": "rgba(48, 39, 34, 1.0)",
+        "materialClass": "stone",
+        "materialClassConfidence": 0.82
+      }
+    },
+    {
+      "id": "upper-sight-box",
+      "name": "Upper rectangular sight box",
+      "level": "meso",
+      "role": "surface",
+      "importance": 1,
+      "confidence": 0.5,
+      "primitive": "box",
+      "topologyClass": "assembled-solid",
+      "topologyRationale": "A deep rectangular recess interrupts the upper front face below the cap.",
+      "geometryDescriptor": {
+        "topologyIntent": "low-poly blockout with bevel-ready edges",
+        "edgeTreatment": {
+          "type": "none",
+          "bevelRadius": 0,
+          "segments": 1
+        },
+        "deformationStack": [],
+        "uvStrategy": "generated procedural coordinates",
+        "normalStrategy": "vertex normals from generated geometry"
+      },
+      "parent": "site-root",
+      "attachment": null,
+      "dimensions": {
+        "width": 3.8,
+        "height": 2.7,
+        "depth": 1.2,
+        "units": "meters",
+        "confidence": 0.76
+      },
+      "transform": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "actionProfile": {
+        "animationRole": "static",
+        "pivot": {
+          "mode": "center",
+          "localPosition": [
+            0,
+            0,
+            0
+          ],
+          "axis": [
+            0,
+            1,
+            0
+          ],
+          "confidence": 0.5
+        },
+        "transformChannels": {
+          "translate": true,
+          "rotate": true,
+          "scale": true,
+          "bend": false,
+          "twist": false,
+          "detach": false,
+          "visibility": true,
+          "materialState": true
+        },
+        "sockets": [],
+        "collider": {
+          "type": "box",
+          "offset": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "isTrigger": false,
+          "notes": "Replace with sphere/capsule/compound proxy when the object shape demands it."
+        },
+        "constraints": [],
+        "destruction": {
+          "breakable": false,
+          "fractureGroup": "root",
+          "seamRefs": [],
+          "detachableFragments": [],
+          "breakImpulse": 0,
+          "debrisMaterial": "chamber-dark"
+        }
+      },
+      "material": "chamber-dark",
+      "materialLayers": [
+        "chamber-dark"
+      ],
+      "deformations": [],
+      "joints": [],
+      "seams": [],
+      "localFeatures": [
+        {
+          "id": "rectangular-opening",
+          "type": "reference-observed",
+          "evidenceRefs": [
+            "full-object"
+          ]
+        },
+        {
+          "id": "sight-box-reveal",
+          "type": "reference-observed",
+          "evidenceRefs": [
+            "full-object"
+          ]
+        }
+      ],
+      "surfaceDetail": {
+        "macroRoughness": 0.04,
+        "microRoughness": 0.03,
+        "bumpAmplitude": 0.006,
+        "normalPattern": "fine brushed response",
+        "displacementPattern": "",
+        "occlusionPattern": "contact and cavity darkening",
+        "edgeWearPattern": "subtle exposed-edge lightening",
+        "notes": "Observed surface response is explicit but kept GPU-cheap for the 60fps target."
+      },
+      "evidenceRefs": [
+        "full-object"
+      ],
+      "details": [],
+      "fidelityTier": "blockout",
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(28, 24, 22, 1.0)",
+        "secondaryAlbedo": "rgba(48, 39, 34, 1.0)",
+        "materialClass": "stone",
+        "materialClassConfidence": 0.82
+      }
+    },
+    {
+      "id": "solar-oculus",
+      "name": "Protruding circular solar oculus",
+      "level": "meso",
+      "role": "surface",
+      "importance": 1,
+      "confidence": 0.5,
+      "primitive": "tube",
+      "topologyClass": "assembled-solid",
+      "topologyRationale": "A separately built short metal tube protrudes from the lower half of the rectangular recess.",
+      "geometryDescriptor": {
+        "topologyIntent": "low-poly blockout with bevel-ready edges",
+        "edgeTreatment": {
+          "type": "none",
+          "bevelRadius": 0,
+          "segments": 1
+        },
+        "deformationStack": [],
+        "uvStrategy": "generated procedural coordinates",
+        "normalStrategy": "vertex normals from generated geometry"
+      },
+      "parent": "upper-sight-box",
+      "attachment": {
+        "parentId": "upper-sight-box",
+        "parentSocket": "upper-sight-box-surface",
+        "localStart": [
+          0,
+          -0.35,
+          -0.5
+        ],
+        "localEnd": [
+          0,
+          -0.35,
+          0.3
+        ],
+        "contactNormal": [
+          0,
+          0,
+          1
+        ],
+        "contactType": "embedded",
+        "embedDepth": 0.08,
+        "overlap": 0.04,
+        "gapTolerance": 0.01,
+        "evidenceRefs": [
+          "full-object"
+        ]
+      },
+      "dimensions": {
+        "radius": 0.68,
+        "length": 0.8,
+        "units": "meters",
+        "confidence": 0.76
+      },
+      "transform": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "actionProfile": {
+        "animationRole": "static",
+        "pivot": {
+          "mode": "center",
+          "localPosition": [
+            0,
+            0,
+            0
+          ],
+          "axis": [
+            0,
+            1,
+            0
+          ],
+          "confidence": 0.5
+        },
+        "transformChannels": {
+          "translate": true,
+          "rotate": true,
+          "scale": true,
+          "bend": false,
+          "twist": false,
+          "detach": false,
+          "visibility": true,
+          "materialState": true
+        },
+        "sockets": [],
+        "collider": {
+          "type": "box",
+          "offset": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "isTrigger": false,
+          "notes": "Replace with sphere/capsule/compound proxy when the object shape demands it."
+        },
+        "constraints": [],
+        "destruction": {
+          "breakable": false,
+          "fractureGroup": "root",
+          "seamRefs": [],
+          "detachableFragments": [],
+          "breakImpulse": 0,
+          "debrisMaterial": "stainless"
+        }
+      },
+      "material": "stainless",
+      "materialLayers": [
+        "stainless"
+      ],
+      "deformations": [],
+      "joints": [],
+      "seams": [],
+      "localFeatures": [
+        {
+          "id": "protruding-tube",
+          "type": "reference-observed",
+          "evidenceRefs": [
+            "full-object"
+          ]
+        },
+        {
+          "id": "brushed-lip",
+          "type": "reference-observed",
+          "evidenceRefs": [
+            "full-object"
+          ]
+        }
+      ],
+      "surfaceDetail": {
+        "macroRoughness": 0.04,
+        "microRoughness": 0.03,
+        "bumpAmplitude": 0.006,
+        "normalPattern": "fine brushed response",
+        "displacementPattern": "",
+        "occlusionPattern": "contact and cavity darkening",
+        "edgeWearPattern": "subtle exposed-edge lightening",
+        "notes": "Observed surface response is explicit but kept GPU-cheap for the 60fps target."
+      },
+      "evidenceRefs": [
+        "full-object"
+      ],
+      "details": [],
+      "fidelityTier": "blockout",
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(145, 142, 135, 1.0)",
+        "secondaryAlbedo": "rgba(88, 91, 94, 1.0)",
+        "materialClass": "metal",
+        "materialClassConfidence": 0.94
+      }
+    },
+    {
+      "id": "summit-rods",
+      "name": "Paired summit alignment rods",
+      "level": "meso",
+      "role": "surface",
+      "importance": 1,
+      "confidence": 0.5,
+      "primitive": "instanced-cluster",
+      "topologyClass": "assembled-solid",
+      "topologyRationale": "Two thin repeated metal rods rise independently from the photographed summit.",
+      "geometryDescriptor": {
+        "topologyIntent": "low-poly blockout with bevel-ready edges",
+        "edgeTreatment": {
+          "type": "none",
+          "bevelRadius": 0,
+          "segments": 1
+        },
+        "deformationStack": [],
+        "uvStrategy": "generated procedural coordinates",
+        "normalStrategy": "vertex normals from generated geometry"
+      },
+      "parent": "pyramid-shell",
+      "attachment": null,
+      "dimensions": {
+        "radius": 0.04,
+        "height": 0.9,
+        "depth": 0.04,
+        "units": "meters",
+        "confidence": 0.76
+      },
+      "transform": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "actionProfile": {
+        "animationRole": "static",
+        "pivot": {
+          "mode": "center",
+          "localPosition": [
+            0,
+            0,
+            0
+          ],
+          "axis": [
+            0,
+            1,
+            0
+          ],
+          "confidence": 0.5
+        },
+        "transformChannels": {
+          "translate": true,
+          "rotate": true,
+          "scale": true,
+          "bend": false,
+          "twist": false,
+          "detach": false,
+          "visibility": true,
+          "materialState": true
+        },
+        "sockets": [],
+        "collider": {
+          "type": "box",
+          "offset": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "isTrigger": false,
+          "notes": "Replace with sphere/capsule/compound proxy when the object shape demands it."
+        },
+        "constraints": [],
+        "destruction": {
+          "breakable": false,
+          "fractureGroup": "root",
+          "seamRefs": [],
+          "detachableFragments": [],
+          "breakImpulse": 0,
+          "debrisMaterial": "stainless"
+        }
+      },
+      "material": "stainless",
+      "materialLayers": [
+        "stainless"
+      ],
+      "deformations": [],
+      "joints": [],
+      "seams": [],
+      "localFeatures": [
+        {
+          "id": "paired-rods",
+          "type": "reference-observed",
+          "evidenceRefs": [
+            "full-object"
+          ]
+        }
+      ],
+      "surfaceDetail": {
+        "macroRoughness": 0.04,
+        "microRoughness": 0.03,
+        "bumpAmplitude": 0.006,
+        "normalPattern": "fine brushed response",
+        "displacementPattern": "",
+        "occlusionPattern": "contact and cavity darkening",
+        "edgeWearPattern": "subtle exposed-edge lightening",
+        "notes": "Observed surface response is explicit but kept GPU-cheap for the 60fps target."
+      },
+      "evidenceRefs": [
+        "full-object"
+      ],
+      "details": [],
+      "fidelityTier": "blockout",
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(145, 142, 135, 1.0)",
+        "secondaryAlbedo": "rgba(88, 91, 94, 1.0)",
+        "materialClass": "metal",
+        "materialClassConfidence": 0.94
+      }
+    },
+    {
+      "id": "stone-cladding",
+      "name": "Irregular granite slab cladding",
+      "level": "meso",
+      "role": "surface",
+      "importance": 1,
+      "confidence": 0.5,
+      "primitive": "instanced-cluster",
+      "topologyClass": "surface-relief",
+      "topologyRationale": "Shallow slab modules and joint grooves add photograph-visible masonry relief without duplicating the structural shell.",
+      "geometryDescriptor": {
+        "topologyIntent": "low-poly blockout with bevel-ready edges",
+        "edgeTreatment": {
+          "type": "none",
+          "bevelRadius": 0,
+          "segments": 1
+        },
+        "deformationStack": [],
+        "uvStrategy": "generated procedural coordinates",
+        "normalStrategy": "vertex normals from generated geometry"
+      },
+      "parent": "pyramid-shell",
+      "attachment": null,
+      "dimensions": {
+        "width": 23,
+        "height": 16.8,
+        "depth": 0.08,
+        "units": "meters",
+        "confidence": 0.76
+      },
+      "transform": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "actionProfile": {
+        "animationRole": "static",
+        "pivot": {
+          "mode": "center",
+          "localPosition": [
+            0,
+            0,
+            0
+          ],
+          "axis": [
+            0,
+            1,
+            0
+          ],
+          "confidence": 0.5
+        },
+        "transformChannels": {
+          "translate": true,
+          "rotate": true,
+          "scale": true,
+          "bend": false,
+          "twist": false,
+          "detach": false,
+          "visibility": true,
+          "materialState": true
+        },
+        "sockets": [],
+        "collider": {
+          "type": "box",
+          "offset": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "isTrigger": false,
+          "notes": "Replace with sphere/capsule/compound proxy when the object shape demands it."
+        },
+        "constraints": [],
+        "destruction": {
+          "breakable": false,
+          "fractureGroup": "root",
+          "seamRefs": [],
+          "detachableFragments": [],
+          "breakImpulse": 0,
+          "debrisMaterial": "pyramid-stone"
+        }
+      },
+      "material": "pyramid-stone",
+      "materialLayers": [
+        "pyramid-stone"
+      ],
+      "deformations": [],
+      "joints": [],
+      "seams": [],
+      "localFeatures": [
+        {
+          "id": "irregular-slab-joints",
+          "type": "reference-observed",
+          "evidenceRefs": [
+            "full-object"
+          ]
+        },
+        {
+          "id": "horizontal-courses",
+          "type": "reference-observed",
+          "evidenceRefs": [
+            "full-object"
+          ]
+        }
+      ],
+      "surfaceDetail": {
+        "macroRoughness": 0.18,
+        "microRoughness": 0.11,
+        "bumpAmplitude": 0.035,
+        "normalPattern": "irregular granite grain",
+        "displacementPattern": "",
+        "occlusionPattern": "contact and cavity darkening",
+        "edgeWearPattern": "subtle exposed-edge lightening",
+        "notes": "Observed surface response is explicit but kept GPU-cheap for the 60fps target."
+      },
+      "evidenceRefs": [
+        "full-object"
+      ],
+      "details": [],
+      "fidelityTier": "blockout",
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(157, 125, 108, 1.0)",
+        "secondaryAlbedo": "rgba(111, 87, 78, 1.0)",
+        "materialClass": "stone",
+        "materialClassConfidence": 0.92
+      }
+    },
+    {
+      "id": "edge-stair",
+      "name": "Left sloping edge stair",
+      "level": "meso",
+      "role": "surface",
+      "importance": 1,
+      "confidence": 0.5,
+      "primitive": "instanced-cluster",
+      "topologyClass": "assembled-solid",
+      "topologyRationale": "Repeated treads climb the photographed left exterior edge and break the side silhouette.",
+      "geometryDescriptor": {
+        "topologyIntent": "low-poly blockout with bevel-ready edges",
+        "edgeTreatment": {
+          "type": "none",
+          "bevelRadius": 0,
+          "segments": 1
+        },
+        "deformationStack": [],
+        "uvStrategy": "generated procedural coordinates",
+        "normalStrategy": "vertex normals from generated geometry"
+      },
+      "parent": "pyramid-shell",
+      "attachment": null,
+      "dimensions": {
+        "width": 0.75,
+        "height": 16.8,
+        "depth": 0.55,
+        "units": "meters",
+        "confidence": 0.76
+      },
+      "transform": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "actionProfile": {
+        "animationRole": "static",
+        "pivot": {
+          "mode": "center",
+          "localPosition": [
+            0,
+            0,
+            0
+          ],
+          "axis": [
+            0,
+            1,
+            0
+          ],
+          "confidence": 0.5
+        },
+        "transformChannels": {
+          "translate": true,
+          "rotate": true,
+          "scale": true,
+          "bend": false,
+          "twist": false,
+          "detach": false,
+          "visibility": true,
+          "materialState": true
+        },
+        "sockets": [],
+        "collider": {
+          "type": "box",
+          "offset": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "isTrigger": false,
+          "notes": "Replace with sphere/capsule/compound proxy when the object shape demands it."
+        },
+        "constraints": [],
+        "destruction": {
+          "breakable": false,
+          "fractureGroup": "root",
+          "seamRefs": [],
+          "detachableFragments": [],
+          "breakImpulse": 0,
+          "debrisMaterial": "pyramid-stone"
+        }
+      },
+      "material": "pyramid-stone",
+      "materialLayers": [
+        "pyramid-stone"
+      ],
+      "deformations": [],
+      "joints": [],
+      "seams": [],
+      "localFeatures": [
+        {
+          "id": "repeated-treads",
+          "type": "reference-observed",
+          "evidenceRefs": [
+            "full-object"
+          ]
+        }
+      ],
+      "surfaceDetail": {
+        "macroRoughness": 0.18,
+        "microRoughness": 0.11,
+        "bumpAmplitude": 0.035,
+        "normalPattern": "irregular granite grain",
+        "displacementPattern": "",
+        "occlusionPattern": "contact and cavity darkening",
+        "edgeWearPattern": "subtle exposed-edge lightening",
+        "notes": "Observed surface response is explicit but kept GPU-cheap for the 60fps target."
+      },
+      "evidenceRefs": [
+        "full-object"
+      ],
+      "details": [],
+      "fidelityTier": "blockout",
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(157, 125, 108, 1.0)",
+        "secondaryAlbedo": "rgba(111, 87, 78, 1.0)",
+        "materialClass": "stone",
+        "materialClassConfidence": 0.92
+      }
+    },
+    {
+      "id": "west-shell",
+      "name": "Cool shadowed west face",
+      "level": "meso",
+      "role": "surface",
+      "importance": 1,
+      "confidence": 0.5,
+      "primitive": "extrude",
+      "topologyClass": "conforming-shell",
+      "topologyRationale": "The photographed side is a broad planar tapered face with a cooler, darker stone response.",
+      "geometryDescriptor": {
+        "topologyIntent": "low-poly blockout with bevel-ready edges",
+        "edgeTreatment": {
+          "type": "none",
+          "bevelRadius": 0,
+          "segments": 1
+        },
+        "deformationStack": [],
+        "uvStrategy": "generated procedural coordinates",
+        "normalStrategy": "vertex normals from generated geometry"
+      },
+      "parent": "pyramid-shell",
+      "attachment": null,
+      "dimensions": {
+        "width": 19,
+        "height": 16.8,
+        "depth": 0.4,
+        "units": "meters",
+        "confidence": 0.76
+      },
+      "transform": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "actionProfile": {
+        "animationRole": "static",
+        "pivot": {
+          "mode": "center",
+          "localPosition": [
+            0,
+            0,
+            0
+          ],
+          "axis": [
+            0,
+            1,
+            0
+          ],
+          "confidence": 0.5
+        },
+        "transformChannels": {
+          "translate": true,
+          "rotate": true,
+          "scale": true,
+          "bend": false,
+          "twist": false,
+          "detach": false,
+          "visibility": true,
+          "materialState": true
+        },
+        "sockets": [],
+        "collider": {
+          "type": "box",
+          "offset": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "isTrigger": false,
+          "notes": "Replace with sphere/capsule/compound proxy when the object shape demands it."
+        },
+        "constraints": [],
+        "destruction": {
+          "breakable": false,
+          "fractureGroup": "root",
+          "seamRefs": [],
+          "detachableFragments": [],
+          "breakImpulse": 0,
+          "debrisMaterial": "shadow-stone"
+        }
+      },
+      "material": "shadow-stone",
+      "materialLayers": [
+        "shadow-stone"
+      ],
+      "deformations": [],
+      "joints": [],
+      "seams": [],
+      "localFeatures": [],
+      "surfaceDetail": {
+        "macroRoughness": 0.18,
+        "microRoughness": 0.11,
+        "bumpAmplitude": 0.035,
+        "normalPattern": "irregular granite grain",
+        "displacementPattern": "",
+        "occlusionPattern": "contact and cavity darkening",
+        "edgeWearPattern": "subtle exposed-edge lightening",
+        "notes": "Observed surface response is explicit but kept GPU-cheap for the 60fps target."
+      },
+      "evidenceRefs": [
+        "full-object"
+      ],
+      "details": [],
+      "fidelityTier": "blockout",
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(69, 63, 65, 1.0)",
+        "secondaryAlbedo": "rgba(99, 82, 76, 1.0)",
+        "materialClass": "stone",
+        "materialClassConfidence": 0.86
+      }
+    },
+    {
+      "id": "north-shell",
+      "name": "North tapered shell and exit",
+      "level": "meso",
+      "role": "surface",
+      "importance": 1,
+      "confidence": 0.5,
+      "primitive": "extrude",
+      "topologyClass": "conforming-shell",
+      "topologyRationale": "The inferred rear shell completes the pylon while preserving an aligned daylight exit.",
+      "geometryDescriptor": {
+        "topologyIntent": "low-poly blockout with bevel-ready edges",
+        "edgeTreatment": {
+          "type": "none",
+          "bevelRadius": 0,
+          "segments": 1
+        },
+        "deformationStack": [],
+        "uvStrategy": "generated procedural coordinates",
+        "normalStrategy": "vertex normals from generated geometry"
+      },
+      "parent": "pyramid-shell",
+      "attachment": null,
+      "dimensions": {
+        "width": 23,
+        "height": 16.8,
+        "depth": 0.4,
+        "units": "meters",
+        "confidence": 0.76
+      },
+      "transform": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "actionProfile": {
+        "animationRole": "static",
+        "pivot": {
+          "mode": "center",
+          "localPosition": [
+            0,
+            0,
+            0
+          ],
+          "axis": [
+            0,
+            1,
+            0
+          ],
+          "confidence": 0.5
+        },
+        "transformChannels": {
+          "translate": true,
+          "rotate": true,
+          "scale": true,
+          "bend": false,
+          "twist": false,
+          "detach": false,
+          "visibility": true,
+          "materialState": true
+        },
+        "sockets": [],
+        "collider": {
+          "type": "box",
+          "offset": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "isTrigger": false,
+          "notes": "Replace with sphere/capsule/compound proxy when the object shape demands it."
+        },
+        "constraints": [],
+        "destruction": {
+          "breakable": false,
+          "fractureGroup": "root",
+          "seamRefs": [],
+          "detachableFragments": [],
+          "breakImpulse": 0,
+          "debrisMaterial": "pyramid-stone"
+        }
+      },
+      "material": "pyramid-stone",
+      "materialLayers": [
+        "pyramid-stone"
+      ],
+      "deformations": [],
+      "joints": [],
+      "seams": [],
+      "localFeatures": [],
+      "surfaceDetail": {
+        "macroRoughness": 0.18,
+        "microRoughness": 0.11,
+        "bumpAmplitude": 0.035,
+        "normalPattern": "irregular granite grain",
+        "displacementPattern": "",
+        "occlusionPattern": "contact and cavity darkening",
+        "edgeWearPattern": "subtle exposed-edge lightening",
+        "notes": "Observed surface response is explicit but kept GPU-cheap for the 60fps target."
+      },
+      "evidenceRefs": [
+        "full-object"
+      ],
+      "details": [],
+      "fidelityTier": "blockout",
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(157, 125, 108, 1.0)",
+        "secondaryAlbedo": "rgba(111, 87, 78, 1.0)",
+        "materialClass": "stone",
+        "materialClassConfidence": 0.92
+      }
+    }
+  ],
+  "materials": [
+    {
+      "id": "pyramid-stone",
+      "name": "Warm irregular granite",
+      "type": "standard",
+      "shaderModel": "MeshStandardMaterial / PBR approximation",
+      "baseColor": "#9D7D6C",
+      "color": "#9D7D6C",
+      "albedo": {
+        "dominant": "#9D7D6C",
+        "secondary": [
+          "#6F574E",
+          "#9D7D6C"
+        ],
+        "samplingNotes": "Use image-observed local color zones, not a single averaged color."
+      },
+      "colorVariation": {
+        "palette": [
+          "#9D7D6C",
+          "#6F574E",
+          "#C2A99A"
+        ],
+        "pattern": "mottled",
+        "amplitude": 0.15,
+        "heightCorrelation": 0.3
+      },
+      "textureResolution": 1024,
+      "textureProjection": {
+        "mode": "uv",
+        "repeat": [
+          2,
+          2
+        ],
+        "anisotropy": 8,
+        "texelDensityIntent": "Preserve stable world/object-scale detail; do not stretch micro detail with component scale."
+      },
+      "surfaceFrequencyBands": [
+        {
+          "id": "macro",
+          "frequency": 2,
+          "amplitude": 0.42,
+          "role": "broad color and height breakup"
+        },
+        {
+          "id": "meso",
+          "frequency": 12,
+          "amplitude": 0.22,
+          "role": "ridges, pores, grain, dents, or equivalent visible relief"
+        },
+        {
+          "id": "micro",
+          "frequency": 56,
+          "amplitude": 0.08,
+          "role": "highlight breakup visible under grazing light"
+        }
+      ],
+      "roughness": {
+        "base": 0.78,
+        "variation": 0.16,
+        "map": "pyramid-stone-independent-roughness",
+        "localResponse": "cavities stay rougher; exposed edges catch broader highlights"
+      },
+      "metalness": {
+        "base": 0,
+        "variation": 0
+      },
+      "normal": {
+        "pattern": "granite-grain-independent-height",
+        "strength": 0.34,
+        "scale": 22,
+        "space": "tangent"
+      },
+      "bump": {
+        "pattern": "none",
+        "amplitude": 0,
+        "scale": 1
+      },
+      "displacement": {
+        "pattern": "none",
+        "amplitude": 0,
+        "scale": 1,
+        "silhouetteAffects": false
+      },
+      "ambientOcclusion": {
+        "cavityStrength": 0.38,
+        "contactShadowBias": 0.4,
+        "notes": "Independent contact and seam occlusion; never reused from albedo."
+      },
+      "wear": {
+        "edgeWear": 0,
+        "scratches": [],
+        "chips": []
+      },
+      "dirt": {
+        "amount": 0,
+        "cavityBias": 0,
+        "color": "#2F2A22"
+      },
+      "localOverrides": [
+        {
+          "id": "cool-shadow-face",
+          "region": "west-facing shell",
+          "color": "#4F4748",
+          "roughness": 0.82
+        },
+        {
+          "id": "cavity-seams",
+          "region": "slab joints",
+          "color": "#352A28",
+          "roughness": 0.91
+        },
+        {
+          "id": "weathering",
+          "region": "lower courses and vertical runoff",
+          "color": "#765A50",
+          "roughness": 0.86
+        }
+      ],
+      "shaderNotes": [
+        "Prefer MeshPhysicalMaterial when clearcoat, sheen, transmission, or thin-surface response is observed; otherwise use MeshStandardMaterial-compatible PBR channels.",
+        "Generate albedo, roughness, height/normal, and AO independently; never alias albedo into roughness.",
+        "Use normal/bump/displacement only when they map to observed surface relief.",
+        "Use displacement geometry when the observed relief changes the close-up silhouette; texture-only relief is insufficient there."
+      ],
+      "notes": "Replace with image-derived color, roughness, noise, and edge-wear notes.",
+      "qualityTier": "reference-fidelity",
+      "referencePbr": {
+        "version": "1",
+        "sourceImage": "/Users/eric/codeprojects/StarAxis/sculpt/reference-review/pyramid-reference.png",
+        "extractor": "extract_pbr_evidence.py",
+        "method": "single-image reference-pixel estimate",
+        "verdict": "pass",
+        "usable": true,
+        "confidence": 0.86,
+        "estimatedFidelity": 0.86,
+        "targetThreshold": 0.7,
+        "hardLimit": "Source contains sky; maps are evidence and palette guidance, not direct full-face textures.",
+        "maps": {
+          "albedo": {
+            "path": "/Users/eric/codeprojects/StarAxis/sculpt/reference-review/pbr/pyramid-stone_albedo.png",
+            "channel": "albedo"
+          },
+          "roughness": {
+            "path": "/Users/eric/codeprojects/StarAxis/sculpt/reference-review/pbr/pyramid-stone_roughness.png",
+            "channel": "roughness"
+          },
+          "height": {
+            "path": "/Users/eric/codeprojects/StarAxis/sculpt/reference-review/pbr/pyramid-stone_height.png",
+            "channel": "height"
+          },
+          "normal": {
+            "path": "/Users/eric/codeprojects/StarAxis/sculpt/reference-review/pbr/pyramid-stone_normal.png",
+            "channel": "normal"
+          },
+          "ao": {
+            "path": "/Users/eric/codeprojects/StarAxis/sculpt/reference-review/pbr/pyramid-stone_ao.png",
+            "channel": "ao"
+          }
+        }
+      }
+    },
+    {
+      "id": "shadow-stone",
+      "name": "Cool shadowed granite",
+      "type": "standard",
+      "shaderModel": "MeshStandardMaterial / PBR approximation",
+      "baseColor": "#454042",
+      "color": "#454042",
+      "albedo": {
+        "dominant": "#454042",
+        "secondary": [
+          "#2F2B2D",
+          "#454042"
+        ],
+        "samplingNotes": "Use image-observed local color zones, not a single averaged color."
+      },
+      "colorVariation": {
+        "palette": [
+          "#454042",
+          "#2F2B2D",
+          "#C2A99A"
+        ],
+        "pattern": "mottled",
+        "amplitude": 0.15,
+        "heightCorrelation": 0.3
+      },
+      "textureResolution": 1024,
+      "textureProjection": {
+        "mode": "uv",
+        "repeat": [
+          2,
+          2
+        ],
+        "anisotropy": 8,
+        "texelDensityIntent": "Preserve stable world/object-scale detail; do not stretch micro detail with component scale."
+      },
+      "surfaceFrequencyBands": [
+        {
+          "id": "macro",
+          "frequency": 2,
+          "amplitude": 0.42,
+          "role": "broad color and height breakup"
+        },
+        {
+          "id": "meso",
+          "frequency": 12,
+          "amplitude": 0.22,
+          "role": "ridges, pores, grain, dents, or equivalent visible relief"
+        },
+        {
+          "id": "micro",
+          "frequency": 56,
+          "amplitude": 0.08,
+          "role": "highlight breakup visible under grazing light"
+        }
+      ],
+      "roughness": {
+        "base": 0.78,
+        "variation": 0.16,
+        "map": "shadow-stone-independent-roughness",
+        "localResponse": "cavities stay rougher; exposed edges catch broader highlights"
+      },
+      "metalness": {
+        "base": 0,
+        "variation": 0
+      },
+      "normal": {
+        "pattern": "granite-grain-independent-height",
+        "strength": 0.34,
+        "scale": 22,
+        "space": "tangent"
+      },
+      "bump": {
+        "pattern": "none",
+        "amplitude": 0,
+        "scale": 1
+      },
+      "displacement": {
+        "pattern": "none",
+        "amplitude": 0,
+        "scale": 1,
+        "silhouetteAffects": false
+      },
+      "ambientOcclusion": {
+        "cavityStrength": 0.38,
+        "contactShadowBias": 0.4,
+        "notes": "Independent contact and seam occlusion; never reused from albedo."
+      },
+      "wear": {
+        "edgeWear": 0,
+        "scratches": [],
+        "chips": []
+      },
+      "dirt": {
+        "amount": 0,
+        "cavityBias": 0,
+        "color": "#2F2A22"
+      },
+      "localOverrides": [
+        {
+          "id": "shadow-stone-contact-zone",
+          "region": "contacts and recesses",
+          "color": "#2F2B2D",
+          "roughness": 0.82
+        }
+      ],
+      "shaderNotes": [
+        "Prefer MeshPhysicalMaterial when clearcoat, sheen, transmission, or thin-surface response is observed; otherwise use MeshStandardMaterial-compatible PBR channels.",
+        "Generate albedo, roughness, height/normal, and AO independently; never alias albedo into roughness.",
+        "Use normal/bump/displacement only when they map to observed surface relief.",
+        "Use displacement geometry when the observed relief changes the close-up silhouette; texture-only relief is insufficient there."
+      ],
+      "notes": "Replace with image-derived color, roughness, noise, and edge-wear notes.",
+      "qualityTier": "utility",
+      "referencePbr": {
+        "version": "1",
+        "sourceImage": "/Users/eric/codeprojects/StarAxis/sculpt/reference-review/pyramid-reference.png",
+        "extractor": "extract_pbr_evidence.py",
+        "method": "single-image reference-pixel estimate",
+        "verdict": "pass",
+        "usable": true,
+        "confidence": 0.86,
+        "estimatedFidelity": 0.86,
+        "targetThreshold": 0.7,
+        "hardLimit": "Source contains sky; maps are evidence and palette guidance, not direct full-face textures.",
+        "maps": {
+          "albedo": {
+            "path": "/Users/eric/codeprojects/StarAxis/sculpt/reference-review/pbr/pyramid-stone_albedo.png",
+            "channel": "albedo"
+          },
+          "roughness": {
+            "path": "/Users/eric/codeprojects/StarAxis/sculpt/reference-review/pbr/pyramid-stone_roughness.png",
+            "channel": "roughness"
+          },
+          "height": {
+            "path": "/Users/eric/codeprojects/StarAxis/sculpt/reference-review/pbr/pyramid-stone_height.png",
+            "channel": "height"
+          },
+          "normal": {
+            "path": "/Users/eric/codeprojects/StarAxis/sculpt/reference-review/pbr/pyramid-stone_normal.png",
+            "channel": "normal"
+          },
+          "ao": {
+            "path": "/Users/eric/codeprojects/StarAxis/sculpt/reference-review/pbr/pyramid-stone_ao.png",
+            "channel": "ao"
+          }
+        }
+      }
+    },
+    {
+      "id": "stainless",
+      "name": "Brushed stainless sight metal",
+      "type": "standard",
+      "shaderModel": "MeshStandardMaterial / PBR approximation",
+      "baseColor": "#9BA0A4",
+      "color": "#9BA0A4",
+      "albedo": {
+        "dominant": "#9BA0A4",
+        "secondary": [
+          "#5C6369",
+          "#9BA0A4"
+        ],
+        "samplingNotes": "Use image-observed local color zones, not a single averaged color."
+      },
+      "colorVariation": {
+        "palette": [
+          "#9BA0A4",
+          "#5C6369",
+          "#C2A99A"
+        ],
+        "pattern": "mottled",
+        "amplitude": 0.15,
+        "heightCorrelation": 0.3
+      },
+      "textureResolution": 1024,
+      "textureProjection": {
+        "mode": "uv",
+        "repeat": [
+          2,
+          2
+        ],
+        "anisotropy": 8,
+        "texelDensityIntent": "Preserve stable world/object-scale detail; do not stretch micro detail with component scale."
+      },
+      "surfaceFrequencyBands": [
+        {
+          "id": "macro",
+          "frequency": 2,
+          "amplitude": 0.42,
+          "role": "broad color and height breakup"
+        },
+        {
+          "id": "meso",
+          "frequency": 12,
+          "amplitude": 0.22,
+          "role": "ridges, pores, grain, dents, or equivalent visible relief"
+        },
+        {
+          "id": "micro",
+          "frequency": 56,
+          "amplitude": 0.08,
+          "role": "highlight breakup visible under grazing light"
+        }
+      ],
+      "roughness": {
+        "base": 0.34,
+        "variation": 0.08,
+        "map": "stainless-independent-roughness",
+        "localResponse": "cavities stay rougher; exposed edges catch broader highlights"
+      },
+      "metalness": {
+        "base": 0,
+        "variation": 0
+      },
+      "normal": {
+        "pattern": "fine-brushed-rings",
+        "strength": 0.12,
+        "scale": 80,
+        "space": "tangent"
+      },
+      "bump": {
+        "pattern": "none",
+        "amplitude": 0,
+        "scale": 1
+      },
+      "displacement": {
+        "pattern": "none",
+        "amplitude": 0,
+        "scale": 1,
+        "silhouetteAffects": false
+      },
+      "ambientOcclusion": {
+        "cavityStrength": 0.12,
+        "contactShadowBias": 0.4,
+        "notes": "Independent contact and seam occlusion; never reused from albedo."
+      },
+      "wear": {
+        "edgeWear": 0,
+        "scratches": [],
+        "chips": []
+      },
+      "dirt": {
+        "amount": 0,
+        "cavityBias": 0,
+        "color": "#2F2A22"
+      },
+      "localOverrides": [
+        {
+          "id": "stainless-contact-zone",
+          "region": "contacts and recesses",
+          "color": "#5C6369",
+          "roughness": 0.82
+        }
+      ],
+      "shaderNotes": [
+        "Prefer MeshPhysicalMaterial when clearcoat, sheen, transmission, or thin-surface response is observed; otherwise use MeshStandardMaterial-compatible PBR channels.",
+        "Generate albedo, roughness, height/normal, and AO independently; never alias albedo into roughness.",
+        "Use normal/bump/displacement only when they map to observed surface relief.",
+        "Use displacement geometry when the observed relief changes the close-up silhouette; texture-only relief is insufficient there."
+      ],
+      "notes": "Replace with image-derived color, roughness, noise, and edge-wear notes.",
+      "qualityTier": "utility",
+      "referencePbr": {
+        "version": "1",
+        "sourceImage": "/Users/eric/codeprojects/StarAxis/sculpt/reference-review/pyramid-reference.png",
+        "extractor": "extract_pbr_evidence.py",
+        "method": "single-image reference-pixel estimate",
+        "verdict": "pass",
+        "usable": true,
+        "confidence": 0.86,
+        "estimatedFidelity": 0.86,
+        "targetThreshold": 0.7,
+        "hardLimit": "Source contains sky; maps are evidence and palette guidance, not direct full-face textures.",
+        "maps": {
+          "albedo": {
+            "path": "/Users/eric/codeprojects/StarAxis/sculpt/reference-review/pbr/pyramid-stone_albedo.png",
+            "channel": "albedo"
+          },
+          "roughness": {
+            "path": "/Users/eric/codeprojects/StarAxis/sculpt/reference-review/pbr/pyramid-stone_roughness.png",
+            "channel": "roughness"
+          },
+          "height": {
+            "path": "/Users/eric/codeprojects/StarAxis/sculpt/reference-review/pbr/pyramid-stone_height.png",
+            "channel": "height"
+          },
+          "normal": {
+            "path": "/Users/eric/codeprojects/StarAxis/sculpt/reference-review/pbr/pyramid-stone_normal.png",
+            "channel": "normal"
+          },
+          "ao": {
+            "path": "/Users/eric/codeprojects/StarAxis/sculpt/reference-review/pbr/pyramid-stone_ao.png",
+            "channel": "ao"
+          }
+        }
+      }
+    },
+    {
+      "id": "chamber-dark",
+      "name": "Dark interior masonry",
+      "type": "standard",
+      "shaderModel": "MeshStandardMaterial / PBR approximation",
+      "baseColor": "#1C1816",
+      "color": "#1C1816",
+      "albedo": {
+        "dominant": "#1C1816",
+        "secondary": [
+          "#302722",
+          "#1C1816"
+        ],
+        "samplingNotes": "Use image-observed local color zones, not a single averaged color."
+      },
+      "colorVariation": {
+        "palette": [
+          "#1C1816",
+          "#302722",
+          "#C2A99A"
+        ],
+        "pattern": "mottled",
+        "amplitude": 0.15,
+        "heightCorrelation": 0.3
+      },
+      "textureResolution": 1024,
+      "textureProjection": {
+        "mode": "uv",
+        "repeat": [
+          2,
+          2
+        ],
+        "anisotropy": 8,
+        "texelDensityIntent": "Preserve stable world/object-scale detail; do not stretch micro detail with component scale."
+      },
+      "surfaceFrequencyBands": [
+        {
+          "id": "macro",
+          "frequency": 2,
+          "amplitude": 0.42,
+          "role": "broad color and height breakup"
+        },
+        {
+          "id": "meso",
+          "frequency": 12,
+          "amplitude": 0.22,
+          "role": "ridges, pores, grain, dents, or equivalent visible relief"
+        },
+        {
+          "id": "micro",
+          "frequency": 56,
+          "amplitude": 0.08,
+          "role": "highlight breakup visible under grazing light"
+        }
+      ],
+      "roughness": {
+        "base": 0.78,
+        "variation": 0.16,
+        "map": "chamber-dark-independent-roughness",
+        "localResponse": "cavities stay rougher; exposed edges catch broader highlights"
+      },
+      "metalness": {
+        "base": 0,
+        "variation": 0
+      },
+      "normal": {
+        "pattern": "granite-grain-independent-height",
+        "strength": 0.34,
+        "scale": 22,
+        "space": "tangent"
+      },
+      "bump": {
+        "pattern": "none",
+        "amplitude": 0,
+        "scale": 1
+      },
+      "displacement": {
+        "pattern": "none",
+        "amplitude": 0,
+        "scale": 1,
+        "silhouetteAffects": false
+      },
+      "ambientOcclusion": {
+        "cavityStrength": 0.38,
+        "contactShadowBias": 0.4,
+        "notes": "Independent contact and seam occlusion; never reused from albedo."
+      },
+      "wear": {
+        "edgeWear": 0,
+        "scratches": [],
+        "chips": []
+      },
+      "dirt": {
+        "amount": 0,
+        "cavityBias": 0,
+        "color": "#2F2A22"
+      },
+      "localOverrides": [
+        {
+          "id": "chamber-dark-contact-zone",
+          "region": "contacts and recesses",
+          "color": "#302722",
+          "roughness": 0.82
+        }
+      ],
+      "shaderNotes": [
+        "Prefer MeshPhysicalMaterial when clearcoat, sheen, transmission, or thin-surface response is observed; otherwise use MeshStandardMaterial-compatible PBR channels.",
+        "Generate albedo, roughness, height/normal, and AO independently; never alias albedo into roughness.",
+        "Use normal/bump/displacement only when they map to observed surface relief.",
+        "Use displacement geometry when the observed relief changes the close-up silhouette; texture-only relief is insufficient there."
+      ],
+      "notes": "Replace with image-derived color, roughness, noise, and edge-wear notes.",
+      "qualityTier": "utility",
+      "referencePbr": {
+        "version": "1",
+        "sourceImage": "/Users/eric/codeprojects/StarAxis/sculpt/reference-review/pyramid-reference.png",
+        "extractor": "extract_pbr_evidence.py",
+        "method": "single-image reference-pixel estimate",
+        "verdict": "pass",
+        "usable": true,
+        "confidence": 0.86,
+        "estimatedFidelity": 0.86,
+        "targetThreshold": 0.7,
+        "hardLimit": "Source contains sky; maps are evidence and palette guidance, not direct full-face textures.",
+        "maps": {
+          "albedo": {
+            "path": "/Users/eric/codeprojects/StarAxis/sculpt/reference-review/pbr/pyramid-stone_albedo.png",
+            "channel": "albedo"
+          },
+          "roughness": {
+            "path": "/Users/eric/codeprojects/StarAxis/sculpt/reference-review/pbr/pyramid-stone_roughness.png",
+            "channel": "roughness"
+          },
+          "height": {
+            "path": "/Users/eric/codeprojects/StarAxis/sculpt/reference-review/pbr/pyramid-stone_height.png",
+            "channel": "height"
+          },
+          "normal": {
+            "path": "/Users/eric/codeprojects/StarAxis/sculpt/reference-review/pbr/pyramid-stone_normal.png",
+            "channel": "normal"
+          },
+          "ao": {
+            "path": "/Users/eric/codeprojects/StarAxis/sculpt/reference-review/pbr/pyramid-stone_ao.png",
+            "channel": "ao"
+          }
+        }
+      }
+    }
+  ],
+  "repetitionSystems": [
+    {
+      "id": "edge-stair-treads",
+      "name": "Left edge stair treads",
+      "componentRef": "edge-stair",
+      "primitive": "box",
+      "count": 54,
+      "distribution": "linear along the left sloped exterior edge",
+      "variation": "fixed tread rhythm with a narrow landing near the summit",
+      "evidenceRefs": [
+        "full-object"
+      ]
+    },
+    {
+      "id": "irregular-slab-courses",
+      "name": "Irregular granite slab courses",
+      "componentRef": "stone-cladding",
+      "primitive": "instanced-cluster",
+      "count": 96,
+      "distribution": "staggered horizontal courses clipped to the tapered front and side faces",
+      "variation": "deterministic width, height, inset, and warm/cool value changes",
+      "evidenceRefs": [
+        "full-object"
+      ]
+    }
+  ],
+  "buildPasses": [
+    {
+      "id": "blockout",
+      "goal": "Match macro silhouette and proportions.",
+      "componentRefs": [
+        "site-root",
+        "pyramid-shell",
+        "star-tunnel",
+        "hour-chamber",
+        "south-entrance",
+        "upper-sight-box",
+        "solar-oculus",
+        "summit-rods",
+        "stone-cladding",
+        "edge-stair",
+        "west-shell",
+        "north-shell"
+      ],
+      "acceptance": [
+        "Silhouette reads correctly without materials.",
+        "Quality contract has named all required macro feature groups before code generation.",
+        "AI vision comparison score meets selfCorrectLoop.visualAcceptance.threshold."
+      ]
+    },
+    {
+      "id": "structural-pass",
+      "goal": "Build the component hierarchy implied by the pre-spec complexity assessment.",
+      "componentRefs": [
+        "site-root",
+        "pyramid-shell",
+        "star-tunnel",
+        "hour-chamber",
+        "south-entrance",
+        "upper-sight-box",
+        "solar-oculus",
+        "summit-rods",
+        "stone-cladding",
+        "edge-stair",
+        "west-shell",
+        "north-shell"
+      ],
+      "acceptance": [
+        "Macro, meso, and repeated structures meet qualityContract.minimumSpecDepth.",
+        "Parent-child relations, joints, seams, sockets, and contact points are explicit.",
+        "Every attached child appendage/connector has parentSocket, localStart/localEnd, contactType, embedDepth or overlap, and gapTolerance.",
+        "AI vision comparison score meets selfCorrectLoop.visualAcceptance.threshold."
+      ]
+    },
+    {
+      "id": "form-refinement",
+      "goal": "Refine shape, deformation, bevels, tapers, curves, asymmetry, and visible local geometry.",
+      "componentRefs": [
+        "site-root",
+        "pyramid-shell",
+        "star-tunnel",
+        "hour-chamber",
+        "south-entrance",
+        "upper-sight-box",
+        "solar-oculus",
+        "summit-rods",
+        "stone-cladding",
+        "edge-stair",
+        "west-shell",
+        "north-shell"
+      ],
+      "acceptance": [
+        "Important visible forms are represented in component geometryDescriptor, deformations, localFeatures, or repetitionSystems.",
+        "Endpoint-based child parts are rooted at their attachment sockets and do not visibly float away from parents.",
+        "AI vision comparison score meets selfCorrectLoop.visualAcceptance.threshold."
+      ]
+    },
+    {
+      "id": "material-pass",
+      "goal": "Match material color, roughness, bump, and local variation.",
+      "componentRefs": [
+        "site-root",
+        "pyramid-shell",
+        "star-tunnel",
+        "hour-chamber",
+        "south-entrance",
+        "upper-sight-box",
+        "solar-oculus",
+        "summit-rods",
+        "stone-cladding",
+        "edge-stair",
+        "west-shell",
+        "north-shell"
+      ],
+      "acceptance": [
+        "Reference-derived albedo palette records dominant, secondary, and accent colors per visible material.",
+        "Each important material defines roughness variation and at least one normal/bump/displacement response.",
+        "Local material overrides, dirt/wear/stains/moss/chips/scratches or equivalent masks are tied to evidenceRefs.",
+        "Thin, transparent, reflective, wet, or fibrous materials document alpha/transmission/clearcoat/metalness/fiber response when relevant.",
+        "Generated preview uses procedural albedo/roughness/bump texture or vertex color variation instead of one flat color.",
+        "Generated preview uses independent PBR maps at 1024px or higher for the quality-first tier.",
+        "If source pixels are available, referencePbr extraction passed at confidence >= 0.7 or the pass is stopped/requesting better references.",
+        "Macro, meso, and micro surface frequency bands are visible at the intended review distance without obvious tiling.",
+        "AI vision comparison score meets selfCorrectLoop.visualAcceptance.threshold."
+      ]
+    },
+    {
+      "id": "surface-pass",
+      "goal": "Add procedural surface locality such as normal/bump/displacement, AO, dirt, stains, chips, grain, moss, scratches, and wear.",
+      "componentRefs": [
+        "site-root",
+        "pyramid-shell",
+        "star-tunnel",
+        "hour-chamber",
+        "south-entrance",
+        "upper-sight-box",
+        "solar-oculus",
+        "summit-rods",
+        "stone-cladding",
+        "edge-stair",
+        "west-shell",
+        "north-shell"
+      ],
+      "acceptance": [
+        "Every required material feature group has local overrides or surfaceDetail tied to evidenceRefs.",
+        "A grazing-angle close-up proves that normal/height detail breaks highlights naturally and does not read as smooth plastic.",
+        "AI vision comparison score meets selfCorrectLoop.visualAcceptance.threshold."
+      ]
+    },
+    {
+      "id": "lighting-pass",
+      "goal": "Make material and form readable under neutral turntable lighting plus optional reference lighting.",
+      "componentRefs": [
+        "site-root",
+        "pyramid-shell",
+        "star-tunnel",
+        "hour-chamber",
+        "south-entrance",
+        "upper-sight-box",
+        "solar-oculus",
+        "summit-rods",
+        "stone-cladding",
+        "edge-stair",
+        "west-shell",
+        "north-shell"
+      ],
+      "acceptance": [
+        "lightingFromPhoto identifies key light direction/color/intensity, fill light, rim or environment light, and ambient color.",
+        "Exposure, tone mapping, background color/gradient, shadow softness, and contact shadow behavior are specified.",
+        "Lighting does not hide geometry/material gaps and screenshots can be compared fairly to the reference.",
+        "Neutral, grazing, and reference-matched lighting checks distinguish material errors from lighting errors.",
+        "AI vision comparison score meets selfCorrectLoop.visualAcceptance.threshold."
+      ]
+    },
+    {
+      "id": "interaction-pass",
+      "goal": "Make the model ready for future animation, transformation, physics, or destruction.",
+      "componentRefs": [
+        "site-root",
+        "pyramid-shell",
+        "star-tunnel",
+        "hour-chamber",
+        "south-entrance",
+        "upper-sight-box",
+        "solar-oculus",
+        "summit-rods",
+        "stone-cladding",
+        "edge-stair",
+        "west-shell",
+        "north-shell"
+      ],
+      "acceptance": [
+        "Macro and movable meso components have stable pivot nodes.",
+        "Sockets, collider proxies, and destruction metadata are present for future runtime actions.",
+        "AI vision comparison score meets selfCorrectLoop.visualAcceptance.threshold."
+      ]
+    },
+    {
+      "id": "optimization-pass",
+      "goal": "Protect runtime performance after visual fidelity is accepted.",
+      "componentRefs": [
+        "site-root",
+        "pyramid-shell",
+        "star-tunnel",
+        "hour-chamber",
+        "south-entrance",
+        "upper-sight-box",
+        "solar-oculus",
+        "summit-rods",
+        "stone-cladding",
+        "edge-stair",
+        "west-shell",
+        "north-shell"
+      ],
+      "acceptance": [
+        "Triangle count, draw calls, instancing, LOD strategy, and FPS target are documented or verified.",
+        "Repeated detail is instanced or simplified where possible without breaking silhouette/material believability."
+      ]
+    }
+  ],
+  "visualEvidence": [
+    {
+      "timestamp": "2026-07-23T16:28:18.616083+00:00",
+      "passId": "blockout",
+      "estimatedFidelity": 0.84,
+      "aiVisionScore": 0.84,
+      "visualAcceptanceThreshold": 0.7,
+      "layerScores": {
+        "silhouetteProportion": 0.88,
+        "componentStructure": 0.84,
+        "formDetail": 0.8,
+        "materialSurface": 0.55,
+        "lightingCamera": 0.82
+      },
+      "featureReviews": [
+        {
+          "id": "truncated-pylon-silhouette",
+          "score": 0.88,
+          "visible": true,
+          "notes": "The broad base, steep taper, narrow flat summit, long shadowed side, and receding edge stair match the reference silhouette. The camera is close enough for a direct portrait comparison."
+        }
+      ],
+      "referenceScreenshot": "sculpt/reference-review/pyramid-reference.png",
+      "renderScreenshot": "sculpt/reference-review/render-pyramid-blockout-review-deep-final.png",
+      "comparisonImage": "sculpt/reference-review/comparison-blockout.png",
+      "cameraView": "front-left low three-quarter portrait",
+      "notes": "Reference and render share a portrait crop and low three-quarter view.",
+      "aiVisionNotes": "Macro shape is now recognizably the Star Axis Solar Pyramid. Remaining visible differences are material granularity and minor upper-opening scale, which are later-pass concerns."
+    },
+    {
+      "timestamp": "2026-07-23T17:01:44.987271+00:00",
+      "passId": "structural-pass",
+      "estimatedFidelity": 0.87,
+      "aiVisionScore": 0.87,
+      "visualAcceptanceThreshold": 0.7,
+      "layerScores": {
+        "silhouetteProportion": 0.89,
+        "componentStructure": 0.91,
+        "formDetail": 0.84,
+        "materialSurface": 0.76,
+        "lightingCamera": 0.83
+      },
+      "featureReviews": [
+        {
+          "id": "dual-sighting-openings",
+          "score": 0.86,
+          "visible": true,
+          "notes": "The rectangular upper sight box, short circular oculus, and enlarged Star Tunnel aperture are all explicit, unobstructed components."
+        },
+        {
+          "id": "hour-chamber-entry",
+          "score": 0.91,
+          "visible": true,
+          "notes": "The grade-level triangular entrance is continuous with a complete chamber floor, paired walls, ceiling, and aligned north daylight exit."
+        }
+      ],
+      "referenceScreenshot": "sculpt/reference-review/pyramid-reference.png",
+      "renderScreenshot": "sculpt/reference-review/render-pyramid-material-baked-final.png",
+      "comparisonImage": "sculpt/reference-review/comparison-material-final.png",
+      "cameraView": "front-left low three-quarter plus first-person aperture/interior evidence",
+      "notes": "The reference-angle comparison and visitor views were inspected together.",
+      "aiVisionNotes": "The exterior comparison shows all major structural systems in the correct hierarchy; the first-person evidence confirms the sightlines and through-passage are real openings rather than visual facades."
+    },
+    {
+      "timestamp": "2026-07-23T17:02:04.030091+00:00",
+      "passId": "form-refinement",
+      "estimatedFidelity": 0.84,
+      "aiVisionScore": 0.84,
+      "visualAcceptanceThreshold": 0.7,
+      "layerScores": {
+        "silhouetteProportion": 0.89,
+        "componentStructure": 0.88,
+        "formDetail": 0.84,
+        "materialSurface": 0.78,
+        "lightingCamera": 0.84
+      },
+      "featureReviews": [
+        {
+          "id": "dual-sighting-openings",
+          "score": 0.86,
+          "visible": true,
+          "notes": "The photographed separation between the upper rectangular cavity and shallow projecting oculus is preserved, while the Star Tunnel is kept short enough to read as an aperture rather than a long tube."
+        },
+        {
+          "id": "edge-stair-and-summit",
+          "score": 0.8,
+          "visible": true,
+          "notes": "The receding left-edge stair and two summit rods restore the recognizable secondary silhouette details from the reference."
+        }
+      ],
+      "referenceScreenshot": "sculpt/reference-review/pyramid-reference.png",
+      "renderScreenshot": "sculpt/reference-review/render-pyramid-material-baked-final.png",
+      "comparisonImage": "sculpt/reference-review/comparison-material-final.png",
+      "cameraView": "front-left low three-quarter portrait",
+      "notes": "Low-angle framing makes the stair, summit, openings, and cladding organization directly comparable.",
+      "aiVisionNotes": "The reference and render share the steep truncated form and the most recognizable local features. The remaining simplification is micro-scale weathering rather than missing identity features."
+    },
+    {
+      "timestamp": "2026-07-23T17:02:34.289499+00:00",
+      "passId": "material-pass",
+      "estimatedFidelity": 0.82,
+      "aiVisionScore": 0.82,
+      "visualAcceptanceThreshold": 0.7,
+      "layerScores": {
+        "silhouetteProportion": 0.89,
+        "componentStructure": 0.88,
+        "formDetail": 0.84,
+        "materialSurface": 0.82,
+        "lightingCamera": 0.84
+      },
+      "featureReviews": [
+        {
+          "id": "granite-cladding-system",
+          "score": 0.8,
+          "visible": true,
+          "notes": "The front shell now uses a baked pale pink-beige granite albedo, dark recessed joints, and a cooler shadowed side instead of the former uniform procedural checker."
+        }
+      ],
+      "referenceScreenshot": "sculpt/reference-review/pyramid-reference.png",
+      "renderScreenshot": "sculpt/reference-review/render-pyramid-material-baked-final.png",
+      "comparisonImage": "sculpt/reference-review/comparison-material-final.png",
+      "cameraView": "front-left low three-quarter portrait",
+      "notes": "Baked albedo is visible across the front cladding without the former runtime checker/noise cost.",
+      "aiVisionNotes": "The baked granite retains the warm front-face palette and fine mineral variation while the shadowed side and cavities remain clearly differentiated. Tier-1 material delta-E is below threshold."
+    },
+    {
+      "timestamp": "2026-07-23T17:02:49.157727+00:00",
+      "passId": "surface-pass",
+      "estimatedFidelity": 0.8,
+      "aiVisionScore": 0.8,
+      "visualAcceptanceThreshold": 0.7,
+      "layerScores": {
+        "silhouetteProportion": 0.89,
+        "componentStructure": 0.88,
+        "formDetail": 0.83,
+        "materialSurface": 0.8,
+        "lightingCamera": 0.84
+      },
+      "featureReviews": [
+        {
+          "id": "granite-cladding-system",
+          "score": 0.78,
+          "visible": true,
+          "notes": "Irregular course breaks and varied vertical joints reproduce the photographed slab organization without expensive per-frame shader noise."
+        }
+      ],
+      "referenceScreenshot": "sculpt/reference-review/pyramid-reference.png",
+      "renderScreenshot": "sculpt/reference-review/render-pyramid-material-baked-final.png",
+      "comparisonImage": "sculpt/reference-review/comparison-material-final.png",
+      "cameraView": "front-left low three-quarter portrait",
+      "notes": "The same full-object pair was used so joint scale and distribution remain comparable.",
+      "aiVisionNotes": "The reference-defining slab courses now read as intentionally irregular instead of a uniform grid. The baked texture adds subtle grain and avoids obvious procedural shimmer."
+    },
+    {
+      "timestamp": "2026-07-23T17:03:06.585223+00:00",
+      "passId": "lighting-pass",
+      "estimatedFidelity": 0.82,
+      "aiVisionScore": 0.82,
+      "visualAcceptanceThreshold": 0.7,
+      "layerScores": {
+        "silhouetteProportion": 0.89,
+        "componentStructure": 0.87,
+        "formDetail": 0.82,
+        "materialSurface": 0.8,
+        "lightingCamera": 0.84
+      },
+      "featureReviews": [],
+      "referenceScreenshot": "sculpt/reference-review/pyramid-reference.png",
+      "renderScreenshot": "sculpt/reference-review/render-pyramid-material-baked-final.png",
+      "comparisonImage": "sculpt/reference-review/comparison-material-final.png",
+      "cameraView": "front-left low three-quarter portrait",
+      "notes": "Lighting direction and low-angle camera are comparable to the supplied exterior photograph.",
+      "aiVisionNotes": "The front face reads as warm sunlit granite while the long side remains cool and dimensional. Openings stay black enough for depth but do not hide their geometry."
+    },
+    {
+      "timestamp": "2026-07-23T17:03:26.871616+00:00",
+      "passId": "interaction-pass",
+      "estimatedFidelity": 0.92,
+      "aiVisionScore": 0.92,
+      "visualAcceptanceThreshold": 0.7,
+      "layerScores": {
+        "silhouetteProportion": 0.9,
+        "componentStructure": 0.94,
+        "formDetail": 0.88,
+        "materialSurface": 0.8,
+        "lightingCamera": 0.88
+      },
+      "featureReviews": [
+        {
+          "id": "hour-chamber-entry",
+          "score": 0.94,
+          "visible": true,
+          "notes": "First-person review confirms an uninterrupted walkable route from the south triangular entry through the complete interior to visible north-side daylight."
+        }
+      ],
+      "referenceScreenshot": "sculpt/reference-review/pyramid-reference.png",
+      "renderScreenshot": "sculpt/reference-review/render-hour-chamber-entry-final.png",
+      "comparisonImage": "sculpt/reference-review/comparison-material-final.png",
+      "cameraView": "first-person visitor eye height plus reference exterior",
+      "notes": "Traversal evidence was reviewed at both the Star Tunnel and the south-to-north pyramid route.",
+      "aiVisionNotes": "The visitor views show uninterrupted sight through the enlarged circular Star Tunnel and through the pyramid chamber. No wall facade closes either route, and both corridor side walls are present."
+    },
+    {
+      "timestamp": "2026-07-23T17:03:56.937099+00:00",
+      "passId": "optimization-pass",
+      "estimatedFidelity": 0.96,
+      "aiVisionScore": null,
+      "visualAcceptanceThreshold": 0.7,
+      "layerScores": {},
+      "featureReviews": [],
+      "referenceScreenshot": "/Users/eric/codeprojects/StarAxis/sculpt/reference-review/pyramid-reference.png",
+      "renderScreenshot": "",
+      "comparisonImage": "",
+      "cameraView": "",
+      "notes": "",
+      "aiVisionNotes": "Performance optimization preserves the accepted silhouette, openings, cladding joints, and interior traversal."
+    }
+  ],
+  "reviewHistory": [
+    {
+      "timestamp": "2026-07-23T16:28:18.616083+00:00",
+      "passId": "blockout",
+      "estimatedFidelity": 0.84,
+      "aiVisionScore": 0.84,
+      "visualAcceptanceThreshold": 0.7,
+      "layerScores": {
+        "silhouetteProportion": 0.88,
+        "componentStructure": 0.84,
+        "formDetail": 0.8,
+        "materialSurface": 0.55,
+        "lightingCamera": 0.82
+      },
+      "featureReviews": [
+        {
+          "id": "truncated-pylon-silhouette",
+          "score": 0.88,
+          "visible": true,
+          "notes": "The broad base, steep taper, narrow flat summit, long shadowed side, and receding edge stair match the reference silhouette. The camera is close enough for a direct portrait comparison."
+        }
+      ],
+      "action": "continue",
+      "summary": "Reference-angle review confirms the pointed pyramid has been replaced by the correct truncated pylon silhouette.",
+      "matched": [
+        "steep tapered pylon silhouette",
+        "narrow flat summit",
+        "deep shadowed side mass",
+        "grade-level triangular entry",
+        "receding left edge stair"
+      ],
+      "mismatches": [
+        "material and fine masonry relief remain for later passes"
+      ],
+      "specFixes": [],
+      "codeFixes": [],
+      "evidence": [
+        "sculpt/reference-review/pyramid-reference.png",
+        "sculpt/reference-review/render-pyramid-blockout-review-deep-final.png",
+        "sculpt/reference-review/comparison-blockout.png",
+        "sculpt/reference-review/pyramid-reference-manual-silhouette.png",
+        "sculpt/reference-review/render-pyramid-manual-silhouette.png"
+      ],
+      "visualEvidence": {
+        "referenceScreenshot": "sculpt/reference-review/pyramid-reference.png",
+        "renderScreenshot": "sculpt/reference-review/render-pyramid-blockout-review-deep-final.png",
+        "comparisonImage": "sculpt/reference-review/comparison-blockout.png",
+        "cameraView": "front-left low three-quarter portrait",
+        "notes": "Reference and render share a portrait crop and low three-quarter view.",
+        "aiVisionNotes": "Macro shape is now recognizably the Star Axis Solar Pyramid. Remaining visible differences are material granularity and minor upper-opening scale, which are later-pass concerns."
+      }
+    },
+    {
+      "timestamp": "2026-07-23T17:01:44.987271+00:00",
+      "passId": "structural-pass",
+      "estimatedFidelity": 0.87,
+      "aiVisionScore": 0.87,
+      "visualAcceptanceThreshold": 0.7,
+      "layerScores": {
+        "silhouetteProportion": 0.89,
+        "componentStructure": 0.91,
+        "formDetail": 0.84,
+        "materialSurface": 0.76,
+        "lightingCamera": 0.83
+      },
+      "featureReviews": [
+        {
+          "id": "dual-sighting-openings",
+          "score": 0.86,
+          "visible": true,
+          "notes": "The rectangular upper sight box, short circular oculus, and enlarged Star Tunnel aperture are all explicit, unobstructed components."
+        },
+        {
+          "id": "hour-chamber-entry",
+          "score": 0.91,
+          "visible": true,
+          "notes": "The grade-level triangular entrance is continuous with a complete chamber floor, paired walls, ceiling, and aligned north daylight exit."
+        }
+      ],
+      "action": "continue",
+      "summary": "The rebuilt sighting structures and complete hour-chamber passage are explicit, aligned, and unobstructed.",
+      "matched": [
+        "rectangular upper sight box",
+        "shallow circular oculus",
+        "enlarged Star Tunnel aperture",
+        "complete south-to-north hour chamber",
+        "continuous floor walls and ceiling"
+      ],
+      "mismatches": [
+        "minor photographic-scale uncertainty remains in non-visitor-facing service details"
+      ],
+      "specFixes": [],
+      "codeFixes": [],
+      "evidence": [
+        "sculpt/reference-review/comparison-material-final.png",
+        "sculpt/reference-review/render-star-tunnel-first-person-final.png",
+        "sculpt/reference-review/render-hour-chamber-entry-final.png",
+        "sculpt/reference-review/render-hour-chamber-interior-final.png"
+      ],
+      "visualEvidence": {
+        "referenceScreenshot": "sculpt/reference-review/pyramid-reference.png",
+        "renderScreenshot": "sculpt/reference-review/render-pyramid-material-baked-final.png",
+        "comparisonImage": "sculpt/reference-review/comparison-material-final.png",
+        "cameraView": "front-left low three-quarter plus first-person aperture/interior evidence",
+        "notes": "The reference-angle comparison and visitor views were inspected together.",
+        "aiVisionNotes": "The exterior comparison shows all major structural systems in the correct hierarchy; the first-person evidence confirms the sightlines and through-passage are real openings rather than visual facades."
+      }
+    },
+    {
+      "timestamp": "2026-07-23T17:02:04.030091+00:00",
+      "passId": "form-refinement",
+      "estimatedFidelity": 0.84,
+      "aiVisionScore": 0.84,
+      "visualAcceptanceThreshold": 0.7,
+      "layerScores": {
+        "silhouetteProportion": 0.89,
+        "componentStructure": 0.88,
+        "formDetail": 0.84,
+        "materialSurface": 0.78,
+        "lightingCamera": 0.84
+      },
+      "featureReviews": [
+        {
+          "id": "dual-sighting-openings",
+          "score": 0.86,
+          "visible": true,
+          "notes": "The photographed separation between the upper rectangular cavity and shallow projecting oculus is preserved, while the Star Tunnel is kept short enough to read as an aperture rather than a long tube."
+        },
+        {
+          "id": "edge-stair-and-summit",
+          "score": 0.8,
+          "visible": true,
+          "notes": "The receding left-edge stair and two summit rods restore the recognizable secondary silhouette details from the reference."
+        }
+      ],
+      "action": "continue",
+      "summary": "The pylon now carries the photographed secondary forms: recessed sight box, short oculus, receding edge stair, and summit rods.",
+      "matched": [
+        "short projecting oculus",
+        "deep rectangular recess",
+        "receding left-edge stair",
+        "paired summit rods",
+        "irregular joint layout"
+      ],
+      "mismatches": [
+        "fine real-world wear and construction tolerances are simplified for realtime rendering"
+      ],
+      "specFixes": [],
+      "codeFixes": [],
+      "evidence": [
+        "sculpt/reference-review/comparison-material-final.png",
+        "sculpt/reference-review/render-pyramid-material-baked-final.png"
+      ],
+      "visualEvidence": {
+        "referenceScreenshot": "sculpt/reference-review/pyramid-reference.png",
+        "renderScreenshot": "sculpt/reference-review/render-pyramid-material-baked-final.png",
+        "comparisonImage": "sculpt/reference-review/comparison-material-final.png",
+        "cameraView": "front-left low three-quarter portrait",
+        "notes": "Low-angle framing makes the stair, summit, openings, and cladding organization directly comparable.",
+        "aiVisionNotes": "The reference and render share the steep truncated form and the most recognizable local features. The remaining simplification is micro-scale weathering rather than missing identity features."
+      }
+    },
+    {
+      "timestamp": "2026-07-23T17:02:34.289499+00:00",
+      "passId": "material-pass",
+      "estimatedFidelity": 0.82,
+      "aiVisionScore": 0.82,
+      "visualAcceptanceThreshold": 0.7,
+      "layerScores": {
+        "silhouetteProportion": 0.89,
+        "componentStructure": 0.88,
+        "formDetail": 0.84,
+        "materialSurface": 0.82,
+        "lightingCamera": 0.84
+      },
+      "featureReviews": [
+        {
+          "id": "granite-cladding-system",
+          "score": 0.8,
+          "visible": true,
+          "notes": "The front shell now uses a baked pale pink-beige granite albedo, dark recessed joints, and a cooler shadowed side instead of the former uniform procedural checker."
+        }
+      ],
+      "action": "continue",
+      "summary": "The runtime-heavy procedural pyramid shader has been replaced with a baked reference-derived granite albedo and inexpensive PBR response.",
+      "matched": [
+        "pale pink-beige granite palette",
+        "dark cavity stone",
+        "cooler side-face response",
+        "warm brushed oculus metal",
+        "static 1024px albedo"
+      ],
+      "mismatches": [
+        "micro-weathering is intentionally subdued to avoid visible tiling"
+      ],
+      "specFixes": [],
+      "codeFixes": [],
+      "evidence": [
+        "public/textures/pyramid-granite-albedo.png",
+        "sculpt/reference-review/pbr/pyramid-reference_albedo.png",
+        "sculpt/reference-review/pbr/pyramid-reference_roughness.png",
+        "sculpt/reference-review/pbr/pyramid-reference_normal.png",
+        "sculpt/reference-review/comparison-material-final.png"
+      ],
+      "visualEvidence": {
+        "referenceScreenshot": "sculpt/reference-review/pyramid-reference.png",
+        "renderScreenshot": "sculpt/reference-review/render-pyramid-material-baked-final.png",
+        "comparisonImage": "sculpt/reference-review/comparison-material-final.png",
+        "cameraView": "front-left low three-quarter portrait",
+        "notes": "Baked albedo is visible across the front cladding without the former runtime checker/noise cost.",
+        "aiVisionNotes": "The baked granite retains the warm front-face palette and fine mineral variation while the shadowed side and cavities remain clearly differentiated. Tier-1 material delta-E is below threshold."
+      }
+    },
+    {
+      "timestamp": "2026-07-23T17:02:49.157727+00:00",
+      "passId": "surface-pass",
+      "estimatedFidelity": 0.8,
+      "aiVisionScore": 0.8,
+      "visualAcceptanceThreshold": 0.7,
+      "layerScores": {
+        "silhouetteProportion": 0.89,
+        "componentStructure": 0.88,
+        "formDetail": 0.83,
+        "materialSurface": 0.8,
+        "lightingCamera": 0.84
+      },
+      "featureReviews": [
+        {
+          "id": "granite-cladding-system",
+          "score": 0.78,
+          "visible": true,
+          "notes": "Irregular course breaks and varied vertical joints reproduce the photographed slab organization without expensive per-frame shader noise."
+        }
+      ],
+      "action": "continue",
+      "summary": "Explicit irregular cladding joints and baked mineral grain add architectural surface detail without per-frame procedural texture evaluation.",
+      "matched": [
+        "irregular horizontal courses",
+        "varied vertical joints",
+        "front-versus-side material separation",
+        "fine mineral grain",
+        "recessed cavity edges"
+      ],
+      "mismatches": [
+        "small stone chips and age staining are simplified at visitor scale"
+      ],
+      "specFixes": [],
+      "codeFixes": [],
+      "evidence": [
+        "sculpt/reference-review/comparison-material-final.png",
+        "sculpt/reference-review/render-pyramid-material-baked-final.png",
+        "public/textures/pyramid-granite-albedo.png"
+      ],
+      "visualEvidence": {
+        "referenceScreenshot": "sculpt/reference-review/pyramid-reference.png",
+        "renderScreenshot": "sculpt/reference-review/render-pyramid-material-baked-final.png",
+        "comparisonImage": "sculpt/reference-review/comparison-material-final.png",
+        "cameraView": "front-left low three-quarter portrait",
+        "notes": "The same full-object pair was used so joint scale and distribution remain comparable.",
+        "aiVisionNotes": "The reference-defining slab courses now read as intentionally irregular instead of a uniform grid. The baked texture adds subtle grain and avoids obvious procedural shimmer."
+      }
+    },
+    {
+      "timestamp": "2026-07-23T17:03:06.585223+00:00",
+      "passId": "lighting-pass",
+      "estimatedFidelity": 0.82,
+      "aiVisionScore": 0.82,
+      "visualAcceptanceThreshold": 0.7,
+      "layerScores": {
+        "silhouetteProportion": 0.89,
+        "componentStructure": 0.87,
+        "formDetail": 0.82,
+        "materialSurface": 0.8,
+        "lightingCamera": 0.84
+      },
+      "featureReviews": [],
+      "action": "continue",
+      "summary": "Reference-matched daylight keeps the granite readable, preserves a cool shadowed west face, and leaves both sighting cavities legible.",
+      "matched": [
+        "warm camera-right key",
+        "cool sky fill",
+        "deep but readable cavities",
+        "soft ground contact",
+        "blue-sky separation"
+      ],
+      "mismatches": [
+        "reference photograph has richer bounced terrain light than the simplified realtime environment"
+      ],
+      "specFixes": [],
+      "codeFixes": [],
+      "evidence": [
+        "sculpt/reference-review/comparison-material-final.png",
+        "sculpt/reference-review/render-pyramid-material-baked-final.png",
+        "sculpt/reference-review/render-hour-chamber-entry-final.png"
+      ],
+      "visualEvidence": {
+        "referenceScreenshot": "sculpt/reference-review/pyramid-reference.png",
+        "renderScreenshot": "sculpt/reference-review/render-pyramid-material-baked-final.png",
+        "comparisonImage": "sculpt/reference-review/comparison-material-final.png",
+        "cameraView": "front-left low three-quarter portrait",
+        "notes": "Lighting direction and low-angle camera are comparable to the supplied exterior photograph.",
+        "aiVisionNotes": "The front face reads as warm sunlit granite while the long side remains cool and dimensional. Openings stay black enough for depth but do not hide their geometry."
+      }
+    },
+    {
+      "timestamp": "2026-07-23T17:03:26.871616+00:00",
+      "passId": "interaction-pass",
+      "estimatedFidelity": 0.92,
+      "aiVisionScore": 0.92,
+      "visualAcceptanceThreshold": 0.7,
+      "layerScores": {
+        "silhouetteProportion": 0.9,
+        "componentStructure": 0.94,
+        "formDetail": 0.88,
+        "materialSurface": 0.8,
+        "lightingCamera": 0.88
+      },
+      "featureReviews": [
+        {
+          "id": "hour-chamber-entry",
+          "score": 0.94,
+          "visible": true,
+          "notes": "First-person review confirms an uninterrupted walkable route from the south triangular entry through the complete interior to visible north-side daylight."
+        }
+      ],
+      "action": "continue",
+      "summary": "First-person traversal confirms both installations are real sightlines: the Star Tunnel reads through to sky and the pyramid is walkable end-to-end.",
+      "matched": [
+        "large clear Star Tunnel aperture",
+        "no terrain clipping at the tunnel",
+        "grade-level pyramid entry",
+        "complete interior walls floor and ceiling",
+        "visible far-side daylight"
+      ],
+      "mismatches": [
+        "the simplified landscape omits some distant site furniture"
+      ],
+      "specFixes": [],
+      "codeFixes": [],
+      "evidence": [
+        "sculpt/reference-review/render-star-tunnel-first-person-final.png",
+        "sculpt/reference-review/render-star-tunnel-bottom-final.png",
+        "sculpt/reference-review/render-hour-chamber-entry-final.png",
+        "sculpt/reference-review/render-hour-chamber-interior-final.png",
+        "sculpt/reference-review/comparison-material-final.png"
+      ],
+      "visualEvidence": {
+        "referenceScreenshot": "sculpt/reference-review/pyramid-reference.png",
+        "renderScreenshot": "sculpt/reference-review/render-hour-chamber-entry-final.png",
+        "comparisonImage": "sculpt/reference-review/comparison-material-final.png",
+        "cameraView": "first-person visitor eye height plus reference exterior",
+        "notes": "Traversal evidence was reviewed at both the Star Tunnel and the south-to-north pyramid route.",
+        "aiVisionNotes": "The visitor views show uninterrupted sight through the enlarged circular Star Tunnel and through the pyramid chamber. No wall facade closes either route, and both corridor side walls are present."
+      }
+    },
+    {
+      "timestamp": "2026-07-23T17:03:56.937099+00:00",
+      "passId": "optimization-pass",
+      "estimatedFidelity": 0.96,
+      "aiVisionScore": null,
+      "visualAcceptanceThreshold": 0.7,
+      "layerScores": {},
+      "featureReviews": [],
+      "action": "continue",
+      "summary": "The final reference-angle build holds 60 FPS with 43 draw calls and 175,904 triangles after moving granite variation to a baked texture.",
+      "matched": [
+        "60 FPS measured runtime",
+        "43 draw calls",
+        "175904 triangles",
+        "static baked granite albedo",
+        "pixel ratio capped at 1",
+        "non-shadow-casting repeated edge treads"
+      ],
+      "mismatches": [
+        "the Vite production bundle still emits a size advisory for the Three.js application chunk"
+      ],
+      "specFixes": [],
+      "codeFixes": [],
+      "evidence": [
+        "sculpt/reference-review/render-pyramid-material-baked-final.png",
+        "public/textures/pyramid-granite-albedo.png"
+      ],
+      "visualEvidence": {
+        "referenceScreenshot": "/Users/eric/codeprojects/StarAxis/sculpt/reference-review/pyramid-reference.png",
+        "renderScreenshot": "",
+        "comparisonImage": "",
+        "cameraView": "",
+        "notes": "",
+        "aiVisionNotes": "Performance optimization preserves the accepted silhouette, openings, cladding joints, and interior traversal."
+      }
+    }
+  ],
+  "lodPlan": [
+    {
+      "tier": "near",
+      "distance": 0,
+      "strategy": "full component tree and material layers"
+    },
+    {
+      "tier": "far",
+      "distance": 30,
+      "strategy": "merge static components and reduce local feature geometry"
+    }
+  ],
+  "performanceBudget": {
+    "qualityPriority": "reference-fidelity",
+    "targetTriangles": 250000,
+    "maxDrawCalls": 160,
+    "textureSize": 2048,
+    "fpsTarget": 60,
+    "optimizationPolicy": "Reach accepted visual fidelity first, then optimize without removing reference-critical geometry or surface layers.",
+    "measuredDesktopRuntime": {
+      "fps": 60,
+      "drawCalls": 43,
+      "triangles": 175904,
+      "geometries": 62,
+      "pixelRatioCap": 1,
+      "notes": "Measured in Chrome at the final reference-angle Solar Pyramid view after replacing the runtime pyramid TSL material with the baked granite albedo."
+    }
+  },
+  "lightingFromPhoto": [
+    "Warm high key light from camera-right reveals the sunlit front stone and casts a cool west-face shadow.",
+    "Soft blue-sky fill preserves readable side-face values without flattening the deep entry and sight-box cavities.",
+    "Low neutral environment rim separates the truncated cap and summit rods from the blue sky.",
+    "ACES filmic tone mapping with controlled exposure preserves stone highlights and deep cavity blacks.",
+    "Contact shadows and ambient occlusion anchor slab seams, oculus attachment, stairs, and the grade line."
+  ],
+  "proceduralStrategy": [
+    "Block out macro silhouette first.",
+    "Add component hierarchy and joints.",
+    "Create stable pivot groups, sockets, collider proxies, and destruction metadata before visual polish.",
+    "Refine forms with bevels, tapers, bends, and procedural noise.",
+    "Run reference PBR extraction for important source-image materials and stop when confidence is below the target threshold.",
+    "Add material variation before adding expensive micro-geometry."
+  ],
+  "animationAnchors": [
+    "root pivot node supports whole-object translation, rotation, scale, and visibility changes",
+    "component pivot groups support later local transforms without rebuilding geometry"
+  ],
+  "destructionAnchors": [
+    "actionProfile.destruction.fractureGroup marks detachable or breakable component sets",
+    "component seams and sockets define plausible break points instead of random explosions"
+  ],
+  "risks": [],
+  "tier1Results": [
+    {
+      "passed": false,
+      "checks": {
+        "silhouetteIoU": 0.3603,
+        "aspectRatioDelta": 0.0326,
+        "scaleDelta": 0.0512,
+        "bilateralSymmetryError": 0.0929,
+        "colorDelta": {
+          "checked": 12,
+          "maxDeltaE": 13.93,
+          "perComponent": [
+            {
+              "componentId": null,
+              "deltaE": 12.02
+            },
+            {
+              "componentId": null,
+              "deltaE": 12.02
+            },
+            {
+              "componentId": null,
+              "deltaE": 13.66
+            },
+            {
+              "componentId": null,
+              "deltaE": 8.63
+            },
+            {
+              "componentId": null,
+              "deltaE": 8.63
+            },
+            {
+              "componentId": null,
+              "deltaE": 8.63
+            },
+            {
+              "componentId": null,
+              "deltaE": 13.93
+            },
+            {
+              "componentId": null,
+              "deltaE": 13.93
+            },
+            {
+              "componentId": null,
+              "deltaE": 12.02
+            },
+            {
+              "componentId": null,
+              "deltaE": 12.02
+            },
+            {
+              "componentId": null,
+              "deltaE": 13.66
+            },
+            {
+              "componentId": null,
+              "deltaE": 12.02
+            }
+          ],
+          "gated": false
+        }
+      },
+      "failures": [
+        "silhouette IoU 0.360 is below threshold 0.85"
+      ],
+      "renderHash": "c610d09e8572db25",
+      "passId": "blockout"
+    },
+    {
+      "passed": false,
+      "checks": {
+        "silhouetteIoU": 0.5627,
+        "aspectRatioDelta": 0.0326,
+        "scaleDelta": 0.0512,
+        "bilateralSymmetryError": 0.2967,
+        "colorDelta": {
+          "checked": 12,
+          "maxDeltaE": 14.0,
+          "perComponent": [
+            {
+              "componentId": null,
+              "deltaE": 7.74
+            },
+            {
+              "componentId": null,
+              "deltaE": 7.74
+            },
+            {
+              "componentId": null,
+              "deltaE": 8.8
+            },
+            {
+              "componentId": null,
+              "deltaE": 12.6
+            },
+            {
+              "componentId": null,
+              "deltaE": 12.6
+            },
+            {
+              "componentId": null,
+              "deltaE": 12.6
+            },
+            {
+              "componentId": null,
+              "deltaE": 14.0
+            },
+            {
+              "componentId": null,
+              "deltaE": 14.0
+            },
+            {
+              "componentId": null,
+              "deltaE": 7.74
+            },
+            {
+              "componentId": null,
+              "deltaE": 7.74
+            },
+            {
+              "componentId": null,
+              "deltaE": 8.8
+            },
+            {
+              "componentId": null,
+              "deltaE": 7.74
+            }
+          ],
+          "gated": false
+        }
+      },
+      "failures": [
+        "silhouette IoU 0.563 is below threshold 0.85"
+      ],
+      "renderHash": "8375c0dfb2688c43",
+      "passId": "blockout"
+    },
+    {
+      "passed": false,
+      "checks": {
+        "silhouetteIoU": 0.8227,
+        "aspectRatioDelta": 0.2698,
+        "scaleDelta": 0.1451,
+        "bilateralSymmetryError": 0.0417,
+        "colorDelta": {
+          "checked": 12,
+          "maxDeltaE": 12.74,
+          "perComponent": [
+            {
+              "componentId": null,
+              "deltaE": 12.58
+            },
+            {
+              "componentId": null,
+              "deltaE": 12.58
+            },
+            {
+              "componentId": null,
+              "deltaE": 6.67
+            },
+            {
+              "componentId": null,
+              "deltaE": 3.19
+            },
+            {
+              "componentId": null,
+              "deltaE": 3.19
+            },
+            {
+              "componentId": null,
+              "deltaE": 3.19
+            },
+            {
+              "componentId": null,
+              "deltaE": 12.74
+            },
+            {
+              "componentId": null,
+              "deltaE": 12.74
+            },
+            {
+              "componentId": null,
+              "deltaE": 12.58
+            },
+            {
+              "componentId": null,
+              "deltaE": 12.58
+            },
+            {
+              "componentId": null,
+              "deltaE": 6.67
+            },
+            {
+              "componentId": null,
+              "deltaE": 12.58
+            }
+          ],
+          "gated": false
+        }
+      },
+      "failures": [
+        "silhouette IoU 0.823 is below threshold 0.85",
+        "aspect-ratio delta 0.270 exceeds threshold 0.05",
+        "scale delta 0.145 exceeds threshold 0.08"
+      ],
+      "renderHash": "d788905efd105357",
+      "passId": "blockout"
+    },
+    {
+      "passed": false,
+      "checks": {
+        "silhouetteIoU": 0.8473,
+        "aspectRatioDelta": 0.11,
+        "scaleDelta": 0.0221,
+        "bilateralSymmetryError": 0.0344,
+        "colorDelta": {
+          "checked": 12,
+          "maxDeltaE": 12.91,
+          "perComponent": [
+            {
+              "componentId": null,
+              "deltaE": 8.19
+            },
+            {
+              "componentId": null,
+              "deltaE": 8.19
+            },
+            {
+              "componentId": null,
+              "deltaE": 8.52
+            },
+            {
+              "componentId": null,
+              "deltaE": 12.91
+            },
+            {
+              "componentId": null,
+              "deltaE": 12.91
+            },
+            {
+              "componentId": null,
+              "deltaE": 12.91
+            },
+            {
+              "componentId": null,
+              "deltaE": 12.52
+            },
+            {
+              "componentId": null,
+              "deltaE": 12.52
+            },
+            {
+              "componentId": null,
+              "deltaE": 8.19
+            },
+            {
+              "componentId": null,
+              "deltaE": 8.19
+            },
+            {
+              "componentId": null,
+              "deltaE": 8.52
+            },
+            {
+              "componentId": null,
+              "deltaE": 8.19
+            }
+          ],
+          "gated": false
+        }
+      },
+      "failures": [
+        "silhouette IoU 0.847 is below threshold 0.85",
+        "aspect-ratio delta 0.110 exceeds threshold 0.05"
+      ],
+      "renderHash": "22bb12e4476e5cf2",
+      "passId": "blockout"
+    },
+    {
+      "passed": false,
+      "checks": {
+        "silhouetteIoU": 0.8161,
+        "aspectRatioDelta": 0.0483,
+        "scaleDelta": 0.0355,
+        "bilateralSymmetryError": 0.0443,
+        "colorDelta": {
+          "checked": 12,
+          "maxDeltaE": 13.07,
+          "perComponent": [
+            {
+              "componentId": null,
+              "deltaE": 13.07
+            },
+            {
+              "componentId": null,
+              "deltaE": 13.07
+            },
+            {
+              "componentId": null,
+              "deltaE": 6.65
+            },
+            {
+              "componentId": null,
+              "deltaE": 3.19
+            },
+            {
+              "componentId": null,
+              "deltaE": 3.19
+            },
+            {
+              "componentId": null,
+              "deltaE": 3.19
+            },
+            {
+              "componentId": null,
+              "deltaE": 12.59
+            },
+            {
+              "componentId": null,
+              "deltaE": 12.59
+            },
+            {
+              "componentId": null,
+              "deltaE": 13.07
+            },
+            {
+              "componentId": null,
+              "deltaE": 13.07
+            },
+            {
+              "componentId": null,
+              "deltaE": 6.65
+            },
+            {
+              "componentId": null,
+              "deltaE": 13.07
+            }
+          ],
+          "gated": false
+        }
+      },
+      "failures": [
+        "silhouette IoU 0.816 is below threshold 0.85"
+      ],
+      "renderHash": "4b52110ecdb90f75",
+      "passId": "blockout"
+    },
+    {
+      "passed": false,
+      "checks": {
+        "silhouetteIoU": 0.8431,
+        "aspectRatioDelta": 0.1247,
+        "scaleDelta": 0.0348,
+        "bilateralSymmetryError": 0.0275,
+        "colorDelta": {
+          "checked": 12,
+          "maxDeltaE": 12.87,
+          "perComponent": [
+            {
+              "componentId": null,
+              "deltaE": 7.52
+            },
+            {
+              "componentId": null,
+              "deltaE": 7.52
+            },
+            {
+              "componentId": null,
+              "deltaE": 8.47
+            },
+            {
+              "componentId": null,
+              "deltaE": 12.81
+            },
+            {
+              "componentId": null,
+              "deltaE": 12.81
+            },
+            {
+              "componentId": null,
+              "deltaE": 12.81
+            },
+            {
+              "componentId": null,
+              "deltaE": 12.87
+            },
+            {
+              "componentId": null,
+              "deltaE": 12.87
+            },
+            {
+              "componentId": null,
+              "deltaE": 7.52
+            },
+            {
+              "componentId": null,
+              "deltaE": 7.52
+            },
+            {
+              "componentId": null,
+              "deltaE": 8.47
+            },
+            {
+              "componentId": null,
+              "deltaE": 7.52
+            }
+          ],
+          "gated": false
+        }
+      },
+      "failures": [
+        "silhouette IoU 0.843 is below threshold 0.85",
+        "aspect-ratio delta 0.125 exceeds threshold 0.05"
+      ],
+      "renderHash": "6cb96a2b0ac9b4ca",
+      "passId": "blockout"
+    },
+    {
+      "passed": false,
+      "checks": {
+        "silhouetteIoU": 0.8265,
+        "aspectRatioDelta": 0.0619,
+        "scaleDelta": 0.0222,
+        "bilateralSymmetryError": 0.046,
+        "colorDelta": {
+          "checked": 12,
+          "maxDeltaE": 12.88,
+          "perComponent": [
+            {
+              "componentId": null,
+              "deltaE": 8.92
+            },
+            {
+              "componentId": null,
+              "deltaE": 8.92
+            },
+            {
+              "componentId": null,
+              "deltaE": 6.37
+            },
+            {
+              "componentId": null,
+              "deltaE": 2.83
+            },
+            {
+              "componentId": null,
+              "deltaE": 2.83
+            },
+            {
+              "componentId": null,
+              "deltaE": 2.83
+            },
+            {
+              "componentId": null,
+              "deltaE": 12.88
+            },
+            {
+              "componentId": null,
+              "deltaE": 12.88
+            },
+            {
+              "componentId": null,
+              "deltaE": 8.92
+            },
+            {
+              "componentId": null,
+              "deltaE": 8.92
+            },
+            {
+              "componentId": null,
+              "deltaE": 6.37
+            },
+            {
+              "componentId": null,
+              "deltaE": 8.92
+            }
+          ],
+          "gated": false
+        }
+      },
+      "failures": [
+        "silhouette IoU 0.826 is below threshold 0.85",
+        "aspect-ratio delta 0.062 exceeds threshold 0.05"
+      ],
+      "renderHash": "4517b675cace6488",
+      "passId": "blockout"
+    },
+    {
+      "passed": false,
+      "checks": {
+        "silhouetteIoU": 0.8187,
+        "aspectRatioDelta": 0.0619,
+        "scaleDelta": 0.0222,
+        "bilateralSymmetryError": 0.056,
+        "colorDelta": {
+          "checked": 12,
+          "maxDeltaE": 12.88,
+          "perComponent": [
+            {
+              "componentId": null,
+              "deltaE": 9.08
+            },
+            {
+              "componentId": null,
+              "deltaE": 9.08
+            },
+            {
+              "componentId": null,
+              "deltaE": 6.39
+            },
+            {
+              "componentId": null,
+              "deltaE": 4.2
+            },
+            {
+              "componentId": null,
+              "deltaE": 4.2
+            },
+            {
+              "componentId": null,
+              "deltaE": 4.2
+            },
+            {
+              "componentId": null,
+              "deltaE": 12.88
+            },
+            {
+              "componentId": null,
+              "deltaE": 12.88
+            },
+            {
+              "componentId": null,
+              "deltaE": 9.08
+            },
+            {
+              "componentId": null,
+              "deltaE": 9.08
+            },
+            {
+              "componentId": null,
+              "deltaE": 6.39
+            },
+            {
+              "componentId": null,
+              "deltaE": 9.08
+            }
+          ],
+          "gated": false
+        }
+      },
+      "failures": [
+        "silhouette IoU 0.819 is below threshold 0.85",
+        "aspect-ratio delta 0.062 exceeds threshold 0.05"
+      ],
+      "renderHash": "5df26942c9617af6",
+      "passId": "blockout"
+    },
+    {
+      "passed": true,
+      "checks": {
+        "silhouetteIoU": 0.9436,
+        "aspectRatioDelta": 0.0033,
+        "scaleDelta": 0.0221,
+        "bilateralSymmetryError": 0.1467,
+        "colorDelta": {
+          "checked": 12,
+          "maxDeltaE": 40.99,
+          "perComponent": [
+            {
+              "componentId": null,
+              "deltaE": 17.61
+            },
+            {
+              "componentId": null,
+              "deltaE": 17.61
+            },
+            {
+              "componentId": null,
+              "deltaE": 22.44
+            },
+            {
+              "componentId": null,
+              "deltaE": 40.99
+            },
+            {
+              "componentId": null,
+              "deltaE": 40.99
+            },
+            {
+              "componentId": null,
+              "deltaE": 40.99
+            },
+            {
+              "componentId": null,
+              "deltaE": 15.21
+            },
+            {
+              "componentId": null,
+              "deltaE": 15.21
+            },
+            {
+              "componentId": null,
+              "deltaE": 17.61
+            },
+            {
+              "componentId": null,
+              "deltaE": 17.61
+            },
+            {
+              "componentId": null,
+              "deltaE": 22.44
+            },
+            {
+              "componentId": null,
+              "deltaE": 17.61
+            }
+          ],
+          "gated": false
+        }
+      },
+      "failures": [],
+      "renderHash": "5a0667db82eae0e1",
+      "passId": "blockout"
+    },
+    {
+      "passed": true,
+      "checks": {
+        "silhouetteIoU": 0.9436,
+        "aspectRatioDelta": 0.0033,
+        "scaleDelta": 0.0221,
+        "bilateralSymmetryError": 0.1467,
+        "colorDelta": {
+          "checked": 12,
+          "maxDeltaE": 40.99,
+          "perComponent": [
+            {
+              "componentId": null,
+              "deltaE": 17.61
+            },
+            {
+              "componentId": null,
+              "deltaE": 17.61
+            },
+            {
+              "componentId": null,
+              "deltaE": 22.44
+            },
+            {
+              "componentId": null,
+              "deltaE": 40.99
+            },
+            {
+              "componentId": null,
+              "deltaE": 40.99
+            },
+            {
+              "componentId": null,
+              "deltaE": 40.99
+            },
+            {
+              "componentId": null,
+              "deltaE": 15.21
+            },
+            {
+              "componentId": null,
+              "deltaE": 15.21
+            },
+            {
+              "componentId": null,
+              "deltaE": 17.61
+            },
+            {
+              "componentId": null,
+              "deltaE": 17.61
+            },
+            {
+              "componentId": null,
+              "deltaE": 22.44
+            },
+            {
+              "componentId": null,
+              "deltaE": 17.61
+            }
+          ],
+          "gated": false
+        }
+      },
+      "failures": [],
+      "renderHash": "5a0667db82eae0e1",
+      "passId": "structural-pass"
+    },
+    {
+      "passed": true,
+      "checks": {
+        "silhouetteIoU": 0.9436,
+        "aspectRatioDelta": 0.0033,
+        "scaleDelta": 0.0221,
+        "bilateralSymmetryError": 0.1467,
+        "colorDelta": {
+          "checked": 12,
+          "maxDeltaE": 40.99,
+          "perComponent": [
+            {
+              "componentId": null,
+              "deltaE": 17.61
+            },
+            {
+              "componentId": null,
+              "deltaE": 17.61
+            },
+            {
+              "componentId": null,
+              "deltaE": 22.44
+            },
+            {
+              "componentId": null,
+              "deltaE": 40.99
+            },
+            {
+              "componentId": null,
+              "deltaE": 40.99
+            },
+            {
+              "componentId": null,
+              "deltaE": 40.99
+            },
+            {
+              "componentId": null,
+              "deltaE": 15.21
+            },
+            {
+              "componentId": null,
+              "deltaE": 15.21
+            },
+            {
+              "componentId": null,
+              "deltaE": 17.61
+            },
+            {
+              "componentId": null,
+              "deltaE": 17.61
+            },
+            {
+              "componentId": null,
+              "deltaE": 22.44
+            },
+            {
+              "componentId": null,
+              "deltaE": 17.61
+            }
+          ],
+          "gated": false
+        }
+      },
+      "failures": [],
+      "renderHash": "5a0667db82eae0e1",
+      "passId": "form-refinement"
+    },
+    {
+      "passed": false,
+      "checks": {
+        "silhouetteIoU": 0.9436,
+        "aspectRatioDelta": 0.0033,
+        "scaleDelta": 0.0221,
+        "bilateralSymmetryError": 0.1467,
+        "colorDelta": {
+          "checked": 12,
+          "maxDeltaE": 40.99,
+          "perComponent": [
+            {
+              "componentId": null,
+              "deltaE": 17.61
+            },
+            {
+              "componentId": null,
+              "deltaE": 17.61
+            },
+            {
+              "componentId": null,
+              "deltaE": 22.44
+            },
+            {
+              "componentId": null,
+              "deltaE": 40.99
+            },
+            {
+              "componentId": null,
+              "deltaE": 40.99
+            },
+            {
+              "componentId": null,
+              "deltaE": 40.99
+            },
+            {
+              "componentId": null,
+              "deltaE": 15.21
+            },
+            {
+              "componentId": null,
+              "deltaE": 15.21
+            },
+            {
+              "componentId": null,
+              "deltaE": 17.61
+            },
+            {
+              "componentId": null,
+              "deltaE": 17.61
+            },
+            {
+              "componentId": null,
+              "deltaE": 22.44
+            },
+            {
+              "componentId": null,
+              "deltaE": 17.61
+            }
+          ],
+          "gated": true
+        }
+      },
+      "failures": [
+        "max per-part color delta-E 40.99 exceeds threshold 20.0"
+      ],
+      "renderHash": "5a0667db82eae0e1",
+      "passId": "material-pass"
+    },
+    {
+      "passed": false,
+      "checks": {
+        "silhouetteIoU": 0.9436,
+        "aspectRatioDelta": 0.0033,
+        "scaleDelta": 0.0221,
+        "bilateralSymmetryError": 0.1467,
+        "colorDelta": {
+          "checked": 12,
+          "maxDeltaE": 40.99,
+          "perComponent": [
+            {
+              "componentId": null,
+              "deltaE": 17.61
+            },
+            {
+              "componentId": null,
+              "deltaE": 17.61
+            },
+            {
+              "componentId": null,
+              "deltaE": 22.44
+            },
+            {
+              "componentId": null,
+              "deltaE": 40.99
+            },
+            {
+              "componentId": null,
+              "deltaE": 40.99
+            },
+            {
+              "componentId": null,
+              "deltaE": 40.99
+            },
+            {
+              "componentId": null,
+              "deltaE": 15.21
+            },
+            {
+              "componentId": null,
+              "deltaE": 15.21
+            },
+            {
+              "componentId": null,
+              "deltaE": 17.61
+            },
+            {
+              "componentId": null,
+              "deltaE": 17.61
+            },
+            {
+              "componentId": null,
+              "deltaE": 22.44
+            },
+            {
+              "componentId": null,
+              "deltaE": 17.61
+            }
+          ],
+          "gated": true
+        }
+      },
+      "failures": [
+        "max per-part color delta-E 40.99 exceeds threshold 20.0"
+      ],
+      "renderHash": "5a0667db82eae0e1",
+      "passId": "surface-pass"
+    },
+    {
+      "passed": false,
+      "checks": {
+        "silhouetteIoU": 0.9436,
+        "aspectRatioDelta": 0.0033,
+        "scaleDelta": 0.0221,
+        "bilateralSymmetryError": 0.1467,
+        "colorDelta": {
+          "checked": 12,
+          "maxDeltaE": 40.99,
+          "perComponent": [
+            {
+              "componentId": null,
+              "deltaE": 17.61
+            },
+            {
+              "componentId": null,
+              "deltaE": 17.61
+            },
+            {
+              "componentId": null,
+              "deltaE": 22.44
+            },
+            {
+              "componentId": null,
+              "deltaE": 40.99
+            },
+            {
+              "componentId": null,
+              "deltaE": 40.99
+            },
+            {
+              "componentId": null,
+              "deltaE": 40.99
+            },
+            {
+              "componentId": null,
+              "deltaE": 15.21
+            },
+            {
+              "componentId": null,
+              "deltaE": 15.21
+            },
+            {
+              "componentId": null,
+              "deltaE": 17.61
+            },
+            {
+              "componentId": null,
+              "deltaE": 17.61
+            },
+            {
+              "componentId": null,
+              "deltaE": 22.44
+            },
+            {
+              "componentId": null,
+              "deltaE": 17.61
+            }
+          ],
+          "gated": true
+        }
+      },
+      "failures": [
+        "max per-part color delta-E 40.99 exceeds threshold 20.0"
+      ],
+      "renderHash": "5a0667db82eae0e1",
+      "passId": "lighting-pass"
+    },
+    {
+      "passed": false,
+      "checks": {
+        "silhouetteIoU": 0.9436,
+        "aspectRatioDelta": 0.0033,
+        "scaleDelta": 0.0221,
+        "bilateralSymmetryError": 0.1467,
+        "colorDelta": {
+          "checked": 12,
+          "maxDeltaE": 40.99,
+          "perComponent": [
+            {
+              "componentId": null,
+              "deltaE": 17.61
+            },
+            {
+              "componentId": null,
+              "deltaE": 17.61
+            },
+            {
+              "componentId": null,
+              "deltaE": 22.44
+            },
+            {
+              "componentId": null,
+              "deltaE": 40.99
+            },
+            {
+              "componentId": null,
+              "deltaE": 40.99
+            },
+            {
+              "componentId": null,
+              "deltaE": 40.99
+            },
+            {
+              "componentId": null,
+              "deltaE": 15.21
+            },
+            {
+              "componentId": null,
+              "deltaE": 15.21
+            },
+            {
+              "componentId": null,
+              "deltaE": 17.61
+            },
+            {
+              "componentId": null,
+              "deltaE": 17.61
+            },
+            {
+              "componentId": null,
+              "deltaE": 22.44
+            },
+            {
+              "componentId": null,
+              "deltaE": 17.61
+            }
+          ],
+          "gated": true
+        }
+      },
+      "failures": [
+        "max per-part color delta-E 40.99 exceeds threshold 20.0"
+      ],
+      "renderHash": "5a0667db82eae0e1",
+      "passId": "interaction-pass"
+    },
+    {
+      "passed": false,
+      "checks": {
+        "silhouetteIoU": 0.7724,
+        "aspectRatioDelta": 0.0326,
+        "scaleDelta": 0.0512,
+        "bilateralSymmetryError": 0.1172,
+        "colorDelta": {
+          "checked": 12,
+          "maxDeltaE": 16.67,
+          "perComponent": [
+            {
+              "componentId": null,
+              "deltaE": 10.13
+            },
+            {
+              "componentId": null,
+              "deltaE": 10.13
+            },
+            {
+              "componentId": null,
+              "deltaE": 16.67
+            },
+            {
+              "componentId": null,
+              "deltaE": 6.8
+            },
+            {
+              "componentId": null,
+              "deltaE": 6.8
+            },
+            {
+              "componentId": null,
+              "deltaE": 6.8
+            },
+            {
+              "componentId": null,
+              "deltaE": 13.95
+            },
+            {
+              "componentId": null,
+              "deltaE": 13.95
+            },
+            {
+              "componentId": null,
+              "deltaE": 10.13
+            },
+            {
+              "componentId": null,
+              "deltaE": 10.13
+            },
+            {
+              "componentId": null,
+              "deltaE": 16.67
+            },
+            {
+              "componentId": null,
+              "deltaE": 10.13
+            }
+          ],
+          "gated": true
+        }
+      },
+      "failures": [
+        "silhouette IoU 0.772 is below threshold 0.85"
+      ],
+      "renderHash": "5fb431c732d69493",
+      "passId": "material-pass"
+    },
+    {
+      "passed": false,
+      "checks": {
+        "silhouetteIoU": 0.7724,
+        "aspectRatioDelta": 0.0326,
+        "scaleDelta": 0.0512,
+        "bilateralSymmetryError": 0.1172,
+        "colorDelta": {
+          "checked": 12,
+          "maxDeltaE": 16.67,
+          "perComponent": [
+            {
+              "componentId": null,
+              "deltaE": 10.13
+            },
+            {
+              "componentId": null,
+              "deltaE": 10.13
+            },
+            {
+              "componentId": null,
+              "deltaE": 16.67
+            },
+            {
+              "componentId": null,
+              "deltaE": 6.8
+            },
+            {
+              "componentId": null,
+              "deltaE": 6.8
+            },
+            {
+              "componentId": null,
+              "deltaE": 6.8
+            },
+            {
+              "componentId": null,
+              "deltaE": 13.95
+            },
+            {
+              "componentId": null,
+              "deltaE": 13.95
+            },
+            {
+              "componentId": null,
+              "deltaE": 10.13
+            },
+            {
+              "componentId": null,
+              "deltaE": 10.13
+            },
+            {
+              "componentId": null,
+              "deltaE": 16.67
+            },
+            {
+              "componentId": null,
+              "deltaE": 10.13
+            }
+          ],
+          "gated": true
+        }
+      },
+      "failures": [
+        "silhouette IoU 0.772 is below threshold 0.85"
+      ],
+      "renderHash": "5fb431c732d69493",
+      "passId": "surface-pass"
+    },
+    {
+      "passed": false,
+      "checks": {
+        "silhouetteIoU": 0.7724,
+        "aspectRatioDelta": 0.0326,
+        "scaleDelta": 0.0512,
+        "bilateralSymmetryError": 0.1172,
+        "colorDelta": {
+          "checked": 12,
+          "maxDeltaE": 16.67,
+          "perComponent": [
+            {
+              "componentId": null,
+              "deltaE": 10.13
+            },
+            {
+              "componentId": null,
+              "deltaE": 10.13
+            },
+            {
+              "componentId": null,
+              "deltaE": 16.67
+            },
+            {
+              "componentId": null,
+              "deltaE": 6.8
+            },
+            {
+              "componentId": null,
+              "deltaE": 6.8
+            },
+            {
+              "componentId": null,
+              "deltaE": 6.8
+            },
+            {
+              "componentId": null,
+              "deltaE": 13.95
+            },
+            {
+              "componentId": null,
+              "deltaE": 13.95
+            },
+            {
+              "componentId": null,
+              "deltaE": 10.13
+            },
+            {
+              "componentId": null,
+              "deltaE": 10.13
+            },
+            {
+              "componentId": null,
+              "deltaE": 16.67
+            },
+            {
+              "componentId": null,
+              "deltaE": 10.13
+            }
+          ],
+          "gated": true
+        }
+      },
+      "failures": [
+        "silhouette IoU 0.772 is below threshold 0.85"
+      ],
+      "renderHash": "5fb431c732d69493",
+      "passId": "lighting-pass"
+    },
+    {
+      "passed": false,
+      "checks": {
+        "silhouetteIoU": 0.7724,
+        "aspectRatioDelta": 0.0326,
+        "scaleDelta": 0.0512,
+        "bilateralSymmetryError": 0.1172,
+        "colorDelta": {
+          "checked": 12,
+          "maxDeltaE": 16.67,
+          "perComponent": [
+            {
+              "componentId": null,
+              "deltaE": 10.13
+            },
+            {
+              "componentId": null,
+              "deltaE": 10.13
+            },
+            {
+              "componentId": null,
+              "deltaE": 16.67
+            },
+            {
+              "componentId": null,
+              "deltaE": 6.8
+            },
+            {
+              "componentId": null,
+              "deltaE": 6.8
+            },
+            {
+              "componentId": null,
+              "deltaE": 6.8
+            },
+            {
+              "componentId": null,
+              "deltaE": 13.95
+            },
+            {
+              "componentId": null,
+              "deltaE": 13.95
+            },
+            {
+              "componentId": null,
+              "deltaE": 10.13
+            },
+            {
+              "componentId": null,
+              "deltaE": 10.13
+            },
+            {
+              "componentId": null,
+              "deltaE": 16.67
+            },
+            {
+              "componentId": null,
+              "deltaE": 10.13
+            }
+          ],
+          "gated": true
+        }
+      },
+      "failures": [
+        "silhouette IoU 0.772 is below threshold 0.85"
+      ],
+      "renderHash": "5fb431c732d69493",
+      "passId": "interaction-pass"
+    },
+    {
+      "passed": false,
+      "checks": {
+        "silhouetteIoU": 0.7724,
+        "aspectRatioDelta": 0.0326,
+        "scaleDelta": 0.0512,
+        "bilateralSymmetryError": 0.1172,
+        "colorDelta": {
+          "checked": 12,
+          "maxDeltaE": 16.67,
+          "perComponent": [
+            {
+              "componentId": null,
+              "deltaE": 10.13
+            },
+            {
+              "componentId": null,
+              "deltaE": 10.13
+            },
+            {
+              "componentId": null,
+              "deltaE": 16.67
+            },
+            {
+              "componentId": null,
+              "deltaE": 6.8
+            },
+            {
+              "componentId": null,
+              "deltaE": 6.8
+            },
+            {
+              "componentId": null,
+              "deltaE": 6.8
+            },
+            {
+              "componentId": null,
+              "deltaE": 13.95
+            },
+            {
+              "componentId": null,
+              "deltaE": 13.95
+            },
+            {
+              "componentId": null,
+              "deltaE": 10.13
+            },
+            {
+              "componentId": null,
+              "deltaE": 10.13
+            },
+            {
+              "componentId": null,
+              "deltaE": 16.67
+            },
+            {
+              "componentId": null,
+              "deltaE": 10.13
+            }
+          ],
+          "gated": true
+        }
+      },
+      "failures": [
+        "silhouette IoU 0.772 is below threshold 0.85"
+      ],
+      "renderHash": "f0fe0fd9336c4f38",
+      "passId": "material-pass"
+    },
+    {
+      "passed": false,
+      "checks": {
+        "silhouetteIoU": 0.7724,
+        "aspectRatioDelta": 0.0326,
+        "scaleDelta": 0.0512,
+        "bilateralSymmetryError": 0.1172,
+        "colorDelta": {
+          "checked": 12,
+          "maxDeltaE": 16.67,
+          "perComponent": [
+            {
+              "componentId": null,
+              "deltaE": 10.13
+            },
+            {
+              "componentId": null,
+              "deltaE": 10.13
+            },
+            {
+              "componentId": null,
+              "deltaE": 16.67
+            },
+            {
+              "componentId": null,
+              "deltaE": 6.8
+            },
+            {
+              "componentId": null,
+              "deltaE": 6.8
+            },
+            {
+              "componentId": null,
+              "deltaE": 6.8
+            },
+            {
+              "componentId": null,
+              "deltaE": 13.95
+            },
+            {
+              "componentId": null,
+              "deltaE": 13.95
+            },
+            {
+              "componentId": null,
+              "deltaE": 10.13
+            },
+            {
+              "componentId": null,
+              "deltaE": 10.13
+            },
+            {
+              "componentId": null,
+              "deltaE": 16.67
+            },
+            {
+              "componentId": null,
+              "deltaE": 10.13
+            }
+          ],
+          "gated": true
+        }
+      },
+      "failures": [
+        "silhouette IoU 0.772 is below threshold 0.85"
+      ],
+      "renderHash": "f0fe0fd9336c4f38",
+      "passId": "surface-pass"
+    },
+    {
+      "passed": false,
+      "checks": {
+        "silhouetteIoU": 0.7724,
+        "aspectRatioDelta": 0.0326,
+        "scaleDelta": 0.0512,
+        "bilateralSymmetryError": 0.1172,
+        "colorDelta": {
+          "checked": 12,
+          "maxDeltaE": 16.67,
+          "perComponent": [
+            {
+              "componentId": null,
+              "deltaE": 10.13
+            },
+            {
+              "componentId": null,
+              "deltaE": 10.13
+            },
+            {
+              "componentId": null,
+              "deltaE": 16.67
+            },
+            {
+              "componentId": null,
+              "deltaE": 6.8
+            },
+            {
+              "componentId": null,
+              "deltaE": 6.8
+            },
+            {
+              "componentId": null,
+              "deltaE": 6.8
+            },
+            {
+              "componentId": null,
+              "deltaE": 13.95
+            },
+            {
+              "componentId": null,
+              "deltaE": 13.95
+            },
+            {
+              "componentId": null,
+              "deltaE": 10.13
+            },
+            {
+              "componentId": null,
+              "deltaE": 10.13
+            },
+            {
+              "componentId": null,
+              "deltaE": 16.67
+            },
+            {
+              "componentId": null,
+              "deltaE": 10.13
+            }
+          ],
+          "gated": true
+        }
+      },
+      "failures": [
+        "silhouette IoU 0.772 is below threshold 0.85"
+      ],
+      "renderHash": "f0fe0fd9336c4f38",
+      "passId": "lighting-pass"
+    },
+    {
+      "passed": false,
+      "checks": {
+        "silhouetteIoU": 0.7724,
+        "aspectRatioDelta": 0.0326,
+        "scaleDelta": 0.0512,
+        "bilateralSymmetryError": 0.1172,
+        "colorDelta": {
+          "checked": 12,
+          "maxDeltaE": 16.67,
+          "perComponent": [
+            {
+              "componentId": null,
+              "deltaE": 10.13
+            },
+            {
+              "componentId": null,
+              "deltaE": 10.13
+            },
+            {
+              "componentId": null,
+              "deltaE": 16.67
+            },
+            {
+              "componentId": null,
+              "deltaE": 6.8
+            },
+            {
+              "componentId": null,
+              "deltaE": 6.8
+            },
+            {
+              "componentId": null,
+              "deltaE": 6.8
+            },
+            {
+              "componentId": null,
+              "deltaE": 13.95
+            },
+            {
+              "componentId": null,
+              "deltaE": 13.95
+            },
+            {
+              "componentId": null,
+              "deltaE": 10.13
+            },
+            {
+              "componentId": null,
+              "deltaE": 10.13
+            },
+            {
+              "componentId": null,
+              "deltaE": 16.67
+            },
+            {
+              "componentId": null,
+              "deltaE": 10.13
+            }
+          ],
+          "gated": true
+        }
+      },
+      "failures": [
+        "silhouette IoU 0.772 is below threshold 0.85"
+      ],
+      "renderHash": "f0fe0fd9336c4f38",
+      "passId": "interaction-pass"
+    },
+    {
+      "passed": false,
+      "checks": {
+        "silhouetteIoU": 0.7724,
+        "aspectRatioDelta": 0.0326,
+        "scaleDelta": 0.0512,
+        "bilateralSymmetryError": 0.1172,
+        "colorDelta": {
+          "checked": 12,
+          "maxDeltaE": 16.67,
+          "perComponent": [
+            {
+              "componentId": null,
+              "deltaE": 10.13
+            },
+            {
+              "componentId": null,
+              "deltaE": 10.13
+            },
+            {
+              "componentId": null,
+              "deltaE": 16.67
+            },
+            {
+              "componentId": null,
+              "deltaE": 6.8
+            },
+            {
+              "componentId": null,
+              "deltaE": 6.8
+            },
+            {
+              "componentId": null,
+              "deltaE": 6.8
+            },
+            {
+              "componentId": null,
+              "deltaE": 13.95
+            },
+            {
+              "componentId": null,
+              "deltaE": 13.95
+            },
+            {
+              "componentId": null,
+              "deltaE": 10.13
+            },
+            {
+              "componentId": null,
+              "deltaE": 10.13
+            },
+            {
+              "componentId": null,
+              "deltaE": 16.67
+            },
+            {
+              "componentId": null,
+              "deltaE": 10.13
+            }
+          ],
+          "gated": true
+        }
+      },
+      "failures": [
+        "silhouette IoU 0.772 is below threshold 0.85"
+      ],
+      "renderHash": "f0fe0fd9336c4f38",
+      "passId": "material-pass"
+    },
+    {
+      "passed": false,
+      "checks": {
+        "silhouetteIoU": 0.9437,
+        "aspectRatioDelta": 0.0033,
+        "scaleDelta": 0.0221,
+        "bilateralSymmetryError": 0.1467,
+        "colorDelta": {
+          "checked": 12,
+          "maxDeltaE": 21.26,
+          "perComponent": [
+            {
+              "componentId": null,
+              "deltaE": 10.1
+            },
+            {
+              "componentId": null,
+              "deltaE": 10.1
+            },
+            {
+              "componentId": null,
+              "deltaE": 12.86
+            },
+            {
+              "componentId": null,
+              "deltaE": 4.3
+            },
+            {
+              "componentId": null,
+              "deltaE": 4.3
+            },
+            {
+              "componentId": null,
+              "deltaE": 4.3
+            },
+            {
+              "componentId": null,
+              "deltaE": 21.26
+            },
+            {
+              "componentId": null,
+              "deltaE": 21.26
+            },
+            {
+              "componentId": null,
+              "deltaE": 10.1
+            },
+            {
+              "componentId": null,
+              "deltaE": 10.1
+            },
+            {
+              "componentId": null,
+              "deltaE": 12.86
+            },
+            {
+              "componentId": null,
+              "deltaE": 10.1
+            }
+          ],
+          "gated": true
+        }
+      },
+      "failures": [
+        "max per-part color delta-E 21.26 exceeds threshold 20.0"
+      ],
+      "renderHash": "82ab460475e43a0f",
+      "passId": "material-pass"
+    },
+    {
+      "passed": false,
+      "checks": {
+        "silhouetteIoU": 0.9437,
+        "aspectRatioDelta": 0.0033,
+        "scaleDelta": 0.0221,
+        "bilateralSymmetryError": 0.1467,
+        "colorDelta": {
+          "checked": 12,
+          "maxDeltaE": 21.26,
+          "perComponent": [
+            {
+              "componentId": null,
+              "deltaE": 10.1
+            },
+            {
+              "componentId": null,
+              "deltaE": 10.1
+            },
+            {
+              "componentId": null,
+              "deltaE": 12.86
+            },
+            {
+              "componentId": null,
+              "deltaE": 4.3
+            },
+            {
+              "componentId": null,
+              "deltaE": 4.3
+            },
+            {
+              "componentId": null,
+              "deltaE": 4.3
+            },
+            {
+              "componentId": null,
+              "deltaE": 21.26
+            },
+            {
+              "componentId": null,
+              "deltaE": 21.26
+            },
+            {
+              "componentId": null,
+              "deltaE": 10.1
+            },
+            {
+              "componentId": null,
+              "deltaE": 10.1
+            },
+            {
+              "componentId": null,
+              "deltaE": 12.86
+            },
+            {
+              "componentId": null,
+              "deltaE": 10.1
+            }
+          ],
+          "gated": true
+        }
+      },
+      "failures": [
+        "max per-part color delta-E 21.26 exceeds threshold 20.0"
+      ],
+      "renderHash": "82ab460475e43a0f",
+      "passId": "surface-pass"
+    },
+    {
+      "passed": false,
+      "checks": {
+        "silhouetteIoU": 0.9437,
+        "aspectRatioDelta": 0.0033,
+        "scaleDelta": 0.0221,
+        "bilateralSymmetryError": 0.1467,
+        "colorDelta": {
+          "checked": 12,
+          "maxDeltaE": 21.26,
+          "perComponent": [
+            {
+              "componentId": null,
+              "deltaE": 10.1
+            },
+            {
+              "componentId": null,
+              "deltaE": 10.1
+            },
+            {
+              "componentId": null,
+              "deltaE": 12.86
+            },
+            {
+              "componentId": null,
+              "deltaE": 4.3
+            },
+            {
+              "componentId": null,
+              "deltaE": 4.3
+            },
+            {
+              "componentId": null,
+              "deltaE": 4.3
+            },
+            {
+              "componentId": null,
+              "deltaE": 21.26
+            },
+            {
+              "componentId": null,
+              "deltaE": 21.26
+            },
+            {
+              "componentId": null,
+              "deltaE": 10.1
+            },
+            {
+              "componentId": null,
+              "deltaE": 10.1
+            },
+            {
+              "componentId": null,
+              "deltaE": 12.86
+            },
+            {
+              "componentId": null,
+              "deltaE": 10.1
+            }
+          ],
+          "gated": true
+        }
+      },
+      "failures": [
+        "max per-part color delta-E 21.26 exceeds threshold 20.0"
+      ],
+      "renderHash": "82ab460475e43a0f",
+      "passId": "lighting-pass"
+    },
+    {
+      "passed": false,
+      "checks": {
+        "silhouetteIoU": 0.9437,
+        "aspectRatioDelta": 0.0033,
+        "scaleDelta": 0.0221,
+        "bilateralSymmetryError": 0.1467,
+        "colorDelta": {
+          "checked": 12,
+          "maxDeltaE": 21.26,
+          "perComponent": [
+            {
+              "componentId": null,
+              "deltaE": 10.1
+            },
+            {
+              "componentId": null,
+              "deltaE": 10.1
+            },
+            {
+              "componentId": null,
+              "deltaE": 12.86
+            },
+            {
+              "componentId": null,
+              "deltaE": 4.3
+            },
+            {
+              "componentId": null,
+              "deltaE": 4.3
+            },
+            {
+              "componentId": null,
+              "deltaE": 4.3
+            },
+            {
+              "componentId": null,
+              "deltaE": 21.26
+            },
+            {
+              "componentId": null,
+              "deltaE": 21.26
+            },
+            {
+              "componentId": null,
+              "deltaE": 10.1
+            },
+            {
+              "componentId": null,
+              "deltaE": 10.1
+            },
+            {
+              "componentId": null,
+              "deltaE": 12.86
+            },
+            {
+              "componentId": null,
+              "deltaE": 10.1
+            }
+          ],
+          "gated": true
+        }
+      },
+      "failures": [
+        "max per-part color delta-E 21.26 exceeds threshold 20.0"
+      ],
+      "renderHash": "82ab460475e43a0f",
+      "passId": "interaction-pass"
+    },
+    {
+      "passed": true,
+      "checks": {
+        "silhouetteIoU": 0.9437,
+        "aspectRatioDelta": 0.0033,
+        "scaleDelta": 0.0221,
+        "bilateralSymmetryError": 0.1467,
+        "colorDelta": {
+          "checked": 12,
+          "maxDeltaE": 16.64,
+          "perComponent": [
+            {
+              "componentId": null,
+              "deltaE": 10.1
+            },
+            {
+              "componentId": null,
+              "deltaE": 10.1
+            },
+            {
+              "componentId": null,
+              "deltaE": 12.86
+            },
+            {
+              "componentId": null,
+              "deltaE": 4.3
+            },
+            {
+              "componentId": null,
+              "deltaE": 4.3
+            },
+            {
+              "componentId": null,
+              "deltaE": 4.3
+            },
+            {
+              "componentId": null,
+              "deltaE": 16.64
+            },
+            {
+              "componentId": null,
+              "deltaE": 16.64
+            },
+            {
+              "componentId": null,
+              "deltaE": 10.1
+            },
+            {
+              "componentId": null,
+              "deltaE": 10.1
+            },
+            {
+              "componentId": null,
+              "deltaE": 12.86
+            },
+            {
+              "componentId": null,
+              "deltaE": 10.1
+            }
+          ],
+          "gated": true
+        }
+      },
+      "failures": [],
+      "renderHash": "82ab460475e43a0f",
+      "passId": "material-pass"
+    },
+    {
+      "passed": true,
+      "checks": {
+        "silhouetteIoU": 0.9437,
+        "aspectRatioDelta": 0.0033,
+        "scaleDelta": 0.0221,
+        "bilateralSymmetryError": 0.1467,
+        "colorDelta": {
+          "checked": 12,
+          "maxDeltaE": 16.64,
+          "perComponent": [
+            {
+              "componentId": null,
+              "deltaE": 10.1
+            },
+            {
+              "componentId": null,
+              "deltaE": 10.1
+            },
+            {
+              "componentId": null,
+              "deltaE": 12.86
+            },
+            {
+              "componentId": null,
+              "deltaE": 4.3
+            },
+            {
+              "componentId": null,
+              "deltaE": 4.3
+            },
+            {
+              "componentId": null,
+              "deltaE": 4.3
+            },
+            {
+              "componentId": null,
+              "deltaE": 16.64
+            },
+            {
+              "componentId": null,
+              "deltaE": 16.64
+            },
+            {
+              "componentId": null,
+              "deltaE": 10.1
+            },
+            {
+              "componentId": null,
+              "deltaE": 10.1
+            },
+            {
+              "componentId": null,
+              "deltaE": 12.86
+            },
+            {
+              "componentId": null,
+              "deltaE": 10.1
+            }
+          ],
+          "gated": true
+        }
+      },
+      "failures": [],
+      "renderHash": "82ab460475e43a0f",
+      "passId": "surface-pass"
+    },
+    {
+      "passed": true,
+      "checks": {
+        "silhouetteIoU": 0.9437,
+        "aspectRatioDelta": 0.0033,
+        "scaleDelta": 0.0221,
+        "bilateralSymmetryError": 0.1467,
+        "colorDelta": {
+          "checked": 12,
+          "maxDeltaE": 16.64,
+          "perComponent": [
+            {
+              "componentId": null,
+              "deltaE": 10.1
+            },
+            {
+              "componentId": null,
+              "deltaE": 10.1
+            },
+            {
+              "componentId": null,
+              "deltaE": 12.86
+            },
+            {
+              "componentId": null,
+              "deltaE": 4.3
+            },
+            {
+              "componentId": null,
+              "deltaE": 4.3
+            },
+            {
+              "componentId": null,
+              "deltaE": 4.3
+            },
+            {
+              "componentId": null,
+              "deltaE": 16.64
+            },
+            {
+              "componentId": null,
+              "deltaE": 16.64
+            },
+            {
+              "componentId": null,
+              "deltaE": 10.1
+            },
+            {
+              "componentId": null,
+              "deltaE": 10.1
+            },
+            {
+              "componentId": null,
+              "deltaE": 12.86
+            },
+            {
+              "componentId": null,
+              "deltaE": 10.1
+            }
+          ],
+          "gated": true
+        }
+      },
+      "failures": [],
+      "renderHash": "82ab460475e43a0f",
+      "passId": "lighting-pass"
+    },
+    {
+      "passed": true,
+      "checks": {
+        "silhouetteIoU": 0.9437,
+        "aspectRatioDelta": 0.0033,
+        "scaleDelta": 0.0221,
+        "bilateralSymmetryError": 0.1467,
+        "colorDelta": {
+          "checked": 12,
+          "maxDeltaE": 16.64,
+          "perComponent": [
+            {
+              "componentId": null,
+              "deltaE": 10.1
+            },
+            {
+              "componentId": null,
+              "deltaE": 10.1
+            },
+            {
+              "componentId": null,
+              "deltaE": 12.86
+            },
+            {
+              "componentId": null,
+              "deltaE": 4.3
+            },
+            {
+              "componentId": null,
+              "deltaE": 4.3
+            },
+            {
+              "componentId": null,
+              "deltaE": 4.3
+            },
+            {
+              "componentId": null,
+              "deltaE": 16.64
+            },
+            {
+              "componentId": null,
+              "deltaE": 16.64
+            },
+            {
+              "componentId": null,
+              "deltaE": 10.1
+            },
+            {
+              "componentId": null,
+              "deltaE": 10.1
+            },
+            {
+              "componentId": null,
+              "deltaE": 12.86
+            },
+            {
+              "componentId": null,
+              "deltaE": 10.1
+            }
+          ],
+          "gated": true
+        }
+      },
+      "failures": [],
+      "renderHash": "82ab460475e43a0f",
+      "passId": "interaction-pass"
+    }
+  ]
+}

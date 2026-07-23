@@ -16,7 +16,12 @@
  *   desert            — caliche sand / gravel / rubble blend (terrain)
  */
 
-import { MeshStandardNodeMaterial } from 'three/webgpu';
+import {
+  MeshStandardNodeMaterial,
+  RepeatWrapping,
+  SRGBColorSpace,
+  TextureLoader,
+} from 'three/webgpu';
 import {
   Fn,
   abs,
@@ -25,9 +30,7 @@ import {
   clamp,
   color,
   float,
-  fract,
   hash,
-  max,
   min,
   mix,
   mx_cell_noise_float,
@@ -222,35 +225,20 @@ export function createMaterials(): StarAxisMaterials {
     graniteCoping.normalNode = bumpMap(speck, float(0.008));
   }
 
-  // -- solar pyramid: salmon sandstone slabs with rectangular seam grid
+  // -- solar pyramid: the slab layout is modeled explicitly on the face.
+  // Keeping this base response constant removes a relatively expensive
+  // full-screen procedural shader from the monument's largest surfaces.
   const pyramidSandstone = new MeshStandardNodeMaterial();
-  {
-    const p = positionWorld;
-    const n = normalWorld;
-    // panel grid on the face plane: u along horizontal contour, v along height
-    const u = mix(p.x, p.z, smoothstep(0.4, 0.6, abs(n.x)));
-    const gu = abs(fract(u.mul(0.66)).sub(0.5));
-    const gv = abs(fract(p.y.mul(1.35)).sub(0.5));
-    const seam = max(
-      smoothstep(0.485, 0.5, gu),
-      smoothstep(0.47, 0.5, gv),
-    );
-    const drift = mx_fractal_noise_float(p.mul(0.14), 3, 2.0, 0.55, 1.0);
-    const patch = mx_cell_noise_float(vec2(u.mul(0.66), p.y.mul(1.35)));
-    const base = palettePick(patch, '#d5a287', '#cb9270', '#e0b498');
-    pyramidSandstone.colorNode = mix(
-      base.mul(float(0.95).add(drift.mul(0.1))),
-      color('#b08363'),
-      seam.mul(0.35),
-    );
-    const rSeed = mx_fractal_noise_float(p.mul(1.9).add(vec3(17.0, 3.0, 5.0)), 2, 2.0, 0.5, 1.0);
-    pyramidSandstone.roughnessNode = clamp(float(0.78).add(rSeed.sub(0.5).mul(0.24)), 0.5, 1.0);
-    const grain = mx_fractal_noise_float(p.mul(11.0), 2, 2.0, 0.5, 1.0);
-    pyramidSandstone.normalNode = bumpMap(
-      float(1.0).sub(seam.mul(0.6)).add(grain.mul(0.12)),
-      float(0.02),
-    );
-  }
+  const pyramidGrain = new TextureLoader().load('/textures/pyramid-granite-albedo.png');
+  pyramidGrain.wrapS = RepeatWrapping;
+  pyramidGrain.wrapT = RepeatWrapping;
+  pyramidGrain.repeat.set(5, 8);
+  pyramidGrain.colorSpace = SRGBColorSpace;
+  pyramidGrain.anisotropy = 8;
+  pyramidSandstone.map = pyramidGrain;
+  pyramidSandstone.color.set('#f0ded9');
+  pyramidSandstone.roughness = 0.82;
+  pyramidSandstone.metalness = 0;
 
   // -- stainless: brushed metal, circumferential streaks. Metalness is kept
   // moderate: with no environment map a full metal goes black in shadow,

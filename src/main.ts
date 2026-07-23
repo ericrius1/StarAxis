@@ -246,7 +246,7 @@ const TOUR_STOPS: TourStop[] = [
     label: 'Solar Pyramid',
     title: 'Solar Pyramid',
     description:
-      'The 55-foot granite tetrahedron is formed by the angles of the sun at the summer and winter solstices. Its exterior stair and sharp profile turn the annual solar cycle into monumental geometry.',
+      'The 55-foot granite pylon is formed by the angles of the sun at the summer and winter solstices. Its truncated summit, upper sight box, exterior stair, and sharp profile turn the annual solar cycle into monumental geometry.',
     fact: 'The pyramid acts as a gnomon: its moving shadow records both daily and seasonal solar motion.',
     pos: [24, 41, -18],
     target: [PYRAMID_CENTER.x, PYRAMID_BASE_Y + 7, PYRAMID_CENTER.z],
