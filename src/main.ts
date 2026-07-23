@@ -16,6 +16,7 @@
  *   5  night view due north (star trails around Polaris)
  *   D / G / N   day / golden hour / night
  *   T  toggle star trails (night)
+ *   L  toggle enhanced lighting and post-processing
  */
 
 import {
@@ -36,6 +37,7 @@ import { buildCollider } from './staraxis/collision';
 import { MesaWind, type MesaWindFrame } from './staraxis/wind';
 import { WindsweptSand } from './staraxis/windsweptSand';
 import { StarAxisSoundscape } from './soundscape';
+import { createVisualEffects } from './visualEffects';
 import {
   APERTURE_CENTER_Y,
   APERTURE_ELEVATION_RAD,
@@ -157,6 +159,15 @@ scene.add(sky.group);
 scene.add(sky.sunLight);
 scene.add(sky.sunLight.target);
 scene.add(sky.hemi);
+
+const visualEffects = createVisualEffects({
+  renderer,
+  scene,
+  camera,
+  sunLight: sky.sunLight,
+  constrainedDevice,
+  highQualityRequested: requestedQuality === 'high',
+});
 
 // The static monument, displaced terrain, and instanced stair treads are
 // world-baked into BVHs so both grounding and wall collision use visible
@@ -521,6 +532,9 @@ window.addEventListener('keydown', (e) => {
     sky.setTrailAmount(trails);
   } else if (k === 'k') {
     void soundscape.toggle();
+  } else if (k === 'l' && !e.repeat) {
+    visualEffects.toggle();
+    updateInfo();
   } else if (k === '/') {
     debugOn = !debugOn;
     if (debugEl) debugEl.style.display = debugOn ? 'block' : 'none';
@@ -556,7 +570,7 @@ window.addEventListener(
 function updateInfo(): void {
   if (!info) return;
   const views = '1 Avenue · 2 pyramid front · 3 Star Tunnel · 4 aerial · 5 aperture night · M tour';
-  const light = 'Z+drag time · D/G/N light · T trails · K sound · / stats';
+  const light = 'Z+drag time · D/G/N light · T trails · L light lab · K sound · / stats';
   const line =
     tourOpen
       ? 'guided tour · [ / ] previous / next · Esc close'
@@ -645,7 +659,7 @@ function updateDebug(): void {
     `draws ${renderer.info.render.drawCalls} · tris ${(renderer.info.render.triangles / 1e6).toFixed(2)}M<br>` +
     `sand volume + ${(sand.totalCount / 1000).toFixed(1)}k micro · wind ${Math.round(latestWind.strength * 100)}%<br>` +
     `collider ${collider.triangleCount} tris<br>` +
-    `${nav}${fp.fly ? ' · fly' : ''} · ${sky.getMode()}<br>` +
+    `${nav}${fp.fly ? ' · fly' : ''} · ${sky.getMode()} · fx ${visualEffects.snapshot().active ? 'on' : 'off'}<br>` +
     `pos ${p.x.toFixed(1)}, ${p.y.toFixed(1)}, ${p.z.toFixed(1)}`;
 }
 setInterval(updateDebug, 500);
@@ -694,7 +708,7 @@ renderer.setAnimationLoop(() => {
   });
   previousCameraPosition.copy(camera.position);
   updateCaption();
-  renderer.render(scene, camera);
+  visualEffects.render();
   frames++;
   frameMsAccum += dt * 1000;
   frameMsCount++;
@@ -714,7 +728,7 @@ declare global {
   }
 }
 window.__capture = () => {
-  renderer.render(scene, camera);
+  visualEffects.render();
   return renderer.domElement.toDataURL('image/png');
 };
 window.__setView = (key: string) => {
@@ -760,5 +774,6 @@ window.__runtime = () => ({
   },
   sand: sand.snapshot(),
   soundscape: soundscape.snapshot(),
+  visualEffects: visualEffects.snapshot(),
   sculptRuntime: monument.group.userData.sculptRuntime,
 });

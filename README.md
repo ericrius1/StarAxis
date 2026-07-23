@@ -47,6 +47,7 @@ Earth's rotation.
 | `5` | Night, due north — star trails around Polaris |
 | `D` / `G` / `N` | Day / golden hour / night |
 | `T` | Toggle long-exposure star trails |
+| **`L`** | **Toggle WebGPU global illumination and post-processing** |
 | `/` | Debug stats (fps, frame ms, draw calls, triangles) |
 
 Presets `1`–`5` work in both modes; in first person they are spawn points,
@@ -96,6 +97,9 @@ opens the field guide at a specific stop.
 - **Sky rig** — TSL sky dome with day/golden/night states; at night the star
   field physically rotates about the Polaris axis, with a fragment-shader
   long-exposure trail mode recreating the famous concentric-arc photograph.
+- **Light Lab** — a compact Tweakpane panel controls WebGPU screen-space global
+  illumination, ambient occlusion, shadows, bloom, color finish, exposure and
+  three quality profiles. `L` bypasses the full enhancement stack in one tap.
 - **Terrain** — analytic heightfield with a flat rectangular apron, authored
   front/rear/side break lines, broad slope transitions, and deterministic
   talus, gravel, and grass.
