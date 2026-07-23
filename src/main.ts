@@ -35,6 +35,8 @@ import { createTerrain } from './staraxis/terrain';
 import { createSky } from './staraxis/sky';
 import { createFirstPerson } from './staraxis/firstPerson';
 import { buildCollider } from './staraxis/collision';
+import { MesaWind, type MesaWindFrame } from './staraxis/wind';
+import { WindsweptSand } from './staraxis/windsweptSand';
 import { StarAxisSoundscape } from './soundscape';
 import {
   STAIR_TOP,
@@ -125,6 +127,23 @@ scene.add(monument.group);
 
 const terrain = createTerrain(materials.desert);
 scene.add(terrain.group);
+
+const deviceMemory =
+  (navigator as Navigator & { deviceMemory?: number }).deviceMemory ?? 8;
+const constrainedDevice = navigator.hardwareConcurrency <= 4 || deviceMemory <= 4;
+const sandQuality = requestedQuality === 'high' ? 1.25 : constrainedDevice ? 0.65 : 1;
+const sand = new WindsweptSand(sandQuality);
+scene.add(sand.group);
+const mesaWind = new MesaWind();
+let latestWind: MesaWindFrame = {
+  directionX: 1,
+  directionZ: 0,
+  strength: 0.4,
+  gust: 0,
+  turbulence: 0.4,
+  speed: 8,
+  elapsed: 0,
+};
 
 const sky = createSky();
 scene.add(sky.group);
@@ -606,6 +625,7 @@ function updateDebug(): void {
   debugEl.innerHTML =
     `fps ${Math.round(lastFps)} · ${ms.toFixed(2)} ms<br>` +
     `draws ${renderer.info.render.drawCalls} · tris ${(renderer.info.render.triangles / 1e6).toFixed(2)}M<br>` +
+    `sand ${(sand.totalCount / 1000).toFixed(1)}k · wind ${Math.round(latestWind.strength * 100)}%<br>` +
     `collider ${collider.triangleCount} tris<br>` +
     `${nav}${fp.fly ? ' · fly' : ''} · ${sky.getMode()}<br>` +
     `pos ${p.x.toFixed(1)}, ${p.y.toFixed(1)}, ${p.z.toFixed(1)}`;
@@ -626,6 +646,7 @@ let lastFps = 0;
 const previousCameraPosition = new Vector3().copy(camera.position);
 
 await renderer.init();
+sand.initialize(renderer, camera.position);
 
 renderer.setAnimationLoop(() => {
   const now = performance.now();
@@ -643,6 +664,8 @@ renderer.setAnimationLoop(() => {
     sunPrev.copy(sky.sunLight.position);
   }
   const cameraTravel = camera.position.distanceTo(previousCameraPosition);
+  latestWind = mesaWind.update(dt, camera.position.x, camera.position.z, sky.getMode());
+  sand.update(renderer, latestWind, camera.position, dt, sky.getMode());
   soundscape.update({
     x: camera.position.x,
     y: camera.position.y,
@@ -650,6 +673,9 @@ renderer.setAnimationLoop(() => {
     dt,
     mode: sky.getMode(),
     moving: nav === 'fp' && cameraTravel > 0.0005,
+    windStrength: latestWind.strength,
+    windGust: latestWind.gust,
+    windTurbulence: latestWind.turbulence,
   });
   previousCameraPosition.copy(camera.position);
   updateCaption();
@@ -705,6 +731,16 @@ window.__runtime = () => ({
   componentIds: Object.keys(monument.components).sort(),
   tourOpen,
   tourStop: TOUR_STOPS[tourIndex].label,
+  wind: {
+    strength: Number(latestWind.strength.toFixed(3)),
+    gust: Number(latestWind.gust.toFixed(3)),
+    speed: Number(latestWind.speed.toFixed(2)),
+    direction: [
+      Number(latestWind.directionX.toFixed(3)),
+      Number(latestWind.directionZ.toFixed(3)),
+    ],
+  },
+  sand: sand.snapshot(),
   soundscape: soundscape.snapshot(),
   sculptRuntime: monument.group.userData.sculptRuntime,
 });

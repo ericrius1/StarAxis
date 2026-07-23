@@ -17,6 +17,9 @@ export interface SoundscapeFrame {
   dt: number;
   mode: SoundscapeMode;
   moving: boolean;
+  windStrength: number;
+  windGust: number;
+  windTurbulence: number;
 }
 
 export interface SoundscapeSnapshot {
@@ -56,7 +59,10 @@ function bellEnvelope(
 export class StarAxisSoundscape {
   private context: AudioContext | null = null;
   private master: GainNode | null = null;
-  private wind: Layer | null = null;
+  private windBody: Layer | null = null;
+  private windMid: Layer | null = null;
+  private windGust: Layer | null = null;
+  private sandHiss: Layer | null = null;
   private highAir: Layer | null = null;
   private earth: Layer | null = null;
   private chamber: Layer | null = null;
@@ -204,16 +210,66 @@ export class StarAxisSoundscape {
       const height = smoothstep(4, 70, y);
       const enclosed = clamp(Math.max(this.tunnelAmount, hour));
       const movementAir = clamp(distance / Math.max(dt, 0.016) / 16);
+      const wind = clamp(frame.windStrength);
+      const gust = clamp(frame.windGust);
+      const turbulence = clamp(frame.windTurbulence);
+      const openAir = 1 - enclosed * 0.86;
 
-      this.setLayer(this.wind, 0.055 + height * 0.035 + gold * 0.024 + movementAir * 0.018, 0.6);
-      if (this.wind?.filter) {
-        this.wind.filter.frequency.setTargetAtTime(
-          460 + height * 500 - enclosed * 300 + gold * 150,
+      // Four complementary noise bands share the visual wind envelope.
+      // The body stays present while the brighter bands only bloom in gusts.
+      this.setLayer(
+        this.windBody,
+        (0.035 + wind * 0.062 + gust * 0.028 + height * 0.012) * (0.4 + openAir * 0.6),
+        0.75,
+      );
+      this.setLayer(
+        this.windMid,
+        (0.022 + wind * 0.047 + gust * 0.04 + movementAir * 0.008) * (0.26 + openAir * 0.74),
+        0.48,
+      );
+      this.setLayer(
+        this.windGust,
+        (0.002 + gust * 0.105 + wind * wind * 0.018) * openAir,
+        0.32,
+      );
+      this.setLayer(
+        this.sandHiss,
+        (0.002 + wind * 0.012 + gust * 0.034 + turbulence * 0.012) * openAir,
+        0.25,
+      );
+      this.setLayer(
+        this.highAir,
+        (0.004 + height * 0.016 + wind * 0.012 + night * 0.003) * (0.35 + openAir * 0.65),
+        0.65,
+      );
+      if (this.windBody?.filter) {
+        this.windBody.filter.frequency.setTargetAtTime(
+          250 + wind * 165 + gust * 75 - enclosed * 120,
           now,
-          0.7,
+          0.8,
         );
       }
-      this.setLayer(this.highAir, 0.012 + height * 0.032 + night * 0.007, 0.8);
+      if (this.windMid?.filter) {
+        this.windMid.filter.frequency.setTargetAtTime(
+          570 + height * 150 + wind * 300 + gold * 90 - enclosed * 280,
+          now,
+          0.54,
+        );
+      }
+      if (this.windGust?.filter) {
+        this.windGust.filter.frequency.setTargetAtTime(
+          180 + wind * 240 + gust * 170,
+          now,
+          0.38,
+        );
+      }
+      if (this.sandHiss?.filter) {
+        this.sandHiss.filter.frequency.setTargetAtTime(
+          2050 + wind * 1250 + turbulence * 850,
+          now,
+          0.42,
+        );
+      }
       this.setLayer(this.earth, 0.026 + enclosed * 0.026 + night * 0.012, 1.4);
       this.setLayer(this.chamber, 0.003 + this.tunnelAmount * 0.075 + hour * 0.052, 0.9);
       this.setLayer(this.solar, 0.002 + solar * (0.018 + gold * 0.04) + aperture * 0.012, 1.1);
@@ -267,13 +323,17 @@ export class StarAxisSoundscape {
 
     const master = context.createGain();
     master.gain.value = 0.0001;
+    const masterTone = context.createBiquadFilter();
+    masterTone.type = 'lowshelf';
+    masterTone.frequency.value = 155;
+    masterTone.gain.value = 2.8;
     const compressor = context.createDynamicsCompressor();
     compressor.threshold.value = -22;
     compressor.knee.value = 18;
     compressor.ratio.value = 3;
     compressor.attack.value = 0.025;
     compressor.release.value = 0.65;
-    master.connect(compressor).connect(context.destination);
+    master.connect(masterTone).connect(compressor).connect(context.destination);
     this.master = master;
 
     const reverbSend = context.createGain();
@@ -286,31 +346,79 @@ export class StarAxisSoundscape {
     this.reverbSend = reverbSend;
     this.reverbReturn = reverbReturn;
 
-    // Wide, surf-like mesa wind: slow modulation turns noise into long breaths.
-    const windSource = this.loopingNoise('brown');
-    const windFilter = context.createBiquadFilter();
-    windFilter.type = 'bandpass';
-    windFilter.frequency.value = 520;
-    windFilter.Q.value = 0.46;
-    const windGain = context.createGain();
-    windGain.gain.value = 0.055;
-    windSource.connect(windFilter).connect(windGain).connect(master);
-    windGain.connect(reverbSend);
-    this.modulate(windGain.gain, 0.055, 0.022, 0.071);
-    this.wind = { gain: windGain, filter: windFilter };
+    // Low body: broad brown noise keeps the air physical rather than tinny.
+    const windBodySource = this.loopingNoise('brown');
+    const windBodyFilter = context.createBiquadFilter();
+    windBodyFilter.type = 'lowpass';
+    windBodyFilter.frequency.value = 320;
+    windBodyFilter.Q.value = 0.38;
+    const windBodyGain = context.createGain();
+    windBodyGain.gain.value = 0.04;
+    windBodySource.connect(windBodyFilter).connect(windBodyGain).connect(master);
+    windBodyGain.connect(reverbSend);
+    this.modulate(windBodyGain.gain, 0.04, 0.009, 0.037);
+    this.modulate(windBodyFilter.frequency, 320, 55, 0.021);
+    this.windBody = { gain: windBodyGain, filter: windBodyFilter };
 
-    // Fine airborne grit and altitude.
+    // Mid body: pink noise supplies the surf-like breadth that a single
+    // band-pass cannot produce.
+    const windMidSource = this.loopingNoise('pink');
+    const windMidFilter = context.createBiquadFilter();
+    windMidFilter.type = 'bandpass';
+    windMidFilter.frequency.value = 690;
+    windMidFilter.Q.value = 0.34;
+    const windMidGain = context.createGain();
+    windMidGain.gain.value = 0.03;
+    windMidSource.connect(windMidFilter).connect(windMidGain).connect(master);
+    windMidGain.connect(reverbSend);
+    this.modulate(windMidGain.gain, 0.03, 0.01, 0.067);
+    this.modulate(windMidFilter.frequency, 690, 95, 0.043);
+    this.windMid = { gain: windMidGain, filter: windMidFilter };
+
+    // Gust pressure: a low, moving band that arrives with visible sand sheets.
+    const gustSource = this.loopingNoise('pink');
+    const gustHigh = context.createBiquadFilter();
+    gustHigh.type = 'highpass';
+    gustHigh.frequency.value = 58;
+    const gustFilter = context.createBiquadFilter();
+    gustFilter.type = 'bandpass';
+    gustFilter.frequency.value = 260;
+    gustFilter.Q.value = 0.62;
+    const gustGain = context.createGain();
+    gustGain.gain.value = 0.002;
+    gustSource.connect(gustHigh).connect(gustFilter).connect(gustGain).connect(master);
+    gustGain.connect(reverbSend);
+    this.modulate(gustFilter.frequency, 260, 82, 0.089);
+    this.windGust = { gain: gustGain, filter: gustFilter };
+
+    // A narrow granular band makes airborne sand audible without turning the
+    // whole wind bed into treble hiss.
+    const sandSource = this.loopingNoise('white');
+    const sandHigh = context.createBiquadFilter();
+    sandHigh.type = 'highpass';
+    sandHigh.frequency.value = 1450;
+    const sandFilter = context.createBiquadFilter();
+    sandFilter.type = 'bandpass';
+    sandFilter.frequency.value = 2700;
+    sandFilter.Q.value = 0.7;
+    const sandGain = context.createGain();
+    sandGain.gain.value = 0.002;
+    sandSource.connect(sandHigh).connect(sandFilter).connect(sandGain).connect(master);
+    this.modulate(sandGain.gain, 0.004, 0.002, 0.19);
+    this.sandHiss = { gain: sandGain, filter: sandFilter };
+
+    // Fine airborne altitude is now only the top octave, not the main wind.
     const airSource = this.loopingNoise('white');
     const airHigh = context.createBiquadFilter();
     airHigh.type = 'highpass';
-    airHigh.frequency.value = 2400;
+    airHigh.frequency.value = 3300;
     const airLow = context.createBiquadFilter();
     airLow.type = 'lowpass';
-    airLow.frequency.value = 6900;
+    airLow.frequency.value = 8200;
     const airGain = context.createGain();
-    airGain.gain.value = 0.012;
+    airGain.gain.value = 0.006;
     airSource.connect(airHigh).connect(airLow).connect(airGain).connect(master);
-    this.modulate(airGain.gain, 0.014, 0.007, 0.113);
+    this.modulate(airGain.gain, 0.007, 0.003, 0.113);
     this.highAir = { gain: airGain, filter: airLow };
 
     // An almost-felt fundamental: fifty years of labor under 26,000 years.
@@ -399,18 +507,28 @@ export class StarAxisSoundscape {
     this.hourPulse = { gain: hourGain };
   }
 
-  private loopingNoise(color: 'white' | 'brown'): AudioBufferSourceNode {
+  private loopingNoise(color: 'white' | 'pink' | 'brown'): AudioBufferSourceNode {
     if (!this.context) throw new Error('Audio context not initialized');
     const sampleRate = this.context.sampleRate;
     const buffer = this.context.createBuffer(2, sampleRate * 5, sampleRate);
     for (let channel = 0; channel < buffer.numberOfChannels; channel++) {
       const data = buffer.getChannelData(channel);
       let last = 0;
+      let pink0 = 0;
+      let pink1 = 0;
+      let pink2 = 0;
       for (let i = 0; i < data.length; i++) {
         const white = Math.random() * 2 - 1;
         if (color === 'brown') {
           last = (last + 0.018 * white) / 1.018;
           data[i] = last * 3.5;
+        } else if (color === 'pink') {
+          // Paul Kellet's lightweight three-pole approximation. Independent
+          // state per channel preserves a wide stereo image.
+          pink0 = 0.99765 * pink0 + white * 0.099046;
+          pink1 = 0.963 * pink1 + white * 0.2965164;
+          pink2 = 0.57 * pink2 + white * 1.0526913;
+          data[i] = (pink0 + pink1 + pink2 + white * 0.1848) * 0.14;
         } else {
           data[i] = white * 0.55;
         }
