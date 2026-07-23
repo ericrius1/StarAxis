@@ -111,11 +111,13 @@ derived from reference-photo PBR extraction (see `sculpt/`).
 ## Performance
 
 The terrain is an 8×8 chunk grid with analytic (seam-free) normals so the
-frustum culls most of its ~1.2M triangles; entry-wall segments, coping and
-horizon mesas are merged into single draws; the sun's shadow map redraws
-only while the sun is moving; everything repeated is instanced. Typical
-ground-level frames run ~30–75 draw calls / 0.3–0.5M triangles at 60 fps.
-`/` shows live stats.
+frustum culls most of the ground. Entry-wall segments, coping and the layered
+horizon mesas are merged into single draws. Rubble and gravel each use one
+multi-geometry `BatchedMesh`, giving varied silhouettes with per-stone frustum
+culling but no extra draw calls; grass and stair repetition remain instanced.
+The sun's shadow map redraws only while the sun is moving. Typical ground-level
+frames run ~30–75 draw calls / 0.2–0.5M triangles at 60 fps. `/` shows live
+stats.
 
 ## Source layout
 
