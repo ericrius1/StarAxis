@@ -74,8 +74,10 @@ opens the field guide at a specific stop.
   detached causeway.
 - **Front Hour Chamber slit** — a true negative space in the facade with
   bronze reveals, a recessed floor and deep shadowed sightline.
-- **Upper Room** — the final stair lands beneath a circular, steel-lined
-  aperture with a fixed Polaris point.
+- **Upper Room** — a level viewing bay is centered on a 1.70 m eye line for
+  an approximately six-foot visitor. Its broad steel-lined aperture opens
+  through a flared passage to the live procedural sky and star field; no
+  opaque sky card blocks the view.
 - **Earthwork apron** — level graded terrain continues behind the stair and
   only then transitions into a broad natural slope, matching the reference
   profile.

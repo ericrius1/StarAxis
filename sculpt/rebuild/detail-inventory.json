@@ -104,6 +104,16 @@
         "mapsTo": { "type": "component", "ref": "terrain-mesa" },
         "evidenceRef": "supporting aerial-side reference",
         "confidence": 0.86
+      },
+      {
+        "id": "eye-height-open-aperture",
+        "kind": "hole",
+        "description": "The upper sighting mouth is centered on a 1.70 m standing eye line and continues as open negative space to the live sky.",
+        "scale": "meso",
+        "affects": "first-person immersion, parallax and star-field visibility",
+        "mapsTo": { "type": "component", "ref": "open-star-sighting-passage" },
+        "evidenceRef": "user first-person obstruction screenshot",
+        "confidence": 0.99
       }
     ]
   }

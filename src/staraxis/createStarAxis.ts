@@ -27,6 +27,7 @@ import {
   Object3D,
   Path,
   PlaneGeometry,
+  PointLight,
   Quaternion,
   Shape,
   ShapeGeometry,
@@ -35,8 +36,12 @@ import {
 } from 'three/webgpu';
 
 import {
+  APERTURE_CENTER_Y,
+  APERTURE_ELEVATION_RAD,
+  APERTURE_EXIT_RADIUS,
   APERTURE_INNER_RADIUS,
   APERTURE_LENGTH,
+  APERTURE_REAR_Z,
   APERTURE_WALL,
   APRON_HEIGHT,
   FRONT_CHAMBER_DEPTH,
@@ -59,6 +64,7 @@ import {
   STRINGER_GAP_X,
   STRINGER_HEIGHT,
   STRINGER_WIDTH,
+  UPPER_LANDING_FRONT_Z,
 } from './constants';
 import type { StarAxisMaterials } from './materials';
 
@@ -154,6 +160,66 @@ function rearFacePoint(x: number, y: number): [number, number, number] {
   return [x, y, PYRAMID_REAR_Z + (PYRAMID_TOP_REAR_Z - PYRAMID_REAR_Z) * t];
 }
 
+const apertureAxis = new Vector3(
+  0,
+  Math.sin(APERTURE_ELEVATION_RAD),
+  Math.cos(APERTURE_ELEVATION_RAD),
+).normalize();
+
+/** Exact intersection of the rising aperture axis with the south shell. */
+function apertureFrontPoint(): Vector3 {
+  const rear = new Vector3(0, APERTURE_CENTER_Y, APERTURE_REAR_Z);
+  const faceAtRearY = frontFacePoint(0, rear.y)[2];
+  const faceDzDy =
+    (PYRAMID_TOP_FRONT_Z - PYRAMID_FRONT_Z) /
+    (PYRAMID_APEX.y - PYRAMID_BASE_Y);
+  const distance =
+    (faceAtRearY - rear.z) /
+    (apertureAxis.z - apertureAxis.y * faceDzDy);
+  return rear.addScaledVector(apertureAxis, distance);
+}
+
+/**
+ * The upper south facet has a true cutout. This replaces the former dark
+ * circle pasted over a solid shell, which necessarily blocked the live sky.
+ */
+function frontCapGeometryWithAperture(
+  slitTopL: [number, number, number],
+  slitTopR: [number, number, number],
+  topRight: [number, number, number],
+  topLeft: [number, number, number],
+): BufferGeometry {
+  const shape = new Shape();
+  shape.moveTo(slitTopL[0], slitTopL[1]);
+  shape.lineTo(slitTopR[0], slitTopR[1]);
+  shape.lineTo(topRight[0], topRight[1]);
+  shape.lineTo(topLeft[0], topLeft[1]);
+  shape.closePath();
+
+  const aperture = new Path();
+  aperture.absarc(
+    0,
+    apertureFrontPoint().y,
+    APERTURE_EXIT_RADIUS,
+    0,
+    Math.PI * 2,
+    false,
+  );
+  shape.holes.push(aperture);
+
+  const geometry = new ShapeGeometry(shape, 64);
+  const positions = geometry.getAttribute('position') as BufferAttribute;
+  for (let i = 0; i < positions.count; i++) {
+    const x = positions.getX(i);
+    const y = positions.getY(i);
+    positions.setXYZ(i, x, y, frontFacePoint(0, y)[2]);
+  }
+  positions.needsUpdate = true;
+  geometry.computeVertexNormals();
+  geometry.computeBoundingSphere();
+  return geometry;
+}
+
 // ---------------------------------------------------------------- pyramid shell
 
 function buildPyramidShell(mats: Mats): Group {
@@ -198,13 +264,12 @@ function buildPyramidShell(mats: Mats): Group {
       [0, 1, 2, 0, 2, 3],
       mats.shell,
     ),
-    faceMesh(
-      'pyramid-front-cap',
-      [slitTopL, slitTopR, tfR, tfL],
-      [0, 1, 2, 0, 2, 3],
-      mats.shell,
-    ),
   );
+  const frontCap = shadowed(
+    new Mesh(frontCapGeometryWithAperture(slitTopL, slitTopR, tfR, tfL), mats.shell),
+  );
+  frontCap.name = 'pyramid-front-cap';
+  shell.add(frontCap);
 
   // North/rear face: the shell parts around one continuous stair excavation.
   const notchBottomHalf = STAIR_WIDTH / 2 + 1.05;
@@ -402,21 +467,31 @@ function buildRearStair(mats: Mats): Group {
 function buildUpperRoom(mats: Mats): Group {
   const upper = new Group();
   upper.name = 'upper-room-aperture';
-  const apertureY = 36.0;
+  const apertureY = APERTURE_CENTER_Y;
+  const headwallHeight = 6.0;
+  const rearCenter = new Vector3(0, apertureY, APERTURE_REAR_Z);
 
   const wallShape = new Shape();
-  wallShape.moveTo(-2.25, 0);
-  wallShape.lineTo(2.25, 0);
-  wallShape.lineTo(2.25, 5.6);
-  wallShape.lineTo(-2.25, 5.6);
+  wallShape.moveTo(-2.25, -headwallHeight / 2);
+  wallShape.lineTo(2.25, -headwallHeight / 2);
+  wallShape.lineTo(2.25, headwallHeight / 2);
+  wallShape.lineTo(-2.25, headwallHeight / 2);
   wallShape.closePath();
   const hole = new Path();
-  hole.absarc(0, 3.7, APERTURE_INNER_RADIUS, 0, Math.PI * 2, false);
+  hole.absarc(
+    0,
+    0,
+    APERTURE_INNER_RADIUS + 0.035,
+    0,
+    Math.PI * 2,
+    false,
+  );
   wallShape.holes.push(hole);
 
   const headwall = shadowed(new Mesh(new ShapeGeometry(wallShape, 32), mats.darkStone));
   headwall.name = 'upper-room-headwall';
-  headwall.position.set(0, 32.3, -18.25);
+  headwall.position.copy(rearCenter).addScaledVector(apertureAxis, APERTURE_LENGTH * 0.58);
+  headwall.quaternion.setFromUnitVectors(new Vector3(0, 0, 1), apertureAxis);
   headwall.userData.noCollide = false;
   upper.add(headwall);
 
@@ -428,79 +503,86 @@ function buildUpperRoom(mats: Mats): Group {
     ),
   );
   bore.name = 'polaris-aperture-bore';
-  bore.rotation.x = Math.PI / 2;
-  bore.position.set(0, apertureY, -18.78);
+  bore.quaternion.setFromUnitVectors(_up, apertureAxis);
+  bore.position.copy(rearCenter).addScaledVector(apertureAxis, APERTURE_LENGTH / 2);
   upper.add(bore);
 
   const ring = shadowed(
     new Mesh(new TorusGeometry(outerRadius, APERTURE_WALL, 10, 48), mats.steel),
   );
   ring.name = 'polaris-aperture-rim';
-  ring.position.set(0, apertureY, -19.38);
+  ring.position.copy(rearCenter).addScaledVector(apertureAxis, -0.012);
+  ring.quaternion.setFromUnitVectors(new Vector3(0, 0, 1), apertureAxis);
   upper.add(ring);
 
-  // The bore remains readable in both day and night captures.  It is a
-  // distant sky card, not a plug at the front of the opening.
-  const skyDisc = new Mesh(
-    new CircleGeometry(APERTURE_INNER_RADIUS * 0.97, 48),
-    new MeshBasicNodeMaterial({ color: '#17314d', side: DoubleSide }),
+  // A flared, open passage crosses the crown and terminates at the real hole
+  // in the south facet. It reveals the live sky dome and star field with
+  // parallax; there is intentionally no opaque disc behind the rim.
+  const frontSurface = apertureFrontPoint();
+  const fullPassageLength = frontSurface.clone().sub(rearCenter).dot(apertureAxis);
+  const passageLength = Math.max(0.2, fullPassageLength - APERTURE_LENGTH);
+  const passage = shadowed(
+    new Mesh(
+      new CylinderGeometry(
+        APERTURE_EXIT_RADIUS,
+        APERTURE_INNER_RADIUS,
+        passageLength,
+        64,
+        1,
+        true,
+      ),
+      mats.darkStone,
+    ),
   );
-  skyDisc.name = 'aperture-sky';
-  skyDisc.position.set(0, apertureY, -19.29);
-  skyDisc.userData.noCollide = true;
-  upper.add(skyDisc);
-
-  const star = new Mesh(
-    new CircleGeometry(0.055, 20),
-    new MeshBasicNodeMaterial({ color: '#ffffff', side: DoubleSide }),
-  );
-  star.name = 'polaris-point';
-  star.position.set(0, apertureY, -19.27);
-  star.userData.noCollide = true;
-  upper.add(star);
+  passage.name = 'open-star-sighting-passage';
+  passage.quaternion.setFromUnitVectors(_up, apertureAxis);
+  passage.position
+    .copy(rearCenter)
+    .addScaledVector(apertureAxis, APERTURE_LENGTH + passageLength / 2);
+  passage.userData.noCollide = true;
+  upper.add(passage);
 
   // The same bore exits through the south/front face above the vertical
   // slit.  This is the key front/back relationship in the supplied photos:
   // the visitor climbs the rear stair to the hole that is also visible on
   // the pyramid's front elevation.
-  const frontSurface = new Vector3(...frontFacePoint(0, apertureY));
-  const frontNormal = new Vector3(0, 0.8, 1).normalize();
   const frontRotation = new Quaternion().setFromUnitVectors(
     new Vector3(0, 0, 1),
-    frontNormal,
+    apertureAxis,
   );
   const frontRim = shadowed(
-    new Mesh(new TorusGeometry(outerRadius, APERTURE_WALL * 1.25, 12, 48), mats.steel),
+    new Mesh(
+      new TorusGeometry(
+        APERTURE_EXIT_RADIUS + APERTURE_WALL,
+        APERTURE_WALL * 1.25,
+        12,
+        64,
+      ),
+      mats.steel,
+    ),
   );
   frontRim.name = 'front-polaris-aperture-rim';
-  frontRim.position.copy(frontSurface).addScaledVector(frontNormal, 0.11);
+  frontRim.position.copy(frontSurface).addScaledVector(apertureAxis, 0.11);
   frontRim.quaternion.copy(frontRotation);
   upper.add(frontRim);
 
-  const frontSky = new Mesh(
-    new CircleGeometry(APERTURE_INNER_RADIUS * 0.98, 48),
-    new MeshBasicNodeMaterial({ color: '#07111f', side: DoubleSide }),
-  );
-  frontSky.name = 'front-polaris-aperture-shadow';
-  frontSky.position.copy(frontSurface).addScaledVector(frontNormal, 0.07);
-  frontSky.quaternion.copy(frontRotation);
-  frontSky.userData.noCollide = true;
-  upper.add(frontSky);
+  // A quiet local wash keeps the steel rim and chamber thickness legible at
+  // night without competing with the star field.
+  const viewingLight = new PointLight('#afcfff', 18, 10, 1.8);
+  viewingLight.name = 'upper-room-night-wash';
+  viewingLight.position.set(0, apertureY + 0.75, APERTURE_REAR_Z - 1.6);
+  viewingLight.castShadow = false;
+  upper.add(viewingLight);
 
-  const frontStar = new Mesh(
-    new CircleGeometry(0.055, 20),
-    new MeshBasicNodeMaterial({ color: '#ffffff', side: DoubleSide }),
+  // A level viewing bay lets a six-foot visitor leave the last tread and move
+  // close enough for the aperture to fill their peripheral field.
+  const landingRearZ = STAIR_TOP.z - 0.45;
+  const landingDepth = UPPER_LANDING_FRONT_Z - landingRearZ;
+  const landing = shadowed(
+    new Mesh(new BoxGeometry(4.25, 0.32, landingDepth), mats.stair),
   );
-  frontStar.name = 'front-polaris-point';
-  frontStar.position.copy(frontSurface).addScaledVector(frontNormal, 0.13);
-  frontStar.quaternion.copy(frontRotation);
-  frontStar.userData.noCollide = true;
-  upper.add(frontStar);
-
-  // A compact landing joins the final tread to the upper room.
-  const landing = shadowed(new Mesh(new BoxGeometry(4.25, 0.32, 3.2), mats.stair));
   landing.name = 'upper-room-landing';
-  landing.position.set(0, STAIR_TOP.y - 0.12, STAIR_TOP.z + 0.7);
+  landing.position.set(0, STAIR_TOP.y - 0.12, landingRearZ + landingDepth / 2);
   upper.add(landing);
 
   return upper;

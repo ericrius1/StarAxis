@@ -5,10 +5,16 @@
  * treads override the flat apron so the visitor can climb to the aperture.
  */
 
-import { STAIR_BASE, STAIR_TOP, STAIR_WIDTH } from './constants';
+import {
+  EYE_HEIGHT,
+  STAIR_BASE,
+  STAIR_TOP,
+  STAIR_WIDTH,
+  UPPER_LANDING_FRONT_Z,
+} from './constants';
 import { stairSurfaceY, terrainHeight } from './heightfield';
 
-export const EYE_HEIGHT = 1.7;
+export { EYE_HEIGHT } from './constants';
 const CHANNEL_HALF = STAIR_WIDTH / 2 + 0.28;
 
 export function inStairChannel(x: number, z: number): boolean {
@@ -19,12 +25,22 @@ export function inStairChannel(x: number, z: number): boolean {
   );
 }
 
+/** Level viewing bay between the last tread and the aperture mouth. */
+export function inUpperViewingBay(x: number, z: number): boolean {
+  return (
+    Math.abs(x - STAIR_TOP.x) <= STAIR_WIDTH / 2 + 0.48 &&
+    z >= STAIR_TOP.z - 0.45 &&
+    z <= UPPER_LANDING_FRONT_Z
+  );
+}
+
 /** Kept for callers compiled against the former two-stair layout. */
 export function onTerraceStair(): boolean {
   return false;
 }
 
 export function walkSurfaceY(x: number, z: number): number {
+  if (inUpperViewingBay(x, z)) return STAIR_TOP.y;
   if (inStairChannel(x, z)) return stairSurfaceY(z);
   return terrainHeight(x, z);
 }

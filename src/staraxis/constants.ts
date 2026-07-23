@@ -57,9 +57,24 @@ export const STAIR_STEP_RUN = (STAIR_TOP.z - STAIR_BASE.z) / STAIR_STEP_COUNT;
 export const STRINGER_HEIGHT = 0.58;
 export const STRINGER_WIDTH = 0.42;
 export const STRINGER_GAP_X = STAIR_WIDTH / 2 + 0.36;
-export const APERTURE_INNER_RADIUS = 0.72;
-export const APERTURE_WALL = 0.09;
-export const APERTURE_LENGTH = 1.15;
+
+/** A six-foot visitor stands at a natural 1.70 m eye line. */
+export const PLAYER_HEIGHT = 1.83;
+export const EYE_HEIGHT = 1.7;
+
+/**
+ * The upper sighting bay is dimensioned from that eye line. The rear mouth
+ * is deliberately broad and shallow; a flared masonry passage carries the
+ * view through the remaining crown instead of terminating in a sky card.
+ */
+export const APERTURE_CENTER_Y = STAIR_TOP.y + EYE_HEIGHT;
+export const APERTURE_REAR_Z = STAIR_TOP.z + 2.7;
+export const APERTURE_ELEVATION_RAD = LATITUDE_RAD;
+export const APERTURE_INNER_RADIUS = 1.0;
+export const APERTURE_EXIT_RADIUS = 1.24;
+export const APERTURE_WALL = 0.1;
+export const APERTURE_LENGTH = 0.58;
+export const UPPER_LANDING_FRONT_Z = APERTURE_REAR_Z + 0.28;
 
 /** Rear landing behind the lowest stair, held level before the mesa drops. */
 export const REAR_LANDING_FRONT_Z = PYRAMID_REAR_Z - 0.5;

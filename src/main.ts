@@ -39,6 +39,9 @@ import { MesaWind, type MesaWindFrame } from './staraxis/wind';
 import { WindsweptSand } from './staraxis/windsweptSand';
 import { StarAxisSoundscape } from './soundscape';
 import {
+  APERTURE_CENTER_Y,
+  APERTURE_ELEVATION_RAD,
+  APERTURE_REAR_Z,
   STAIR_TOP,
   STAIR_BASE,
   STAIR_STEP_RUN,
@@ -181,8 +184,8 @@ interface Preset {
 
 const APERTURE_VIEW: [number, number, number] = [
   0,
-  36.0,
-  -17.5,
+  APERTURE_CENTER_Y + Math.sin(APERTURE_ELEVATION_RAD) * 40,
+  APERTURE_REAR_Z + Math.cos(APERTURE_ELEVATION_RAD) * 40,
 ];
 
 const PRESETS: Record<string, Preset> = {
@@ -276,11 +279,11 @@ const TOUR_STOPS: TourStop[] = [
     label: 'Aperture',
     title: 'Upper Room and Polaris',
     description:
-      'The stair ends at a compact upper landing and circular steel-lined aperture. The dark blue bore and fixed point preserve the celestial target in both daylight and night modes.',
-    fact: 'The upper room belongs to the same core as the rear stair and the front chamber.',
-    pos: [0, STAIR_TOP.y + 1.55, STAIR_TOP.z - 2.0],
+      'The stair ends on a level eye-height viewing bay. The broad steel-lined mouth now opens through a flared passage to the live sky, so stars carry real depth and parallax instead of sitting on a flat card.',
+    fact: 'The opening is centered on a six-foot visitor and fills peripheral vision at the threshold.',
+    pos: [0, STAIR_TOP.y + EYE_HEIGHT, APERTURE_REAR_Z - 0.68],
     target: APERTURE_VIEW,
-    fov: 52,
+    fov: 60,
     mode: 'night',
   },
   {
