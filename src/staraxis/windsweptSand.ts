@@ -1,25 +1,21 @@
 /**
- * Camera-centred GPU saltation field.
+ * Camera-centred GPU sand haze.
  *
- * Wind-blown grains are ballistic and terrain-bound, so a neighbour sort
- * would spend bandwidth without changing the image. Instead, particle IDs
- * encode an implicit uniform grid (cell + lane): the storage buffers begin
- * spatially coherent, respawn evenly, and never need a CPU-side rebuild.
+ * The primary effect is a continuous, terrain-relative height volume injected
+ * through Scene.fogNode. Long anisotropic density fields advect with the shared
+ * wind and dissolve through turbulent edges, so sand reads as mist rather than
+ * a cloud of billboards.
  *
- * Three concentric bands are intentionally asymmetric:
- *   near — dense, terrain collision every frame
- *   mid  — fewer grains, a 30 Hz physics step
- *   far  — sparse, larger dust flecks at 15 Hz
- *
- * This is the same spatial-bucketing insight as counting-sort sand, with the
- * sort eliminated because this saltation model has no grain/grain forces.
+ * A small GPU saltation field remains only for sub-pixel near-camera sparkle.
+ * Particle IDs encode an implicit uniform grid (cell + lane), retaining even
+ * coverage without a sort or any grain/grain force pass.
  */
 
 import {
   ClampToEdgeWrapping,
+  Color,
   DataTexture,
   DataUtils,
-  FloatType,
   Group,
   HalfFloatType,
   LinearFilter,
@@ -35,14 +31,19 @@ import {
   If,
   clamp,
   color,
+  densityFogFactor,
   float,
   hash,
   instanceIndex,
   instancedArray,
   mix,
+  output,
+  positionWorld,
+  rangeFogFactor,
   shapeCircle,
   smoothstep,
   texture,
+  triNoise3D,
   uint,
   uniform,
   vec2,
@@ -84,6 +85,16 @@ export interface SandFrame extends MesaWindFrame {
 }
 
 const HEIGHT_TEXTURE_SIZE = 512;
+const DISTANCE_FOG_COLORS = {
+  day: new Color('#cfd8e4'),
+  goldenHour: new Color('#dcb28a'),
+  night: new Color('#070a12'),
+} as const;
+const SAND_FOG_COLORS = {
+  day: new Color('#cdb58e'),
+  goldenHour: new Color('#c79a66'),
+  night: new Color('#151412'),
+} as const;
 
 function buildHeightTexture(): DataTexture {
   const samples = new Uint16Array(HEIGHT_TEXTURE_SIZE * HEIGHT_TEXTURE_SIZE);
@@ -122,6 +133,7 @@ function lightForMode(mode: 'day' | 'goldenHour' | 'night'): number {
 export class WindsweptSand {
   readonly group = new Group();
   readonly totalCount: number;
+  readonly fogNode: any;
 
   private readonly heightTexture = buildHeightTexture();
   private readonly cameraPosition = uniform(new Vector3());
@@ -131,61 +143,36 @@ export class WindsweptSand {
   private readonly turbulence = uniform(0.4);
   private readonly elapsed = uniform(0);
   private readonly light = uniform(1);
+  private readonly distanceFogColor = uniform(new Color('#cfd8e4'));
+  private readonly sandFogColor = uniform(new Color('#cdb58e'));
   private readonly bands: SandBand[];
   private initialized = false;
 
   constructor(quality = 1) {
-    this.group.name = 'windswept-sand-clipmap';
+    this.group.name = 'windswept-sand-volume';
 
     const laneScale = Math.max(0.55, quality);
     const bandConfigs: BandConfig[] = [
       {
-        name: 'near',
-        grid: 32,
-        lanes: Math.max(10, Math.round(18 * laneScale)),
-        radius: 56,
+        name: 'micro',
+        grid: 24,
+        lanes: Math.max(3, Math.round(6 * laneScale)),
+        radius: 42,
         innerRadius: 0,
         stepHz: 60,
-        baseSize: 0.048,
-        alpha: 0.72,
-        hop: 1.25,
-        drag: 3.8,
+        baseSize: 0.014,
+        alpha: 0.12,
+        hop: 0.32,
+        drag: 4.2,
         speedScale: 1,
-        gravity: 8.4,
-      },
-      {
-        name: 'mid',
-        grid: 28,
-        lanes: Math.max(4, Math.round(8 * laneScale)),
-        radius: 155,
-        innerRadius: 42,
-        stepHz: 30,
-        baseSize: 0.095,
-        alpha: 0.4,
-        hop: 0.8,
-        drag: 2.6,
-        speedScale: 0.92,
-        gravity: 7.6,
-      },
-      {
-        name: 'far',
-        grid: 24,
-        lanes: Math.max(2, Math.round(3 * laneScale)),
-        radius: 330,
-        innerRadius: 120,
-        stepHz: 15,
-        baseSize: 0.19,
-        alpha: 0.2,
-        hop: 0.48,
-        drag: 1.8,
-        speedScale: 0.78,
-        gravity: 6.4,
+        gravity: 9.1,
       },
     ];
 
     this.bands = bandConfigs.map((config) => this.createBand(config));
     this.totalCount = this.bands.reduce((sum, band) => sum + band.count, 0);
     this.bands.forEach((band) => this.group.add(band.sprite));
+    this.fogNode = this.createFogNode();
   }
 
   initialize(renderer: WebGPURenderer, position: Vector3): void {
@@ -210,6 +197,8 @@ export class WindsweptSand {
     this.turbulence.value = frame.turbulence;
     this.elapsed.value = frame.elapsed;
     this.light.value = lightForMode(mode);
+    this.distanceFogColor.value.lerp(DISTANCE_FOG_COLORS[mode], Math.min(dt * 2, 1));
+    this.sandFogColor.value.lerp(SAND_FOG_COLORS[mode], Math.min(dt * 2.8, 1));
 
     for (const band of this.bands) {
       band.accumulator += dt;
@@ -225,7 +214,7 @@ export class WindsweptSand {
     return {
       particles: this.totalCount,
       bands: this.bands.length,
-      strategy: 'implicit-grid-clipmap',
+      strategy: 'height-volume-plus-micro-saltation',
     };
   }
 
@@ -390,22 +379,18 @@ export class WindsweptSand {
       config.innerRadius > 0
         ? smoothstep(config.innerRadius * 0.74, config.innerRadius, distance)
         : float(1);
-    const windVisibility = smoothstep(0.15, 0.58, this.windStrength)
-      .mul(0.58)
-      .add(this.gust.mul(0.42))
-      .add(0.12);
-    const sandColor = mix(color('#745037'), color('#e2c392'), seed)
+    const windVisibility = smoothstep(0.28, 0.72, this.windStrength)
+      .mul(0.38)
+      .add(this.gust.mul(0.52))
+      .add(0.025);
+    const sandColor = mix(color('#806247'), color('#b99a72'), seed)
       .mul(this.light)
-      .mul(float(0.78).add(seed.mul(0.35)));
+      .mul(float(0.72).add(seed.mul(0.24)));
 
     material.positionNode = renderPosition;
-    material.scaleNode = vec2(
-      float(config.baseSize)
-        .mul(float(0.7).add(seed.mul(0.8)))
-        .mul(float(0.9).add(this.windStrength.mul(1.7))),
-      float(config.baseSize).mul(float(0.42).add(seed.mul(0.42))),
-    );
-    material.rotationNode = float(-0.12).add(seed.sub(0.5).mul(0.34));
+    const grainSize = float(config.baseSize).mul(float(0.55).add(seed.mul(1.05)));
+    material.scaleNode = vec2(grainSize);
+    material.rotationNode = seed.mul(Math.PI * 2);
     material.colorNode = sandColor;
     material.opacityNode = (shapeCircle() as any)
       .mul(config.alpha)
@@ -417,6 +402,7 @@ export class WindsweptSand {
     material.depthWrite = false;
     material.depthTest = true;
     material.toneMapped = true;
+    material.fog = false;
 
     const sprite = new Sprite(material);
     sprite.name = `windswept-sand-${config.name}`;
@@ -433,5 +419,75 @@ export class WindsweptSand {
       step,
       accumulator: 0,
     };
+  }
+
+  /**
+   * Continuous ground-relative sand density. The fog factor integrates along
+   * the camera ray through densityFogFactor, while world-space anisotropic
+   * noise breaks the top into long wind-aligned veils.
+   */
+  private createFogNode(): any {
+    const sampleTerrain = Fn(([xz]: any[]) => {
+      const coord = xz.div(float(TERRAIN_SIZE)).add(0.5);
+      return texture(this.heightTexture, coord).r;
+    });
+
+    return Fn(() => {
+      const groundY = sampleTerrain(positionWorld.xz);
+      const altitude = positionWorld.y.sub(groundY).max(0).toVar();
+      const sandFactor = float(0).toVar();
+
+      // The branch keeps the noise march off the full-screen sky and upper
+      // architecture. Only fragments inside the shallow ground layer pay for
+      // the volumetric density evaluation.
+      If(altitude.lessThan(6), () => {
+        const acrossDirection = vec2(this.windDirection.y.negate(), this.windDirection.x);
+        const along = positionWorld.xz.dot(this.windDirection);
+        const across = positionWorld.xz.dot(acrossDirection);
+        const travel = this.elapsed.mul(float(1.8).add(this.windStrength.mul(8.2)));
+        const flowPosition = vec3(
+          along.sub(travel).mul(0.009),
+          across.mul(0.044).add(this.elapsed.mul(0.012)),
+          altitude.mul(0.22),
+        );
+        const volumeNoise = triNoise3D(
+          flowPosition,
+          float(0.08).add(this.turbulence.mul(0.12)),
+          this.elapsed.mul(0.07),
+        );
+        const filament = across
+          .mul(0.19)
+          .add(along.mul(0.018))
+          .sub(this.elapsed.mul(float(0.8).add(this.windStrength.mul(2.4))))
+          .sin()
+          .mul(0.055);
+        const wisps = smoothstep(0.18, 0.55, volumeNoise.add(filament));
+        const heightFalloff = smoothstep(
+          float(3.6).add(this.gust.mul(1.2)),
+          0,
+          altitude,
+        );
+        const opticalDepth = densityFogFactor(
+          float(0.007)
+            .add(this.windStrength.mul(0.0085))
+            .add(this.gust.mul(0.006)),
+        );
+        const windGate = smoothstep(0.18, 0.62, this.windStrength)
+          .mul(0.72)
+          .add(this.gust.mul(0.28));
+
+        sandFactor.assign(
+          opticalDepth
+            .mul(heightFalloff)
+            .mul(wisps)
+            .mul(windGate)
+            .mul(float(0.55).add(this.gust.mul(0.4))),
+        );
+      });
+
+      const sanded = mix(output.rgb, this.sandFogColor, sandFactor);
+      const distanceHaze = rangeFogFactor(500, 1500);
+      return vec4(mix(sanded, this.distanceFogColor, distanceHaze), output.a);
+    })();
   }
 }

@@ -89,10 +89,9 @@ opens the field guide at a specific stop.
   solar harmonics, and sparse nocturnal bells. The mix changes continuously
   with position, movement, elevation, and light.
 - **Windswept sand** — a shared deterministic wind field drives both the
-  soundscape and a GPU-resident saltation clipmap. Particle IDs form an
-  implicit spatial grid, with dense terrain collision near the visitor and
-  progressively sparser, lower-frequency simulation in the middle and far
-  bands.
+  soundscape and an animated, terrain-relative height volume. Wind-aligned
+  density noise forms broad translucent veils with turbulent edges; only a
+  sparse implicit-grid saltation field remains for near-camera micro-grains.
 - **Sky rig** — TSL sky dome with day/golden/night states; at night the star
   field physically rotates about the Polaris axis, with a fragment-shader
   long-exposure trail mode recreating the famous concentric-arc photograph.

@@ -20,8 +20,6 @@
 
 import {
   ACESFilmicToneMapping,
-  Color,
-  Fog,
   PerspectiveCamera,
   Scene,
   Vector3,
@@ -139,6 +137,7 @@ const constrainedDevice = navigator.hardwareConcurrency <= 4 || deviceMemory <= 
 const sandQuality = requestedQuality === 'high' ? 1.25 : constrainedDevice ? 0.65 : 1;
 const sand = new WindsweptSand(sandQuality);
 scene.add(sand.group);
+scene.fogNode = sand.fogNode;
 const mesaWind = new MesaWind();
 let latestWind: MesaWindFrame = {
   directionX: 1,
@@ -165,14 +164,6 @@ fp.setCollider(collider);
 sky.sunLight.shadow.autoUpdate = false;
 sky.sunLight.shadow.needsUpdate = true;
 const sunPrev = new Vector3().copy(sky.sunLight.position);
-
-// Distance haze sells the mesa scale; color tracks the light mode.
-const FOG_COLORS = {
-  day: new Color('#cfd8e4'),
-  goldenHour: new Color('#dcb28a'),
-  night: new Color('#070a12'),
-} as const;
-scene.fog = new Fog(FOG_COLORS.day.clone(), 500, 1500);
 
 // ---------------------------------------------------------------- camera presets
 interface Preset {
@@ -628,7 +619,7 @@ function updateDebug(): void {
   debugEl.innerHTML =
     `fps ${Math.round(lastFps)} · ${ms.toFixed(2)} ms<br>` +
     `draws ${renderer.info.render.drawCalls} · tris ${(renderer.info.render.triangles / 1e6).toFixed(2)}M<br>` +
-    `sand ${(sand.totalCount / 1000).toFixed(1)}k · wind ${Math.round(latestWind.strength * 100)}%<br>` +
+    `sand volume + ${(sand.totalCount / 1000).toFixed(1)}k micro · wind ${Math.round(latestWind.strength * 100)}%<br>` +
     `collider ${collider.triangleCount} tris<br>` +
     `${nav}${fp.fly ? ' · fly' : ''} · ${sky.getMode()}<br>` +
     `pos ${p.x.toFixed(1)}, ${p.y.toFixed(1)}, ${p.z.toFixed(1)}`;
@@ -658,9 +649,6 @@ renderer.setAnimationLoop(() => {
   if (nav === 'fp') fp.update(dt);
   else controls.update();
   sky.update(dt);
-  if (scene.fog instanceof Fog) {
-    scene.fog.color.lerp(FOG_COLORS[sky.getMode()], Math.min(dt * 2, 1));
-  }
   // redraw the shadow map only while the sun is actually moving
   if (sky.sunLight.position.distanceToSquared(sunPrev) > 0.25) {
     sky.sunLight.shadow.needsUpdate = true;
