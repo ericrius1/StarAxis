@@ -1,5 +1,5 @@
 {
-  "targetName": "Star Axis Aperture and Solar Pyramid",
+  "targetName": "Unified Star Axis Site Sequence",
   "targetId": "star-axis-aperture-and-solar-pyramid",
   "schemaVersion": "2.1",
   "terminologyProfile": {
@@ -38,7 +38,7 @@
     ],
     "descriptionRule": "Use measurable 3D graphics terms. Avoid vague words unless they are paired with concrete geometry/material/shader parameters."
   },
-  "sourceImage": "/Users/eric/codeprojects/StarAxis/sculpt/reference-review/pyramid-reference.png",
+  "sourceImage": "/Users/eric/Library/Application Support/CleanShot/media/media_sMMa16AAtN/CleanShot 2026-07-23 at 14.29.24@2x.png",
   "referenceCamera": {
     "solved": false,
     "fovDegrees": 40,
@@ -693,6 +693,9 @@
     }
   },
   "assumptions": [
+    "The newly supplied excavation photograph is the Avenue and Equinoctial Chamber approach, not a second pyramid: it occupies the lower south side of the mesa and feeds the same 147-step Star Tunnel.",
+    "The Star Tunnel climbs north toward Polaris and emerges inside the Solar Pyramid; the Hour Chamber slit remains a distinct opening on the pyramid's public north face.",
+    "Published counts and dimensions control repeated systems where the photos do not provide exact scale: 147 interior steps and 20 exterior granite steps.",
     "Rear-face geometry is inferred as a matching tapered shell so the established south-to-north visitor passage remains complete.",
     "Existing site scale is retained while photograph-visible ratios control the new silhouette.",
     "The oculus close-up is used for shallow-bore framing and metal response, while the exterior photo controls placement and outer scale."

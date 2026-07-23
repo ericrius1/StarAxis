@@ -9,8 +9,8 @@
  *   M            open the guided field tour
  *
  * Keys:
- *   1  south/front slit
- *   2  north/rear stair and level apron
+ *   1  Avenue / south excavation
+ *   2  Solar Pyramid north/front face
  *   3  on the Star Tunnel stair looking toward the aperture
  *   4  high aerial overview
  *   5  night view due north (star trails around Polaris)
@@ -50,6 +50,9 @@ import {
   PYRAMID_CENTER,
   PYRAMID_FRONT_Z,
   PYRAMID_REAR_Z,
+  PORTAL_Z,
+  TERRACE_TOP_Y,
+  TRENCH_SOUTH_Z,
 } from './staraxis/constants';
 import { EYE_HEIGHT } from './staraxis/walk';
 
@@ -176,20 +179,35 @@ interface Preset {
 const APERTURE_VIEW: [number, number, number] = [
   0,
   APERTURE_CENTER_Y + Math.sin(APERTURE_ELEVATION_RAD) * 40,
-  APERTURE_REAR_Z + Math.cos(APERTURE_ELEVATION_RAD) * 40,
+  APERTURE_REAR_Z - Math.cos(APERTURE_ELEVATION_RAD) * 40,
 ];
 
 const PRESETS: Record<string, Preset> = {
-  '1': { pos: [0, 9.7, 35], target: [0, 17, 1], fov: 55, mode: 'day' },
-  '2': { pos: [28, 20, -89], target: [0, 24, -36], fov: 52, mode: 'goldenHour' },
+  '1': {
+    pos: [0, 4.2, TRENCH_SOUTH_Z - 3],
+    target: [0, 10.5, -2],
+    fov: 54,
+    mode: 'day',
+  },
+  '2': {
+    pos: [0, 31.5, PYRAMID_FRONT_Z - 26],
+    target: [0, 37, PYRAMID_CENTER.z],
+    fov: 52,
+    mode: 'goldenHour',
+  },
   '3': {
-    pos: [STAIR_BASE.x, STAIR_BASE.y + EYE_HEIGHT + 0.8, STAIR_BASE.z - 2.5],
+    pos: [STAIR_BASE.x, STAIR_BASE.y + EYE_HEIGHT + 0.35, STAIR_BASE.z + 2.2],
     target: APERTURE_VIEW,
     fov: 48,
     mode: 'day',
   },
-  '4': { pos: [-95, 82, 105], target: [0, 15, -34], fov: 48, mode: 'day' },
-  '5': { pos: [0, 10.2, -83], target: APERTURE_VIEW, fov: 58, mode: 'night' },
+  '4': { pos: [-105, 92, 118], target: [0, 18, -24], fov: 48, mode: 'day' },
+  '5': {
+    pos: [0, STAIR_TOP.y + EYE_HEIGHT, APERTURE_REAR_Z + 1.35],
+    target: APERTURE_VIEW,
+    fov: 62,
+    mode: 'night',
+  },
 };
 
 interface TourStop extends Preset {
@@ -202,66 +220,66 @@ interface TourStop extends Preset {
 const TOUR_STOPS: TourStop[] = [
   {
     label: 'Overview',
-    title: 'One pyramid, cut on two sides',
+    title: 'One continuous north-rising work',
     description:
-      'The rebuilt scene reads as one continuous pyramid. Its south face holds the narrow Hour Chamber slit; the north face opens around the Star Tunnel stair; both terminate in the same upper aperture.',
-    fact: 'The shell, stair cut, chamber and summit now share one footprint and one apex.',
-    pos: [-94, 77, 103],
-    target: [0, 17, -31],
+      'The Avenue is the lower southern excavation. It enters the Equinoctial Chamber, becomes the 147-step Star Tunnel, and rises through the mesa into the Solar Pyramid at the north end.',
+    fact: 'The Avenue, stair axis, mesa slot and pyramid are now one connected route—not separate attractions.',
+    pos: [-105, 92, 118],
+    target: [0, 18, -24],
     fov: 48,
     mode: 'day',
   },
   {
-    label: 'Front',
-    title: 'South face and slit',
+    label: 'Avenue',
+    title: 'The excavated southern approach',
     description:
-      'From the front, the monument is a single tall stone face with a needle-like opening. A recessed dark passage and cold sighting point give the slit real depth rather than a painted black mark.',
-    fact: 'The front slit is not the stair entrance; it is a separate sight chamber inside the same pyramid.',
-    pos: [0, 9.7, 36],
-    target: [0, 17, 2],
+      'Curved, outward-leaning stone walls descend into the cut. The distant triangular portal and the centered stair reveal the entire axial sequence from the first step into the site.',
+    fact: 'Published accounts describe the Avenue as a roughly 75-foot-deep excavation leading to the 147-step passage.',
+    pos: [0, 4.2, TRENCH_SOUTH_Z - 3],
+    target: [0, 10.5, -2],
     fov: 54,
     mode: 'day',
   },
   {
-    label: 'Slit interior',
-    title: 'Hour Chamber threshold',
+    label: 'Equinoctial',
+    title: 'Triangular threshold',
     description:
-      'The opening narrows overhead and continues into a shadowed axial chamber. Stone jambs, bronze reveals and the long floor plane make the front face feel inhabited and thick.',
-    fact: 'Walk forward from the south forecourt to look into the slit.',
-    pos: [0, 9.72, 8.9],
-    target: [0, 16, -8],
-    fov: 50,
-    mode: 'night',
-  },
-  {
-    label: 'Rear apron',
-    title: 'Flat plane, then slope',
-    description:
-      'Behind the stair, a broad level landing continues across the mesa. Only beyond that deliberate horizontal plane does the terrain roll down into the desert.',
-    fact: 'The apron remains flat to the north before a wide naturalized falloff.',
-    pos: [30, 15, -111],
-    target: [0, 13, -60],
+      'The lower granite flight passes through a real triangular void in the retaining wall. Beyond it, the long stair continues north through the rubble bowl without a wall or terrain sheet blocking the view.',
+    fact: 'The portal belongs to the Equinoctial Chamber at the base of the Star Tunnel.',
+    pos: [0, 4.6, 17],
+    target: [0, TERRACE_TOP_Y + 4.6, PORTAL_Z - 5],
     fov: 50,
     mode: 'day',
   },
   {
-    label: 'Rear stair',
-    title: 'Star Tunnel carved into the back',
+    label: 'Star Tunnel',
+    title: '147 steps toward Polaris',
     description:
-      'The 147-step flight begins on the north landing and rises through a deep incision in the rear face. The flanking stone is the pyramid shell itself, not a second detached structure.',
-    fact: 'Rear cut, stringers, stair bed and exterior faces now meet without a terrain gap.',
-    pos: [0, 9.8, -82],
+      'The stair rises due north at the local latitude angle. Instanced granite treads and paired open masonry walls preserve the sightline while keeping the scene light enough for real-time exploration.',
+    fact: 'The model uses 147 treads and an 8.25-inch published rise.',
+    pos: [0, STAIR_BASE.y + EYE_HEIGHT + 0.25, STAIR_BASE.z + 2.2],
     target: APERTURE_VIEW,
-    fov: 54,
+    fov: 48,
     mode: 'day',
+  },
+  {
+    label: 'Pyramid rear',
+    title: 'The stair enters the same pyramid',
+    description:
+      'At the upper mesa the stair passes through a deep opening in the south/back face of the Solar Pyramid. The masonry returns, tunnel walls, stair bed and shell all meet as one construction.',
+    fact: 'This is the corrected relationship that replaces the former detached pyramid and tunnel.',
+    pos: [25, 33, -28],
+    target: [0, 37, -50],
+    fov: 50,
+    mode: 'goldenHour',
   },
   {
     label: 'On the stair',
-    title: 'Ascending inside the shell',
+    title: 'Ascending the open axis',
     description:
-      'As the treads climb, the rear opening narrows toward the summit. Pale granite stringers trace the polar ascent while dark return walls reveal the thickness of the cut.',
+      'The side walls stay above the carved ground and remain open to the sky. Looking ahead, the broad circular aperture stays centered instead of collapsing into a tiny dot.',
     fact: 'Each tread advances toward the same aperture housed in the pyramid crown.',
-    pos: [0, 21.6, -40.3],
+    pos: [0, 23.1, -29.2],
     target: APERTURE_VIEW,
     fov: 48,
     mode: 'day',
@@ -272,20 +290,20 @@ const TOUR_STOPS: TourStop[] = [
     description:
       'The stair ends on a level eye-height viewing bay. The broad steel-lined mouth now opens through a flared passage to the live sky, so stars carry real depth and parallax instead of sitting on a flat card.',
     fact: 'The opening is centered on a six-foot visitor and fills peripheral vision at the threshold.',
-    pos: [0, STAIR_TOP.y + EYE_HEIGHT, APERTURE_REAR_Z - 0.68],
+    pos: [0, STAIR_TOP.y + EYE_HEIGHT, APERTURE_REAR_Z + 1.35],
     target: APERTURE_VIEW,
     fov: 60,
     mode: 'night',
   },
   {
-    label: 'Profile',
-    title: 'Pyramid and landform together',
+    label: 'Pyramid front',
+    title: 'Hour Chamber slit on the north face',
     description:
-      'In profile, the long rear slope of the pyramid contains the ascent while the graded mesa meets its base. The level north apron is readable as a distinct horizon before it slopes away.',
-    fact: 'This side view is the layout check: no detached pyramid, stair trench or floating mound.',
-    pos: [66, 33, -26],
-    target: [0, 20, -30],
-    fov: 50,
+      'The public front remains the steep truncated pylon seen in the photographs: irregular granite courses, a tall needle slit, an upper polar opening, summit rods and twenty exterior granite steps along the rear edge.',
+    fact: 'The front slit is the Hour Chamber—not the entrance to the 147-step Star Tunnel.',
+    pos: [0, 31.5, PYRAMID_FRONT_Z - 26],
+    target: [0, 37, PYRAMID_CENTER.z],
+    fov: 52,
     mode: 'goldenHour',
   },
 ];
@@ -535,7 +553,7 @@ window.addEventListener(
 
 function updateInfo(): void {
   if (!info) return;
-  const views = '1 front slit · 2 rear stair · 3 on stair · 4 aerial · 5 night · M tour';
+  const views = '1 Avenue · 2 pyramid front · 3 Star Tunnel · 4 aerial · 5 aperture night · M tour';
   const light = 'Z+drag time · D/G/N light · T trails · K sound · / stats';
   const line =
     tourOpen
@@ -562,34 +580,38 @@ const captionEl = document.getElementById('caption') as HTMLDivElement | null;
 let lastCaption = '';
 
 function zoneCaption(x: number, z: number): string {
-  if (Math.abs(x) < 2.8 && z >= STAIR_TOP.z - 3.2 && z < STAIR_TOP.z + 3.0) {
-    return 'Upper Room — the rear stair and front chamber meet at the Polaris aperture';
+  if (Math.abs(x) < 2.8 && Math.abs(z - STAIR_TOP.z) < 3.2) {
+    return 'Upper Room — the Star Tunnel reaches the live Polaris aperture inside the Solar Pyramid';
   }
-  if (Math.abs(x) <= STAIR_WIDTH / 2 + 0.45 && z >= STAIR_BASE.z && z <= STAIR_TOP.z) {
+  if (
+    Math.abs(x) <= STAIR_WIDTH / 2 + 0.45 &&
+    z <= STAIR_BASE.z &&
+    z >= STAIR_TOP.z
+  ) {
     const step = Math.min(
       STAIR_STEP_COUNT,
-      Math.max(1, Math.ceil((z - STAIR_BASE.z) / STAIR_STEP_RUN)),
+      Math.max(1, Math.ceil((STAIR_BASE.z - z) / STAIR_STEP_RUN)),
     );
     const year = 2100 + Math.round(((step / STAIR_STEP_COUNT) * 12900) / 50) * 50;
-    return `Rear Star Tunnel — carved into the pyramid · step ${step}/${STAIR_STEP_COUNT} · AD ${year}`;
+    return `Star Tunnel — rising due north through the mesa · step ${step}/${STAIR_STEP_COUNT} · AD ${year}`;
   }
   if (
     Math.abs(x) <= FRONT_SLIT_HALF_WIDTH + 0.7 &&
-    z <= PYRAMID_FRONT_Z + 3 &&
-    z >= PYRAMID_FRONT_Z - 18
+    z >= PYRAMID_FRONT_Z - 3 &&
+    z <= PYRAMID_REAR_Z
   ) {
-    return 'Front Hour Chamber — a narrow slit looking into the unified pyramid';
+    return 'Hour Chamber — the north/front slit looks through the unified Solar Pyramid';
   }
   const px = x - PYRAMID_CENTER.x;
   const pz = z - PYRAMID_CENTER.z;
-  if (Math.abs(x) < 28 && z < PYRAMID_REAR_Z && z > -94) {
-    return 'Rear apron — level ground behind the staircase before the mesa slopes away';
+  if (Math.abs(x) < 13 && z > 12 && z < TRENCH_SOUTH_Z + 5) {
+    return 'The Avenue — a deep southern excavation aligned with the Star Tunnel';
   }
-  if (Math.abs(px) < 22 && Math.abs(pz) < 42) {
-    return 'Unified pyramid — front slit, rear stair, and upper aperture in one mass';
+  if (Math.abs(x) < 20 && z >= -7 && z <= 12) {
+    return 'Equinoctial Chamber — triangular threshold into the 147-step axis';
   }
-  if (Math.abs(x) < 9 && z > PYRAMID_FRONT_Z && z < 62) {
-    return 'South approach — the narrow front slit is straight ahead';
+  if (Math.abs(px) < 15 && Math.abs(pz) < 18) {
+    return 'Solar Pyramid — Hour Chamber in front, Star Tunnel entering from the rear';
   }
   return '';
 }

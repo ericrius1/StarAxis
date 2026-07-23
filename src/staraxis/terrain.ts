@@ -29,9 +29,9 @@ import {
 import { clamp, color, mix, positionWorld } from 'three/tsl';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import {
-  APRON_FRONT_Z,
-  APRON_HALF_WIDTH,
-  APRON_REAR_Z,
+  BOWL_CENTER,
+  BOWL_RADIUS,
+  TRENCH_SOUTH_Z,
   TERRAIN_SIZE,
   TERRAIN_SEGMENTS,
   PYRAMID_FRONT_Z,
@@ -59,15 +59,19 @@ function slopeMag(x: number, z: number): number {
 
 /** Keep-out region above the star-tunnel stair slot. */
 function inStairSlot(x: number, z: number): boolean {
+  const zMin = Math.min(STAIR_BASE.z, STAIR_TOP.z) - 4;
+  const zMax = Math.max(STAIR_BASE.z, STAIR_TOP.z) + 4;
   return (
     Math.abs(x) < 4.25 &&
-    z > STAIR_BASE.z - 4 &&
-    z < STAIR_TOP.z + 4
+    z > zMin &&
+    z < zMax
   );
 }
 
 function inPyramidFootprint(x: number, z: number): boolean {
-  return Math.abs(x) < 16.5 && z > PYRAMID_REAR_Z - 1 && z < PYRAMID_FRONT_Z + 1;
+  const zMin = Math.min(PYRAMID_REAR_Z, PYRAMID_FRONT_Z) - 1;
+  const zMax = Math.max(PYRAMID_REAR_Z, PYRAMID_FRONT_Z) + 1;
+  return Math.abs(x) < 11.5 && z > zMin && z < zMax;
 }
 
 const _pos = new Vector3();
@@ -151,13 +155,12 @@ function createGround(desertMaterial: MeshStandardNodeMaterial): Group {
           0.18 * Math.sin(x * 0.019 - z * 0.031);
         const slope = Math.min(1, Math.hypot(dx, dz) * 2.8);
         const approach =
-          Math.abs(x) < 6.5 && z > PYRAMID_FRONT_Z && z < 68
+          Math.abs(x) < 7.5 && z > 1 && z < TRENCH_SOUTH_Z
             ? Math.max(0, 1 - Math.abs(x) / 6.5)
             : 0;
+        const bowlDistance = Math.hypot(x - BOWL_CENTER.x, z - BOWL_CENTER.z);
         const apron =
-          Math.abs(x) < APRON_HALF_WIDTH &&
-          z < APRON_FRONT_Z &&
-          z > APRON_REAR_Z
+          bowlDistance < BOWL_RADIUS + 2
             ? 0.36
             : 0;
         const path = Math.max(approach, apron);
@@ -387,12 +390,9 @@ function createGrassTufts(): InstancedMesh {
     const x = Math.cos(a) * r;
     const z = Math.sin(a) * r;
 
-    if (
-      Math.abs(x) < APRON_HALF_WIDTH + 2 &&
-      z < APRON_FRONT_Z + 2 &&
-      z > APRON_REAR_Z - 2
-    ) continue; // preserve the authored flat apron and its crisp break lines
-    if (Math.abs(x) < 9 && z > 8 && z < 66) continue; // keep the front approach clear
+    if (Math.hypot(x - BOWL_CENTER.x, z - BOWL_CENTER.z) < BOWL_RADIUS + 4) continue;
+    if (Math.abs(x) < 14 && z > 0 && z < TRENCH_SOUTH_Z + 4) continue;
+    if (inPyramidFootprint(x, z)) continue;
     if (inStairSlot(x, z)) continue;
     if (slopeMag(x, z) > 0.42) continue; // gentle slopes only
 

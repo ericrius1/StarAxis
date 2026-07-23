@@ -1,23 +1,30 @@
 /**
- * Analytic terrain for the rebuilt, unified monument.
+ * Analytic height field shared by rendering and first-person walking.
  *
- * The important authored landform is a level apron around and behind the
- * pyramid.  It continues well beyond the foot of the rear stair, then breaks
- * into a broad slope at its north edge.  The same function drives both the
- * rendered terrain and the first-person walking surface.
+ * The Avenue and circular Equinoctial excavation are carved into one natural
+ * mesa. The full Star Tunnel slot is then cut northward through that same
+ * landform so no terrain sheet can clip across the 147-step sightline.
  */
 
 import {
-  APRON_FRONT_Z,
-  APRON_HALF_WIDTH,
-  APRON_HEIGHT,
-  APRON_REAR_Z,
-  APRON_SLOPE_RUN,
+  BOWL_CENTER,
+  BOWL_FLOOR_Y,
+  CRESCENT_ARC_HALF_RAD,
+  PYRAMID_BASE_HALF,
+  PYRAMID_BASE_Y,
+  PYRAMID_CENTER,
   STAIR_BASE,
   STAIR_TOP,
   SUMMIT_CENTER,
   SUMMIT_HEIGHT,
   SUMMIT_RADIUS,
+  TERRACE_STAIR_HALF_W,
+  TERRACE_STAIR_RISE,
+  TERRACE_STAIR_RUN,
+  TERRACE_STAIR_TOP_Y,
+  TERRACE_STAIR_TOP_Z,
+  TRENCH_SOUTH_Z,
+  crescentCrownY,
 } from './constants';
 
 function smooth01(t: number): number {
@@ -29,44 +36,108 @@ function lerp(a: number, b: number, t: number): number {
   return a + (b - a) * t;
 }
 
-/** Low, deterministic high-desert undulation. */
 function plainNoise(x: number, z: number): number {
   return (
-    1.15 * Math.sin(x * 0.008 + 0.9) * Math.sin(z * 0.009 - 1.3) +
-    0.62 * Math.sin(x * 0.021 + 1.7) * Math.sin(z * 0.019 - 0.6) +
-    0.24 * Math.sin(x * 0.061 - 2.1) * Math.sin(z * 0.054 + 1.2)
+    2.15 * Math.sin(x * 0.0042 + 0.9) * Math.sin(z * 0.0051 - 1.3) +
+    1.2 * Math.sin(x * 0.011 + 1.7) * Math.sin(z * 0.013 - 0.6) +
+    0.52 * Math.sin(x * 0.031 - 2.1) * Math.sin(z * 0.027 + 1.2)
   );
 }
 
-/** The unbuilt mesa underneath the architectural grading. */
 export function naturalHeight(x: number, z: number): number {
   const dx = x - SUMMIT_CENTER.x;
   const dz = z - SUMMIT_CENTER.z;
-  const mesa =
+  const mound =
     SUMMIT_HEIGHT * Math.exp(-(dx * dx + dz * dz) / (SUMMIT_RADIUS * SUMMIT_RADIUS));
-  return plainNoise(x, z) + mesa;
+  const northernPlateau =
+    (SUMMIT_HEIGHT - 1.8) *
+    smooth01((-z - 24) / 48) *
+    smooth01((310 - Math.abs(x + 30)) / 185);
+  return plainNoise(x, z) + Math.max(mound, northernPlateau);
 }
 
-/** Continuous walking line along the rear stair. */
 export function stairSurfaceY(z: number): number {
-  const t = (z - STAIR_BASE.z) / (STAIR_TOP.z - STAIR_BASE.z);
+  const t = (STAIR_BASE.z - z) / (STAIR_BASE.z - STAIR_TOP.z);
   return lerp(STAIR_BASE.y, STAIR_TOP.y, Math.max(0, Math.min(1, t)));
 }
 
-/**
- * Rectangular mesa grading.  `outside` is zero across the flat apron and
- * grows past its side/front/rear break lines.  The rear run is deliberately
- * long and obvious in profile: flat ground behind the stair, then slope.
- */
-export function terrainHeight(x: number, z: number): number {
-  const natural = naturalHeight(x, z);
-  const sideOutside = Math.max(0, Math.abs(x) - APRON_HALF_WIDTH);
-  const frontOutside = Math.max(0, z - APRON_FRONT_Z);
-  const rearOutside = Math.max(0, APRON_REAR_Z - z);
-  const outside = Math.max(sideOutside, frontOutside, rearOutside);
-  const blend = smooth01(outside / APRON_SLOPE_RUN);
+export function trenchFloorY(z: number): number {
+  const t = smooth01((TRENCH_SOUTH_Z - z) / (TRENCH_SOUTH_Z - 2));
+  return lerp(1.1, 2.2, t);
+}
 
-  // The 8 m pad is intentionally planar; only the falloff carries natural
-  // undulation.  This is the flat plane visible behind the staircase.
-  return lerp(APRON_HEIGHT, natural, blend);
+export function terraceStairLineY(z: number): number {
+  const line =
+    TERRACE_STAIR_TOP_Y -
+    ((z - TERRACE_STAIR_TOP_Z) * TERRACE_STAIR_RISE) / TERRACE_STAIR_RUN;
+  return Math.min(TERRACE_STAIR_TOP_Y, Math.max(trenchFloorY(z), line));
+}
+
+export function terrainHeight(x: number, z: number): number {
+  let h = naturalHeight(x, z);
+
+  // Circular Equinoctial excavation. The court and rubble bowl are a single
+  // cut, with the masonry crown following the photographed arc.
+  const db = Math.hypot(x - BOWL_CENTER.x, z - BOWL_CENTER.z);
+  if (db < 30.5) {
+    const angle = Math.atan2(x - BOWL_CENTER.x, -(z - BOWL_CENTER.z));
+    const boundedAngle = Math.max(
+      -CRESCENT_ARC_HALF_RAD,
+      Math.min(CRESCENT_ARC_HALF_RAD, angle),
+    );
+    const crown = crescentCrownY(boundedAngle) - 0.35;
+    if (db <= 23.2) {
+      const court = BOWL_FLOOR_Y;
+      const south = trenchFloorY(z);
+      const target = lerp(court, south, smooth01((z - 1.1) / 2.4));
+      h = Math.min(h, target);
+    } else {
+      const t = smooth01((30.5 - db) / 7.3);
+      h = lerp(h, Math.min(h, crown), t);
+    }
+  }
+
+  // Avenue: a long, south-facing trench whose upper banks widen outward.
+  if (z > 1 && z < TRENCH_SOUTH_Z + 18) {
+    const floor = trenchFloorY(z);
+    const halfWidth = lerp(5.4, 13.2, smooth01((z - 2) / (TRENCH_SOUTH_Z - 2)));
+    const wallRise = Math.max(0, Math.abs(x) - halfWidth) * 1.55;
+    const carved = Math.min(h, floor + wallRise);
+    const fade = smooth01((TRENCH_SOUTH_Z + 18 - z) / 18);
+    h = lerp(h, carved, fade);
+  }
+
+  // Granite stair through the lower retaining wall.
+  if (Math.abs(x) < TERRACE_STAIR_HALF_W + 0.25 && z > -1.4 && z < 6.8) {
+    h = Math.min(h, terraceStairLineY(z) - 0.32);
+  }
+
+  // Full Star Tunnel slot. Keeping this open from portal to pyramid prevents
+  // the old invisible-ground wall and makes the complete sightline readable.
+  if (z > STAIR_TOP.z - 3.5 && z < STAIR_BASE.z + 2.2) {
+    const stairY = stairSurfaceY(z);
+    const halfWidth = 3.65;
+    const wallRise = Math.max(0, Math.abs(x) - halfWidth) * 2.35;
+    const carved = Math.min(h, stairY - 0.58 + wallRise);
+    const along =
+      smooth01((STAIR_BASE.z + 2.2 - z) / 3.2) *
+      smooth01((z - (STAIR_TOP.z - 3.5)) / 1.8);
+    h = lerp(h, carved, along);
+  }
+
+  // Seat the unified Solar Pyramid on the mesa around—not on top of—the
+  // tunnel slot. The center channel remains governed by the stair carve.
+  const localX = Math.abs(x - PYRAMID_CENTER.x);
+  const localZ = Math.abs(z - PYRAMID_CENTER.z);
+  const pyramidApron =
+    localX < PYRAMID_BASE_HALF + 5 && localZ < PYRAMID_BASE_HALF + 9;
+  if (pyramidApron && localX > 4.1) {
+    const edge = Math.max(
+      localX / (PYRAMID_BASE_HALF + 5),
+      localZ / (PYRAMID_BASE_HALF + 9),
+    );
+    h = Math.max(h, lerp(PYRAMID_BASE_Y + 0.2, h, smooth01((edge - 0.62) / 0.38)));
+  }
+
+  return h;
 }
