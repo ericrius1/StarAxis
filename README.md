@@ -52,11 +52,12 @@ Earth's rotation.
 Presets `1`–`5` work in both modes; in first person they are spawn points,
 and a vantage well off the ground (the aerial view) spawns you flying.
 
-The walker follows the terrain heightfield (Star Tunnel treads and the
-terrace flight override it in their channels), while a static BVH over the
-monument blocks walls, parapets and pyramid faces. Knee-height steps pass
-under the capsule so stairs stay climbable. No gravity/jumping — grounding
-is eased, not simulated — and scatter rocks are set dressing, not solid.
+Walking casts directly against a static `three-mesh-bvh` built from the
+rendered terrain, architectural meshes, and every instanced stair tread.
+A separate solid-geometry BVH resolves the full-height visitor capsule
+against visible walls, parapets, and continuous stair stringers, while
+bounded movement substeps stop at ledges instead of falling through seams.
+Scatter rocks and grass remain non-solid set dressing.
 
 URL params for scripted captures: `?nav=orbit&view=1..5&mode=day|goldenHour|night&trails=1&blockout=1`
 or a free camera `?cam=x,y,z&look=x,y,z&fov=55`. `nav=fp|orbit` picks the

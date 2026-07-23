@@ -385,6 +385,7 @@ function buildEquinoctialChamber(mats: Mats): Group {
       TERRACE_TOP_Y - 0.4,
       TERRACE_Z - terraceDepth / 2,
     );
+    slab.userData.collisionSurfaceOnly = true;
     chamber.add(slab);
   }
 
@@ -402,24 +403,34 @@ function buildEquinoctialChamber(mats: Mats): Group {
     lowerSteps.setMatrixAt(i, matrix);
   }
   lowerSteps.instanceMatrix.needsUpdate = true;
+  lowerSteps.userData.collisionSurfaceOnly = true;
   chamber.add(shadowed(lowerSteps));
 
-  const portalShape = new Shape();
-  portalShape.moveTo(-PORTAL_BASE_HALF_WIDTH, 0);
-  portalShape.lineTo(PORTAL_BASE_HALF_WIDTH, 0);
-  portalShape.lineTo(0, PORTAL_HEIGHT);
-  portalShape.closePath();
-  const portalVoid = new Path();
-  portalVoid.moveTo(-PORTAL_VOID_HALF_WIDTH, 0.02);
-  portalVoid.lineTo(PORTAL_VOID_HALF_WIDTH, 0.02);
-  portalVoid.lineTo(0, PORTAL_VOID_HEIGHT);
-  portalVoid.closePath();
-  portalShape.holes.push(portalVoid);
-  const portalGeometry = new ExtrudeGeometry(portalShape, {
-    depth: PORTAL_DEPTH,
-    bevelEnabled: false,
+  // Two real flanks make the triangular opening continuous with the floor.
+  // A hole inside one solid extrusion necessarily left a tiny bottom ring
+  // that caught the rounded visitor foot before it could reach the top step.
+  const portalFlanks = [-1, 1].map((side) => {
+    const shape = new Shape();
+    if (side < 0) {
+      shape.moveTo(-PORTAL_BASE_HALF_WIDTH, 0);
+      shape.lineTo(-PORTAL_VOID_HALF_WIDTH, 0);
+      shape.lineTo(0, PORTAL_VOID_HEIGHT);
+      shape.lineTo(0, PORTAL_HEIGHT);
+    } else {
+      shape.moveTo(PORTAL_VOID_HALF_WIDTH, 0);
+      shape.lineTo(PORTAL_BASE_HALF_WIDTH, 0);
+      shape.lineTo(0, PORTAL_HEIGHT);
+      shape.lineTo(0, PORTAL_VOID_HEIGHT);
+    }
+    shape.closePath();
+    const geometry = new ExtrudeGeometry(shape, {
+      depth: PORTAL_DEPTH,
+      bevelEnabled: false,
+    });
+    geometry.translate(0, 0, -PORTAL_DEPTH / 2);
+    return geometry;
   });
-  portalGeometry.translate(0, 0, -PORTAL_DEPTH / 2);
+  const portalGeometry = mergeGeometries(portalFlanks);
   const portal = shadowed(new Mesh(portalGeometry, mats.cutStone));
   portal.name = 'equinoctial-triangular-portal';
   portal.position.set(0, TERRACE_TOP_Y, PORTAL_Z);
@@ -675,6 +686,7 @@ function buildExteriorPyramidStair(mats: Mats): Group {
     steps.setMatrixAt(i, matrix);
   }
   steps.instanceMatrix.needsUpdate = true;
+  steps.userData.collisionSurfaceOnly = true;
   group.add(shadowed(steps));
   return group;
 }
@@ -697,6 +709,7 @@ function buildFrontChamber(mats: Mats): Group {
   );
   floor.name = 'hour-chamber-floor';
   floor.position.set(0, PYRAMID_BASE_Y + 0.02, chamberCenterZ);
+  floor.userData.collisionSurfaceOnly = true;
   chamber.add(floor);
 
   for (const side of [-1, 1]) {
@@ -736,21 +749,38 @@ function buildRearStair(mats: Mats): Group {
   const stair = new Group();
   stair.name = 'rear-star-tunnel-stair';
 
+  // A real granite threshold bridges the coarsely tessellated terrain cut to
+  // the first riser. The former analytic walk surface concealed this gap.
+  const baseLandingDepth = 1.65;
+  const baseLanding = shadowed(
+    new Mesh(new BoxGeometry(STAIR_WIDTH, 0.24, baseLandingDepth), mats.stair),
+  );
+  baseLanding.name = 'star-tunnel-base-landing';
+  baseLanding.position.set(
+    STAIR_BASE.x,
+    STAIR_BASE.y - 0.12,
+    STAIR_BASE.z + baseLandingDepth / 2,
+  );
+  baseLanding.userData.collisionSurfaceOnly = true;
+  stair.add(baseLanding);
+
+  const stepHeight = Math.max(0.16, STAIR_STEP_RISE + 0.025);
   const stepGeometry = new BoxGeometry(
     STAIR_WIDTH,
-    Math.max(0.16, STAIR_STEP_RISE + 0.025),
+    stepHeight,
     STAIR_STEP_RUN + 0.055,
   );
   const steps = new InstancedMesh(stepGeometry, mats.stair, STAIR_STEP_COUNT);
   steps.name = 'star-tunnel-147-steps';
   const matrix = new Matrix4();
   for (let i = 0; i < STAIR_STEP_COUNT; i++) {
-    const y = STAIR_BASE.y + (i + 1) * STAIR_STEP_RISE;
+    const topY = STAIR_BASE.y + (i + 1) * STAIR_STEP_RISE;
     const z = STAIR_BASE.z - (i + 0.5) * STAIR_STEP_RUN;
-    matrix.setPosition(STAIR_BASE.x, y - 0.08, z);
+    matrix.setPosition(STAIR_BASE.x, topY - stepHeight / 2, z);
     steps.setMatrixAt(i, matrix);
   }
   steps.instanceMatrix.needsUpdate = true;
+  steps.userData.collisionSurfaceOnly = true;
   shadowed(steps);
   stair.add(steps);
 
@@ -776,9 +806,10 @@ function buildRearStair(mats: Mats): Group {
   flight.quaternion.setFromUnitVectors(new Vector3(0, 0, 1), runDirection.clone().normalize());
   stair.add(flight);
 
-  // Pale granite stringers visually bind the staircase into the rear cut.
+  // Continuous, raised granite stringers bind the staircase into the rear
+  // cut and provide visible edge protection for the visitor capsule.
   for (const side of [-1, 1]) {
-    const offset = new Vector3(side * STRINGER_GAP_X, 0.3, 0);
+    const offset = new Vector3(side * STRINGER_GAP_X, STRINGER_HEIGHT / 2, 0);
     stair.add(
       beamBetween(
         side < 0 ? 'star-tunnel-west-stringer' : 'star-tunnel-east-stringer',
@@ -1038,7 +1069,8 @@ function buildUpperRoom(mats: Mats): Group {
     new Mesh(new BoxGeometry(4.25, 0.32, landingDepth), mats.stair),
   );
   landing.name = 'upper-room-landing';
-  landing.position.set(0, STAIR_TOP.y - 0.12, (landingRearZ + landingFrontZ) / 2);
+  landing.position.set(0, STAIR_TOP.y - 0.16, (landingRearZ + landingFrontZ) / 2);
+  landing.userData.collisionSurfaceOnly = true;
   upper.add(landing);
 
   return upper;
@@ -1126,7 +1158,7 @@ export function createStarAxis(
       rearStairBase: [STAIR_BASE.x, STAIR_BASE.y + 1.7, STAIR_BASE.z + 2],
       apertureLanding: [STAIR_TOP.x, STAIR_TOP.y + 1.7, STAIR_TOP.z],
     },
-    colliders: 'mesh-bvh plus analytic terrain/stair walking surfaces',
+    colliders: 'three-mesh-bvh ground raycasts and capsule shapecasts over rendered geometry',
   };
 
   return { group, components };

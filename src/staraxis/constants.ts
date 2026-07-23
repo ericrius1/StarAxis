@@ -82,9 +82,10 @@ export const STAIR_TOP = {
   y: STAIR_BASE.y + STAIR_STEP_COUNT * STAIR_STEP_RISE,
   z: STAIR_BASE.z - STAIR_STEP_COUNT * STAIR_STEP_RUN,
 } as const;
-export const STRINGER_HEIGHT = 0.62;
+export const STRINGER_HEIGHT = 0.9;
 export const STRINGER_WIDTH = 0.44;
-export const STRINGER_GAP_X = STAIR_WIDTH / 2 + 0.38;
+/** Slight overlap with the tread edge closes the former fall-through seam. */
+export const STRINGER_GAP_X = STAIR_WIDTH / 2 + STRINGER_WIDTH / 2 - 0.04;
 export const TUNNEL_MOUTH_T = 0.43;
 
 // ---------------------------------------------------------------- Solar Pyramid

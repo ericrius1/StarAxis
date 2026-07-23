@@ -158,8 +158,10 @@ scene.add(sky.sunLight);
 scene.add(sky.sunLight.target);
 scene.add(sky.hemi);
 
-// The monument is static: bake it into one BVH for capsule collision.
-const collider = buildCollider(monument.group);
+// The static monument, displaced terrain, and instanced stair treads are
+// world-baked into BVHs so both grounding and wall collision use visible
+// triangles rather than a parallel analytic approximation.
+const collider = buildCollider([monument.group, terrain.group]);
 fp.setCollider(collider);
 
 // Static scene → render the sun's shadow map only when the sun moves
@@ -735,7 +737,10 @@ window.__runtime = () => ({
   nav,
   fly: fp.fly,
   pointerLocked: fp.isLocked(),
+  camera: camera.position.toArray().map((value) => Number(value.toFixed(3))),
   cameraY: Number(camera.position.y.toFixed(2)),
+  colliderTriangles: collider.triangleCount,
+  solidColliderTriangles: collider.solidTriangleCount,
   drawCalls: renderer.info.render.drawCalls,
   triangles: renderer.info.render.triangles,
   geometries: renderer.info.memory.geometries,
