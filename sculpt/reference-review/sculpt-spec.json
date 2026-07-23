@@ -3810,11 +3810,11 @@
       "layerScores": {},
       "featureReviews": [],
       "action": "continue",
-      "summary": "The final reference-angle build holds 60 FPS with 43 draw calls and 175,904 triangles after moving granite variation to a baked texture.",
+      "summary": "The final merged reference-angle build holds 60 FPS with 46 draw calls and 228,768 triangles after moving granite variation to a baked texture.",
       "matched": [
         "60 FPS measured runtime",
-        "43 draw calls",
-        "175904 triangles",
+        "46 draw calls",
+        "228768 triangles",
         "static baked granite albedo",
         "pixel ratio capped at 1",
         "non-shadow-casting repeated edge treads"
@@ -3859,11 +3859,11 @@
     "optimizationPolicy": "Reach accepted visual fidelity first, then optimize without removing reference-critical geometry or surface layers.",
     "measuredDesktopRuntime": {
       "fps": 60,
-      "drawCalls": 43,
-      "triangles": 175904,
-      "geometries": 62,
+      "drawCalls": 46,
+      "triangles": 228768,
+      "geometries": 63,
       "pixelRatioCap": 1,
-      "notes": "Measured in Chrome at the final reference-angle Solar Pyramid view after replacing the runtime pyramid TSL material with the baked granite albedo."
+      "notes": "Measured in Chrome at the final reference-angle Solar Pyramid view after replacing the runtime pyramid TSL material with the baked granite albedo and merging the existing GPU-resident windswept-sand system."
     }
   },
   "lightingFromPhoto": [
