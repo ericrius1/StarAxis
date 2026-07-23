@@ -13,9 +13,11 @@
   "type": "module",
   "dependencies": {
     "three": "^0.185.1",
-    "three-mesh-bvh": "^0.9.13"
+    "three-mesh-bvh": "^0.9.13",
+    "tweakpane": "^4.0.5"
   },
   "devDependencies": {
+    "@tweakpane/core": "^2.0.5",
     "@types/three": "^0.185.1",
     "typescript": "^5.9.3",
     "vite": "^8.1.5"
