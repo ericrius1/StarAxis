@@ -132,14 +132,14 @@ export function terrainHeight(x: number, z: number): number {
   // Reference photography shows tall, parallel architectural walls around
   // the upper run—not a hillside roof. Carving the complete slot also keeps
   // the terrain heightfield from drawing an apparent wall across the stairs.
-  if (z > STAIR_TOP.z - 2.5 && z < STAIR_BASE.z + 2) {
+  if (z > STAIR_TOP.z - 4.5 && z < STAIR_BASE.z + 2) {
     const surf = stairSurfaceY(z) - 0.5;
     const halfW = 3.35;
     const wallRise = Math.max(0, Math.abs(x) - halfW) * 2.15;
     const carved = Math.min(h, surf + wallRise);
     const along =
       smooth01((STAIR_BASE.z + 2 - z) / 3.5) *
-      smooth01((z - (STAIR_TOP.z - 2.5)) / 3.0);
+      smooth01((z - (STAIR_TOP.z - 4.5)) / 1.5);
     h = lerp(h, carved, along);
   }
 

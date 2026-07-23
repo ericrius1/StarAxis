@@ -109,6 +109,10 @@ function createGround(desertMaterial: MeshStandardNodeMaterial): Group {
   const segPerChunk = TERRAIN_SEGMENTS / CHUNKS;
   const e = 0.9; // central-difference step for analytic normals
   const n = new Vector3();
+  const sand = new Color('#d3bda0');
+  const caliche = new Color('#e2d3b8');
+  const rubble = new Color('#9f7d5f');
+  const baked = new Color();
 
   for (let cy = 0; cy < CHUNKS; cy++) {
     for (let cx = 0; cx < CHUNKS; cx++) {
@@ -120,6 +124,7 @@ function createGround(desertMaterial: MeshStandardNodeMaterial): Group {
 
       const position = geometry.attributes.position;
       const normal = geometry.attributes.normal;
+      const colors = new Float32Array(position.count * 3);
       for (let i = 0; i < position.count; i++) {
         const x = position.getX(i);
         const z = position.getZ(i);
@@ -128,7 +133,30 @@ function createGround(desertMaterial: MeshStandardNodeMaterial): Group {
         const dz = (terrainHeight(x, z + e) - terrainHeight(x, z - e)) / (2 * e);
         n.set(-dx, 1, -dz).normalize();
         normal.setXYZ(i, n.x, n.y, n.z);
+
+        // Bake the former multi-noise TSL desert shader into vertex color.
+        // This preserves large-scale caliche/rubble breakup but turns the
+        // ground fragment stage into one inexpensive texture-free material.
+        const patch =
+          0.5 +
+          0.24 * Math.sin(x * 0.071 + z * 0.043) +
+          0.18 * Math.sin(x * 0.019 - z * 0.031);
+        const slope = Math.min(1, Math.hypot(dx, dz) * 2.8);
+        const inTrench =
+          Math.abs(x) < 8.5 && z > 7 && z < 61
+            ? Math.max(0, 1 - Math.abs(x) / 8.5)
+            : 0;
+        const inBowl = Math.max(0, 1 - Math.hypot(x - BOWL_CENTER.x, z - BOWL_CENTER.z) / 20);
+        const path = Math.max(inTrench, inBowl);
+        baked
+          .copy(sand)
+          .lerp(rubble, Math.min(0.72, slope * 0.65 + Math.max(0, patch - 0.58) * 0.35))
+          .lerp(caliche, path * 0.7);
+        colors[i * 3] = baked.r;
+        colors[i * 3 + 1] = baked.g;
+        colors[i * 3 + 2] = baked.b;
       }
+      geometry.setAttribute('color', new BufferAttribute(colors, 3));
       geometry.computeBoundingSphere();
 
       const mesh = new Mesh(geometry, desertMaterial);

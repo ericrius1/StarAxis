@@ -21,7 +21,9 @@ export const POLARIS_DIR = {
 
 // ---------------------------------------------------------------- terrain
 export const TERRAIN_SIZE = 1600; // width/depth of the ground plane
-export const TERRAIN_SEGMENTS = 768;
+// 512² is visually smooth at walking height while removing ~660k triangles
+// from the former 768² grid. Fine material variation is baked per vertex.
+export const TERRAIN_SEGMENTS = 512;
 
 /** Mesa summit mound: gaussian centered north of the bowl. */
 export const SUMMIT_CENTER = { x: -4, z: -40 } as const;

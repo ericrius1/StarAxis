@@ -10,44 +10,39 @@
 
 import {
   BackSide,
+  BufferAttribute,
+  BufferGeometry,
   Color,
   DirectionalLight,
   Group,
   HemisphereLight,
+  LineBasicMaterial,
+  LineSegments,
   Mesh,
   MeshBasicNodeMaterial,
+  Points,
+  PointsMaterial,
   SphereGeometry,
   Vector3,
 } from 'three/webgpu';
 import {
   Fn,
-  Loop,
   clamp,
   color,
   cameraPosition,
-  cos,
-  cross,
   dot,
-  exp,
-  float,
-  floor,
-  fract,
-  length,
-  max,
   mix,
   normalize,
   positionWorld,
   pow,
-  sin,
   smoothstep,
-  step,
   time,
   triNoise3D,
   uniform,
   vec3,
   vec4,
 } from 'three/tsl';
-import { LATITUDE_RAD, SKY_RADIUS } from './constants';
+import { LATITUDE_RAD, SKY_RADIUS, STAR_COUNT } from './constants';
 
 export interface SkyRig {
   group: Group;
@@ -76,14 +71,13 @@ const STAR_ROTATION_SPEED = (Math.PI * 2) / 240; // rad/s
 /** Cross-fade duration between sky modes (seconds). */
 const FADE_DURATION = 2;
 
-/** Star-cell density: cells per unit of direction space. */
-const STAR_DENSITY = 64;
-
-/** Number of rotated samples used to draw star trails. */
-const TRAIL_SAMPLES = 24;
-
 /** Total trail arc (radians) at trailAmount = 1. */
 const TRAIL_ARC = 0.45;
+
+function hash01(i: number, salt: number): number {
+  const s = Math.sin(i * 12.9898 + salt * 78.233 + 0.5) * 43758.5453123;
+  return s - Math.floor(s);
+}
 
 // ---------------------------------------------------------------- mode targets
 
@@ -165,30 +159,10 @@ export function createSky(): SkyRig {
   // ------------------------------------------------------------- uniforms
   const uDayNight = uniform(1); // 0 = night, 1 = day
   const uGolden = uniform(0);
-  const uTrail = uniform(0);
-  const uStarAngle = uniform(0);
   const uSunDir = uniform(MODES.day.sunDir.clone());
-
-  // ------------------------------------------------------------- TSL helpers
-  /** Hash a cell coordinate (vec3) + scalar seed to [0, 1). */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const hash3 = (p: any, seed: number): any =>
-    fract(sin(dot(p, vec3(127.1, 311.7, 74.7)).add(seed)).mul(43758.5453123));
-
-  /** Rodrigues rotation of v about a unit axis by angle ang. */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const rotateAboutAxis = (v: any, axis: any, ang: any): any => {
-    const c = cos(ang);
-    const s = sin(ang);
-    return v
-      .mul(c)
-      .add(cross(axis, v).mul(s))
-      .add(axis.mul(dot(axis, v)).mul(c.oneMinus()));
-  };
 
   // ------------------------------------------------------------- sky dome
   const skyColor = Fn(() => {
-    const axis = vec3(POLARIS_AXIS.x, POLARIS_AXIS.y, POLARIS_AXIS.z);
     const dir = normalize(positionWorld.sub(cameraPosition)).toVar();
     const up = clamp(dir.y, 0.0, 1.0).toVar();
     const sunDot = clamp(dot(dir, uSunDir), 0.0, 1.0).toVar();
@@ -214,63 +188,9 @@ export function createSky(): SkyRig {
     golden.addAssign(color('#ff9a4d').mul(pow(sunDot, 4.0).mul(0.5)));
     golden.addAssign(color('#ffd9a8').mul(pow(sunDot, 700.0).mul(3.0)));
 
-    // ---- NIGHT: near-black gradient + rotating star field + trails.
+    // ---- NIGHT: near-black gradient. Stars and trails are baked once into
+    // geometry below instead of being searched per pixel in this shader.
     const night = mix(color('#0a1024'), color('#050810'), smoothstep(0.0, 0.5, up)).toVar();
-    const starMask = smoothstep(-0.02, 0.1, dir.y).toVar();
-
-    // Star trails: sample the star hash at rotated offsets along the
-    // rotation direction. Each sample is smeared along the local rotation
-    // tangent so consecutive samples fuse into continuous arcs.
-    const stepAngle = uTrail.mul(TRAIL_ARC / TRAIL_SAMPLES);
-    const stretch = uTrail.mul(8.0).add(1.0);
-    const starAcc = vec3(0.0).toVar();
-
-    Loop(TRAIL_SAMPLES, ({ i }) => {
-      const fi = float(i);
-      const angle = uStarAngle.sub(fi.mul(stepAngle));
-      const rd = rotateAboutAxis(dir, axis, angle).toVar();
-      // Local direction of star motion (tangent of rotation about the axis).
-      const tangent = normalize(cross(axis, rd).add(vec3(1e-4, 0.0, 0.0))).toVar();
-
-      const p = rd.mul(STAR_DENSITY);
-      const cell = floor(p).toVar();
-      const f = fract(p).sub(0.5).toVar();
-
-      const presence = step(0.7, hash3(cell, 5.0));
-      const offset = vec3(hash3(cell, 1.0), hash3(cell, 2.0), hash3(cell, 3.0))
-        .sub(0.5)
-        .mul(0.72);
-      const mag = hash3(cell, 4.0);
-      const brightness = pow(mag, 14.0).mul(2.2).add(pow(mag, 4.0).mul(0.28));
-      const radius = pow(mag, 6.0).mul(0.1).add(0.055);
-
-      // Anisotropic distance: compress along the tangent to elongate stars.
-      const delta = f.sub(offset).toVar();
-      const dT = dot(delta, tangent);
-      const dP = delta.sub(tangent.mul(dT));
-      const distEff = length(dP.add(tangent.mul(dT.div(stretch))));
-      const disc = smoothstep(radius, radius.mul(0.25), distEff);
-
-      // Color temperature: blue-white to amber.
-      const starCol = mix(vec3(0.72, 0.82, 1.0), vec3(1.0, 0.85, 0.62), hash3(cell, 6.0));
-      const falloff = fi.div(TRAIL_SAMPLES).oneMinus().mul(0.85).add(0.15);
-      starAcc.assign(max(starAcc, starCol.mul(disc.mul(brightness).mul(presence).mul(falloff))));
-    });
-
-    // Faint Milky-Way band, rotating with the star field.
-    const rd0 = rotateAboutAxis(dir, axis, uStarAngle).toVar();
-    const mwNormal = normalize(vec3(0.62, 0.18, 0.76));
-    const mwBand = exp(pow(dot(rd0, mwNormal), 2.0).mul(-28.0));
-    const mwNoise = triNoise3D(rd0.mul(2.6), 0.0, float(0.0));
-    const milkyWay = vec3(0.62, 0.68, 0.85).mul(mwBand).mul(mwNoise.mul(0.7).add(0.3)).mul(0.14);
-
-    // Polaris: one bright fixed star exactly on the rotation axis.
-    const pd = dot(dir, axis);
-    const polarisDisc = smoothstep(Math.cos(0.006), Math.cos(0.002), pd);
-    const polarisGlow = smoothstep(0.99988, 1.0, pd).mul(0.3);
-    const polaris = vec3(1.0, 0.97, 0.9).mul(polarisDisc.mul(2.0).add(polarisGlow));
-
-    night.addAssign(starAcc.add(milkyWay).add(polaris).mul(starMask));
 
     // ---- Blend the three states.
     const base = mix(night, day, uDayNight);
@@ -289,11 +209,129 @@ export function createSky(): SkyRig {
   dome.frustumCulled = false;
   group.add(dome);
 
+  // ------------------------------------------------------------- baked stars
+  // One deterministic point cloud replaces the old full-screen hash loop.
+  // Rotating this group around POLARIS_AXIS preserves the celestial motion
+  // at a tiny fraction of the fragment cost.
+  const celestial = new Group();
+  celestial.name = 'baked-celestial-field';
+  const starPositions = new Float32Array(STAR_COUNT * 3);
+  const starColors = new Float32Array(STAR_COUNT * 3);
+  const cool = new Color('#b7ccff');
+  const warm = new Color('#ffe0ad');
+  const starColor = new Color();
+  const starDirs: Vector3[] = [];
+  const goldenAngle = Math.PI * (3 - Math.sqrt(5));
+  const starRadius = SKY_RADIUS * 0.94;
+  for (let i = 0; i < STAR_COUNT; i++) {
+    const y = 1 - (2 * (i + 0.5)) / STAR_COUNT;
+    const r = Math.sqrt(Math.max(0, 1 - y * y));
+    const phi = i * goldenAngle + (hash01(i, 1) - 0.5) * 0.18;
+    const dir = new Vector3(Math.cos(phi) * r, y, Math.sin(phi) * r);
+    starDirs.push(dir);
+    starPositions[i * 3] = dir.x * starRadius;
+    starPositions[i * 3 + 1] = dir.y * starRadius;
+    starPositions[i * 3 + 2] = dir.z * starRadius;
+    const magnitude = Math.pow(hash01(i, 2), 5);
+    starColor
+      .lerpColors(cool, warm, hash01(i, 3))
+      .multiplyScalar(0.5 + magnitude * 1.6);
+    starColors[i * 3] = starColor.r;
+    starColors[i * 3 + 1] = starColor.g;
+    starColors[i * 3 + 2] = starColor.b;
+  }
+  const starGeometry = new BufferGeometry();
+  starGeometry.setAttribute('position', new BufferAttribute(starPositions, 3));
+  starGeometry.setAttribute('color', new BufferAttribute(starColors, 3));
+  const starMaterial = new PointsMaterial({
+    size: 1.45,
+    sizeAttenuation: false,
+    vertexColors: true,
+    transparent: true,
+    opacity: 0,
+    depthWrite: false,
+    fog: false,
+    toneMapped: false,
+  });
+  const stars = new Points(starGeometry, starMaterial);
+  stars.name = 'baked-stars';
+  stars.frustumCulled = false;
+  celestial.add(stars);
+
+  const polarisGeometry = new BufferGeometry();
+  polarisGeometry.setAttribute(
+    'position',
+    new BufferAttribute(
+      new Float32Array([
+        POLARIS_AXIS.x * starRadius,
+        POLARIS_AXIS.y * starRadius,
+        POLARIS_AXIS.z * starRadius,
+      ]),
+      3,
+    ),
+  );
+  const polarisMaterial = new PointsMaterial({
+    color: '#fff5d9',
+    size: 4,
+    sizeAttenuation: false,
+    transparent: true,
+    opacity: 0,
+    depthWrite: false,
+    fog: false,
+    toneMapped: false,
+  });
+  const polaris = new Points(polarisGeometry, polarisMaterial);
+  polaris.name = 'polaris';
+  polaris.frustumCulled = false;
+  celestial.add(polaris);
+
+  // Bake short arc segments for a representative bright subset. The entire
+  // trail layer is a single line draw and only appears when T is enabled.
+  const trailPositions: number[] = [];
+  const trailColors: number[] = [];
+  const trailSegments = 5;
+  for (let i = 0; i < STAR_COUNT; i++) {
+    if (hash01(i, 4) < 0.965) continue;
+    for (let segment = 0; segment < trailSegments; segment++) {
+      const a0 = -(TRAIL_ARC * segment) / trailSegments;
+      const a1 = -(TRAIL_ARC * (segment + 1)) / trailSegments;
+      const p0 = starDirs[i].clone().applyAxisAngle(POLARIS_AXIS, a0).multiplyScalar(starRadius);
+      const p1 = starDirs[i].clone().applyAxisAngle(POLARIS_AXIS, a1).multiplyScalar(starRadius);
+      trailPositions.push(p0.x, p0.y, p0.z, p1.x, p1.y, p1.z);
+      const fade0 = 1 - segment / trailSegments;
+      const fade1 = 1 - (segment + 1) / trailSegments;
+      trailColors.push(fade0, fade0 * 0.9, fade0 * 0.75, fade1, fade1 * 0.9, fade1 * 0.75);
+    }
+  }
+  const trailGeometry = new BufferGeometry();
+  trailGeometry.setAttribute(
+    'position',
+    new BufferAttribute(new Float32Array(trailPositions), 3),
+  );
+  trailGeometry.setAttribute(
+    'color',
+    new BufferAttribute(new Float32Array(trailColors), 3),
+  );
+  const trailMaterial = new LineBasicMaterial({
+    vertexColors: true,
+    transparent: true,
+    opacity: 0,
+    depthWrite: false,
+    fog: false,
+    toneMapped: false,
+  });
+  const trails = new LineSegments(trailGeometry, trailMaterial);
+  trails.name = 'baked-star-trails';
+  trails.frustumCulled = false;
+  trails.visible = false;
+  celestial.add(trails);
+  group.add(celestial);
+
   // ------------------------------------------------------------- lights
   const sunLight = new DirectionalLight(MODES.day.sunColor, MODES.day.sunIntensity);
   sunLight.name = 'sun';
   sunLight.castShadow = true;
-  sunLight.shadow.mapSize.set(2048, 2048);
+  sunLight.shadow.mapSize.set(1024, 1024);
   sunLight.shadow.camera.left = -140;
   sunLight.shadow.camera.right = 140;
   sunLight.shadow.camera.top = 140;
@@ -321,6 +359,7 @@ export function createSky(): SkyRig {
   let toState = cloneState(MODES.day);
   const current = cloneState(MODES.day);
   let starAngle = 0;
+  let trailAmount = 0;
 
   const applyState = (s: ModeState): void => {
     uDayNight.value = s.dayNight;
@@ -345,13 +384,13 @@ export function createSky(): SkyRig {
   };
 
   const setTrailAmount = (a: number): void => {
-    uTrail.value = Math.min(1, Math.max(0, a));
+    trailAmount = Math.min(1, Math.max(0, a));
   };
 
   const update = (dt: number): void => {
     // Star rotation: full revolution in ~4 minutes.
     starAngle = (starAngle + dt * STAR_ROTATION_SPEED) % (Math.PI * 2);
-    uStarAngle.value = starAngle;
+    celestial.setRotationFromAxisAngle(POLARIS_AXIS, starAngle);
 
     // Mode cross-fade over ~FADE_DURATION seconds, smoothstep-eased.
     if (fadeT < 1) {
@@ -369,6 +408,14 @@ export function createSky(): SkyRig {
 
       applyState(current);
     }
+
+    const nightOpacity = 1 - current.dayNight;
+    starMaterial.opacity = nightOpacity;
+    polarisMaterial.opacity = nightOpacity;
+    stars.visible = nightOpacity > 0.002;
+    polaris.visible = stars.visible;
+    trailMaterial.opacity = nightOpacity * trailAmount * 0.5;
+    trails.visible = trailMaterial.opacity > 0.002;
   };
 
   const getMode = (): SkyMode => mode;

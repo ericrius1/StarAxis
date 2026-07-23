@@ -43,7 +43,9 @@ import {
   PORTAL_Z,
   PYRAMID_BASE_Y,
   PYRAMID_CENTER,
+  LATITUDE_RAD,
 } from './staraxis/constants';
+import { EYE_HEIGHT } from './staraxis/walk';
 
 const app = document.getElementById('app') as HTMLDivElement;
 const info = document.getElementById('info') as HTMLDivElement;
@@ -60,7 +62,12 @@ const tourPrev = document.getElementById('tour-prev') as HTMLButtonElement | nul
 const tourNext = document.getElementById('tour-next') as HTMLButtonElement | null;
 
 const renderer = new WebGPURenderer({ antialias: true });
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+// A 2× backing buffer quadrupled fragment work on Retina displays and was
+// the single largest frame-time cost. Native CSS resolution remains crisp
+// for a full-window WebGPU scene; ?quality=high opts back into 1.5×.
+const requestedQuality = new URLSearchParams(location.search).get('quality');
+const pixelRatioCap = requestedQuality === 'high' ? 1.5 : 1;
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, pixelRatioCap));
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.toneMapping = ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.0;
@@ -120,6 +127,12 @@ interface Preset {
   mode?: 'day' | 'goldenHour' | 'night';
 }
 
+const APERTURE_VIEW: [number, number, number] = [
+  STAIR_TOP.x,
+  STAIR_TOP.y + EYE_HEIGHT + Math.sin(LATITUDE_RAD) * 2.2,
+  STAIR_TOP.z - Math.cos(LATITUDE_RAD) * 2.2,
+];
+
 const PRESETS: Record<string, Preset> = {
   '1': { pos: [0, 3.7, 40], target: [0, 12.5, -8], fov: 62, mode: 'day' },
   '2': { pos: [27, 25, -12], target: [-16, 36, -47], fov: 55, mode: 'goldenHour' },
@@ -127,7 +140,7 @@ const PRESETS: Record<string, Preset> = {
     // on the upper landing, sighting up the aperture bore toward Polaris
     // (matches the tunnel_2 reference)
     pos: [STAIR_BASE.x, STAIR_BASE.y + 23.13, STAIR_BASE.z - 30.9],
-    target: [STAIR_TOP.x, STAIR_TOP.y + 3.6, STAIR_TOP.z - 2.6],
+    target: APERTURE_VIEW,
     fov: 50,
     mode: 'day',
   },
@@ -183,7 +196,7 @@ const TOUR_STOPS: TourStop[] = [
       'The central 147-step stair is exactly parallel to Earth’s axis. As the open-air corridor climbs toward Polaris, each step reveals a wider field of sky and corresponds to a different circumpolar orbit in the precession cycle.',
     fact: 'Bottom view · Polaris’s orbit appears dime-sized · top view · the orbit fills human peripheral vision',
     pos: [0, 8.2, -2.8],
-    target: [0, 29.7, STAIR_TOP.z - 1.2],
+    target: APERTURE_VIEW,
     fov: 52,
     mode: 'day',
   },
@@ -194,7 +207,7 @@ const TOUR_STOPS: TourStop[] = [
       'At the final stair, a 40-inch circular oculus fills the visual field. Its axis is aimed at Polaris, framing the largest orbit in the cycle—seen approximately 13,000 years in either direction from the present.',
     fact: 'The oculus is approximately the width of human peripheral vision when viewed at close range.',
     pos: [0, STAIR_TOP.y + 1.75, STAIR_TOP.z + 2.8],
-    target: [0, STAIR_TOP.y + 2.75, STAIR_TOP.z - 2.4],
+    target: APERTURE_VIEW,
     fov: 56,
     mode: 'night',
   },

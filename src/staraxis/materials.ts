@@ -294,43 +294,21 @@ export function createMaterials(): StarAxisMaterials {
   }
 
   // -- darker concrete/granite for shadowed interiors (hood, chambers)
-  const concreteDark = new MeshStandardNodeMaterial();
-  {
-    const p = positionWorld;
-    const drift = mx_fractal_noise_float(p.mul(0.5), 3, 2.0, 0.5, 1.0);
-    concreteDark.colorNode = mix(color('#8d8880'), color('#6f6a62'), drift.mul(0.7));
-    concreteDark.roughnessNode = float(0.85);
-    const grain = mx_fractal_noise_float(p.mul(6.0), 2, 2.0, 0.5, 1.0);
-    concreteDark.normalNode = bumpMap(grain, float(0.008));
-  }
+  const concreteDark = new MeshStandardNodeMaterial({
+    color: '#77716a',
+    roughness: 0.88,
+    metalness: 0,
+  });
 
-  // -- desert ground: caliche path / gravel / rubble slope blend
-  const desert = new MeshStandardNodeMaterial();
-  {
-    const p = positionWorld;
-    const n = normalWorld;
-    const slope = clamp(float(1.0).sub(n.y), 0.0, 1.0);
-    const patch = mx_fractal_noise_float(p.mul(0.08), 3, 2.0, 0.55, 1.0);
-    const pebble = mx_fractal_noise_float(p.mul(3.2).add(vec3(7.0, 0.0, 13.0)), 2, 2.0, 0.5, 1.0);
-
-    // path corridor mask: pale compacted band along the entry trench + bowl floor
-    const inTrench = smoothstep(float(9.0), float(5.0), abs(p.x))
-      .mul(smoothstep(float(6.0), float(12.0), p.z))
-      .mul(smoothstep(float(62.0), float(50.0), p.z));
-    const inBowl = smoothstep(float(20.0), float(14.0), p.xz.length());
-    const path = max(inTrench, inBowl);
-
-    const sand = mix(color('#d3bda0'), color('#c0a480'), patch);
-    const rubble = mix(color('#b5a488'), color('#996f4d'), smoothstep(0.4, 0.8, pebble));
-    const slopeMix = mix(sand, rubble, clamp(slope.mul(5.0).add(patch.mul(0.4)).sub(0.25), 0.0, 1.0));
-    desert.colorNode = mix(slopeMix, color('#e2d3b8'), path.mul(0.75));
-
-    const rSeed = mx_fractal_noise_float(p.mul(1.1).add(vec3(21.0, 8.0, 2.0)), 2, 2.0, 0.5, 1.0);
-    desert.roughnessNode = clamp(float(0.94).add(rSeed.sub(0.5).mul(0.1)).sub(path.mul(0.06)), 0.7, 1.0);
-    desert.normalNode = bumpMap(pebble.mul(float(1.0).sub(path.mul(0.7))), float(0.05));
-    const cav = mx_fractal_noise_float(p.mul(0.3).add(vec3(2.0, 5.0, 9.0)), 2, 2.0, 0.5, 1.0);
-    desert.aoNode = clamp(float(1.0).sub(cav.sub(0.6).max(0.0).mul(0.35)), 0.55, 1.0);
-  }
+  // -- desert ground: its procedural breakup is baked into terrain vertex
+  // colors once at construction time, eliminating several FBM evaluations
+  // for every ground pixel on every frame.
+  const desert = new MeshStandardNodeMaterial({
+    color: 0xffffff,
+    roughness: 0.94,
+    metalness: 0,
+    vertexColors: true,
+  });
 
   return {
     flagstone,

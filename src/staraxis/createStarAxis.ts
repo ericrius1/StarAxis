@@ -23,9 +23,11 @@ import {
   InstancedMesh,
   Matrix4,
   Mesh,
+  MeshBasicNodeMaterial,
   DoubleSide,
   MeshStandardNodeMaterial,
   Object3D,
+  Path,
   Quaternion,
   Shape,
   ShapeGeometry,
@@ -43,11 +45,6 @@ import {
   COPING_HEIGHT,
   ENTRY_WALL_HEIGHT,
   ENTRY_WALL_LEAN_RAD,
-  HEADWALL,
-  HOOD_BASE_HALF_WIDTH,
-  HOOD_END_T,
-  HOOD_TOP_HALF_WIDTH,
-  HOOD_WALL_HEIGHT,
   HOUR_WEDGE_DEG,
   HOUR_WEDGE_HEIGHT,
   APERTURE_INNER_RADIUS,
@@ -85,6 +82,7 @@ import {
 } from './constants';
 import { stairPoint, crescentCrownY, TUNNEL_MOUTH_T } from './constants';
 import { terrainHeight, trenchFloorY } from './heightfield';
+import { EYE_HEIGHT } from './walk';
 import type { StarAxisMaterials } from './materials';
 
 export interface StarAxisModel {
@@ -479,77 +477,88 @@ function buildStarTunnel(mats: Mats): Group {
     g.add(s);
   }
 
-  // ---- open upper tunnel: tall walls continue the stair into the mesa while
-  // the entire run remains open to the sky. This is the defining sightline in
-  // the built work: the oculus stays visible as the view widens step by step.
+  // ---- open upper tunnel: one continuous pair of walls follows the stair
+  // from the crescent notch to the oculus. Explicit world-vertical prisms
+  // avoid the rotated-box corners that used to dip through the terrain.
   const hood = new Group();
   hood.name = 'open-star-tunnel';
-  const hoodT0 = TUNNEL_MOUTH_T;
-  const hoodT1 = HOOD_END_T;
-  const p0 = stairPoint(hoodT0);
-  const p1 = stairPoint(hoodT1);
-  const hoodMid = { x: 0, y: (p0.y + p1.y) / 2, z: (p0.z + p1.z) / 2 };
-  const hoodLen = slopeLen * (hoodT1 - hoodT0);
-  const lean = Math.atan2(HOOD_BASE_HALF_WIDTH - HOOD_TOP_HALF_WIDTH, HOOD_WALL_HEIGHT);
+  const axis = new Vector3(0, Math.sin(LATITUDE_RAD), -Math.cos(LATITUDE_RAD)).normalize();
+  const start = stairPoint(TUNNEL_MOUTH_T);
+  const p0 = new Vector3(start.x, start.y, start.z);
+  const extension = 2.2;
+  const p1 = new Vector3(STAIR_TOP.x, STAIR_TOP.y, STAIR_TOP.z).addScaledVector(axis, extension);
+  const wallHeight = 6.5;
+  const wallMat = mats.concreteDark.clone();
+  wallMat.side = DoubleSide;
   for (const side of [-1, 1]) {
-    const slab = shadowed(new Mesh(new BoxGeometry(0.65, HOOD_WALL_HEIGHT + 0.6, hoodLen), mats.concreteDark));
-    const off = (HOOD_BASE_HALF_WIDTH + HOOD_TOP_HALF_WIDTH) / 2;
-    slab.position.set(side * off, hoodMid.y + HOOD_WALL_HEIGHT / 2 + 0.5, hoodMid.z);
-    slab.quaternion.setFromUnitVectors(new Vector3(0, 0, -1), slopeDir);
-    slab.rotateZ(side * lean);
+    const innerBottomX = side * 2.15;
+    const outerBottomX = side * 3.15;
+    const innerTopX = side * 1.62;
+    const outerTopX = side * 2.38;
+    const positions = new Float32Array([
+      innerBottomX, p0.y - 0.45, p0.z,
+      outerBottomX, p0.y - 0.45, p0.z,
+      outerTopX, p0.y + wallHeight, p0.z,
+      innerTopX, p0.y + wallHeight, p0.z,
+      innerBottomX, p1.y - 0.45, p1.z,
+      outerBottomX, p1.y - 0.45, p1.z,
+      outerTopX, p1.y + wallHeight, p1.z,
+      innerTopX, p1.y + wallHeight, p1.z,
+    ]);
+    const indices = [
+      0, 1, 2, 0, 2, 3,
+      4, 7, 6, 4, 6, 5,
+      0, 3, 7, 0, 7, 4,
+      1, 5, 6, 1, 6, 2,
+      0, 4, 5, 0, 5, 1,
+      3, 2, 6, 3, 6, 7,
+    ];
+    const wallGeo = new BufferGeometry();
+    wallGeo.setAttribute('position', new BufferAttribute(positions, 3));
+    wallGeo.setIndex(indices);
+    wallGeo.computeVertexNormals();
+    const slab = shadowed(new Mesh(wallGeo, wallMat));
+    slab.name = side < 0 ? 'star-tunnel-wall-west' : 'star-tunnel-wall-east';
     hood.add(slab);
   }
-
-  // The crescent wall is already notched around the stair. Keeping that
-  // threshold clear preserves the uninterrupted oculus sightline instead of
-  // introducing a low lintel that reads as a phantom wall.
   g.add(hood);
 
-  // ---- upper chamber: open concrete shell around the summit exit
-  const chamber = new Group();
-  chamber.name = 'upper-chamber';
-  const chamberS = stairPoint(0.86);
-  for (const side of [-1, 1]) {
-    const wallLen = Math.abs(STAIR_TOP.z - 2.2 - chamberS.z);
-    // walls sunk 2 m below grade so they seat into the summit dish cleanly
-    const w = shadowed(new Mesh(new BoxGeometry(0.8, 6.6, wallLen), mats.concrete));
-    w.position.set(side * 2.7, STAIR_TOP.y - 1.4, (chamberS.z + STAIR_TOP.z - 2.2) / 2);
-    chamber.add(w);
-  }
-  g.add(chamber);
+  // ---- oculus assembly. Its center lies on the exact continuation of the
+  // stair visitor's eye line, so the bore stays concentric from every step.
+  const topEye = new Vector3(STAIR_TOP.x, STAIR_TOP.y + EYE_HEIGHT, STAIR_TOP.z);
+  const apertureCenter = topEye.clone().addScaledVector(axis, extension);
 
-  // ---- headwall slab at the summit exit, with a real slot so sky shows
-  // through the aperture bore
-  const headwall = new Group();
-  headwall.name = 'headwall-slab';
-  const hwCx = 0;
-  const hwCy = STAIR_TOP.y + 1.2; // center y ≈ 30
-  const hwCz = STAIR_TOP.z - 0.9;
-  const slotHalfW = 0.72;
-  const slotBot = hwCy + 0.5; // slot spans the tube crossing height
-  const slotTop = hwCy + 2.35;
-  const hwTop = hwCy + HEADWALL.h / 2;
-  const hwBot = hwCy - HEADWALL.h / 2;
-  const sideW = HEADWALL.w / 2 - slotHalfW;
-  for (const side of [-1, 1]) {
-    const p = shadowed(new Mesh(new BoxGeometry(sideW, HEADWALL.h, HEADWALL.d), mats.concrete));
-    p.position.set(side * (slotHalfW + sideW / 2), hwCy, hwCz);
-    headwall.add(p);
-  }
-  const below = shadowed(new Mesh(new BoxGeometry(slotHalfW * 2, slotBot - hwBot, HEADWALL.d), mats.concrete));
-  below.position.set(hwCx, (slotBot + hwBot) / 2, hwCz);
-  headwall.add(below);
-  const above = shadowed(new Mesh(new BoxGeometry(slotHalfW * 2, hwTop - slotTop, HEADWALL.d), mats.concrete));
-  above.position.set(hwCx, (hwTop + slotTop) / 2, hwCz);
-  headwall.add(above);
+  // A real circular cutout replaces the old rectangular slot. The frame is
+  // perpendicular to the polar axis and the steel tube passes cleanly through.
+  const frameShape = new Shape();
+  frameShape.moveTo(-3.4, -2.6);
+  frameShape.lineTo(3.4, -2.6);
+  frameShape.lineTo(3.4, 3.4);
+  frameShape.lineTo(-3.4, 3.4);
+  frameShape.closePath();
+  const frameHole = new Path();
+  frameHole.absarc(
+    0,
+    0,
+    APERTURE_INNER_RADIUS + APERTURE_WALL + 0.06,
+    0,
+    Math.PI * 2,
+    true,
+  );
+  frameShape.holes.push(frameHole);
+  const headwall = shadowed(new Mesh(new ShapeGeometry(frameShape, 48), wallMat));
+  headwall.name = 'headwall-circular-frame';
+  headwall.position.copy(apertureCenter);
+  headwall.quaternion.setFromUnitVectors(new Vector3(0, 0, 1), axis.clone().negate());
   g.add(headwall);
 
-  // ---- brushed-steel aperture tube, axis parallel to Earth's axis
   const tube = new Group();
   tube.name = 'steel-aperture';
+  const tubeMat = mats.stainless.clone();
+  tubeMat.side = DoubleSide;
   const inner = new Mesh(
     new CylinderGeometry(APERTURE_INNER_RADIUS, APERTURE_INNER_RADIUS, APERTURE_LENGTH, 40, 1, true),
-    mats.stainless,
+    tubeMat,
   );
   const outer = new Mesh(
     new CylinderGeometry(
@@ -560,13 +569,11 @@ function buildStarTunnel(mats: Mats): Group {
       1,
       true,
     ),
-    mats.stainless,
+    tubeMat,
   );
-  inner.material.side = 2; // DoubleSide so the bore interior renders
   tube.add(inner, outer);
-  const axis = new Vector3(0, Math.sin(LATITUDE_RAD), -Math.cos(LATITUDE_RAD));
   tube.quaternion.setFromUnitVectors(new Vector3(0, 1, 0), axis);
-  tube.position.set(0, STAIR_TOP.y + 2.6, STAIR_TOP.z - 1.1);
+  tube.position.copy(apertureCenter);
   g.add(tube);
 
   return g;
@@ -609,7 +616,9 @@ function buildSolarPyramid(mats: Mats): Group {
   const geo = new BufferGeometry();
   geo.setAttribute('position', new BufferAttribute(new Float32Array(pos), 3));
   geo.computeVertexNormals();
-  const body = shadowed(new Mesh(geo, mats.pyramidSandstone));
+  const bodyMat = mats.pyramidSandstone.clone();
+  bodyMat.side = DoubleSide;
+  const body = shadowed(new Mesh(geo, bodyMat));
   body.name = 'pyramid-body';
   g.add(body);
 
@@ -708,18 +717,16 @@ function buildSolarPyramid(mats: Mats): Group {
   northFace.name = 'pyramid-north-aperture';
   g.add(northFace);
 
-  // ---- hour chamber: a darkened passage between the two apertures. The
-  // south entrance and north view remain visually connected.
+  // ---- hour chamber: a complete passage between the two face apertures.
+  // The earlier five-metre shell ended before the camera reached the north
+  // half of the pyramid, which made its walls and floor disappear.
   const chamber = new Group();
   chamber.name = 'hour-chamber';
-  const chamberDark = new MeshStandardNodeMaterial();
-  chamberDark.color.set('#151210');
-  chamberDark.roughness = 1.0;
+  // Unlit dark masonry remains legible at the night tour stop. The chamber
+  // is intentionally shadowed, but it must not read as absent geometry.
+  const chamberDark = new MeshBasicNodeMaterial();
+  chamberDark.color.set('#4a3d34');
   chamberDark.side = DoubleSide;
-  const CD = 5.0; // chamber depth along the inward face normal
-  const CU = 3.6; // chamber half-width in face coords
-  const CV0 = -0.6;
-  const CV1 = slitV1 + 1.2;
   const quad = (a: Vector3, b: Vector3, c: Vector3, d: Vector3): BufferGeometry => {
     const q = new BufferGeometry();
     q.setAttribute(
@@ -735,11 +742,68 @@ function buildSolarPyramid(mats: Mats): Group {
     q.computeVertexNormals();
     return q;
   };
-  // Side walls and ceiling shade the threshold without closing the sightline.
+
+  const southSurfaceZ = (y: number): number => M.z + (apex.z - M.z) * (y / H);
+  const northSurfaceZ = (y: number): number =>
+    northBase.z + (apex.z - northBase.z) * (y / H);
+  const floorY = Math.max(Vd.y * slitV0, northV.y * northOpeningV0) + 0.08;
+  const ceilingY = Math.min(Vd.y * slitV1, northV.y * northOpeningV1) - 0.12;
+  const floorHalfW = Math.min(slitHalfW, northOpeningHalfW) - 0.06;
+  const ceilingHalfW = 0.12;
+  const southFloorZ = southSurfaceZ(floorY) - 0.08;
+  const northFloorZ = northSurfaceZ(floorY) + 0.08;
+  const southCeilingZ = southSurfaceZ(ceilingY) - 0.08;
+  const northCeilingZ = northSurfaceZ(ceilingY) + 0.08;
+
+  const floor = new Mesh(
+    quad(
+      new Vector3(-floorHalfW, floorY, southFloorZ),
+      new Vector3(-floorHalfW, floorY, northFloorZ),
+      new Vector3(floorHalfW, floorY, northFloorZ),
+      new Vector3(floorHalfW, floorY, southFloorZ),
+    ),
+    chamberDark,
+  );
+  floor.name = 'hour-chamber-floor';
+
+  const ceiling = new Mesh(
+    quad(
+      new Vector3(-ceilingHalfW, ceilingY, southCeilingZ),
+      new Vector3(ceilingHalfW, ceilingY, southCeilingZ),
+      new Vector3(ceilingHalfW, ceilingY, northCeilingZ),
+      new Vector3(-ceilingHalfW, ceilingY, northCeilingZ),
+    ),
+    chamberDark,
+  );
+  ceiling.name = 'hour-chamber-ceiling';
+
+  const leftWall = new Mesh(
+    quad(
+      new Vector3(-floorHalfW, floorY, southFloorZ),
+      new Vector3(-ceilingHalfW, ceilingY, southCeilingZ),
+      new Vector3(-ceilingHalfW, ceilingY, northCeilingZ),
+      new Vector3(-floorHalfW, floorY, northFloorZ),
+    ),
+    chamberDark,
+  );
+  leftWall.name = 'hour-chamber-west-wall';
+
+  const rightWall = new Mesh(
+    quad(
+      new Vector3(floorHalfW, floorY, southFloorZ),
+      new Vector3(floorHalfW, floorY, northFloorZ),
+      new Vector3(ceilingHalfW, ceilingY, northCeilingZ),
+      new Vector3(ceilingHalfW, ceilingY, southCeilingZ),
+    ),
+    chamberDark,
+  );
+  rightWall.name = 'hour-chamber-east-wall';
+
   chamber.add(
-    new Mesh(quad(mapFace(-CU, CV0, 0), mapFace(-CU, CV0, -CD), mapFace(-CU, CV1, -CD), mapFace(-CU, CV1, 0)), chamberDark),
-    new Mesh(quad(mapFace(CU, CV0, 0), mapFace(CU, CV1, 0), mapFace(CU, CV1, -CD), mapFace(CU, CV0, -CD)), chamberDark),
-    new Mesh(quad(mapFace(-CU, CV1, 0), mapFace(-CU, CV1, -CD), mapFace(CU, CV1, -CD), mapFace(CU, CV1, 0)), chamberDark),
+    floor,
+    ceiling,
+    leftWall,
+    rightWall,
   );
   g.add(chamber);
 
