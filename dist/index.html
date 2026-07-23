@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Star Axis — Charles Ross</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background: #050508;
+      }
+      #app {
+        position: fixed;
+        inset: 0;
+      }
+      #app canvas {
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+      #info {
+        position: fixed;
+        top: 12px;
+        left: 14px;
+        z-index: 10;
+        color: rgba(220, 225, 240, 0.85);
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 12px;
+        line-height: 1.6;
+        pointer-events: none;
+        user-select: none;
+      }
+      #info h1 {
+        font-size: 13px;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+      /* Shown only while the pointer is locked. */
+      #crosshair {
+        position: fixed;
+        left: 50%;
+        top: 50%;
+        width: 14px;
+        height: 14px;
+        margin: -7px 0 0 -7px;
+        z-index: 10;
+        opacity: 0;
+        transition: opacity 0.15s ease;
+        pointer-events: none;
+      }
+      #crosshair::before,
+      #crosshair::after {
+        content: '';
+        position: absolute;
+        background: rgba(235, 240, 250, 0.7);
+      }
+      #crosshair::before {
+        left: 50%;
+        top: 0;
+        width: 1px;
+        height: 100%;
+        margin-left: -0.5px;
+      }
+      #crosshair::after {
+        top: 50%;
+        left: 0;
+        height: 1px;
+        width: 100%;
+        margin-top: -0.5px;
+      }
+    </style>
+    <script type="module" crossorigin src="/assets/index-qeUtXJLK.js"></script>
+  </head>
+  <body>
+    <div id="info">
+      <h1>Star Axis — Charles Ross</h1>
+      <div>click to walk &middot; C orbit</div>
+    </div>
+    <div id="crosshair"></div>
+    <div id="app"></div>
+  </body>
+</html>
