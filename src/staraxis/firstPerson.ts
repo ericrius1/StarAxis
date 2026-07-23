@@ -12,6 +12,7 @@ import type { PerspectiveCamera } from 'three/webgpu';
 import { Vector3 } from 'three/webgpu';
 
 import { EYE_HEIGHT, walkSurfaceY } from './walk';
+import { resolveCapsule, type Collider } from './collision';
 
 const WALK_SPEED = 5.5; // m/s — an unhurried visitor's pace
 const SPRINT_SPEED = 16;
@@ -32,6 +33,8 @@ export interface FirstPersonRig {
   lock(): void;
   /** Teleport to a vantage point; auto-selects walk or fly. */
   placeAt(pos: Vector3 | [number, number, number], lookAt: Vector3 | [number, number, number]): void;
+  /** Attach the static collision world (capsule vs monument BVH). */
+  setCollider(collider: Collider): void;
   toggleFly(): boolean;
   /** True if the key was consumed as a movement key. */
   handleKey(code: string, down: boolean): boolean;
@@ -63,6 +66,7 @@ export function createFirstPerson(
 
   let enabled = false;
   let fly = false;
+  let collider: Collider | null = null;
   /** Eye height is eased toward the surface instead of snapping. */
   let groundedY = camera.position.y;
 
@@ -121,6 +125,10 @@ export function createFirstPerson(
       const ground = walkSurfaceY(p.x, p.z) + EYE_HEIGHT;
       fly = p.y - ground > FLY_SPAWN_THRESHOLD;
       groundedY = camera.position.y;
+    },
+
+    setCollider(c) {
+      collider = c;
     },
 
     toggleFly() {
@@ -186,6 +194,12 @@ export function createFirstPerson(
         const targetY = surfaceEyeY();
         groundedY += (targetY - groundedY) * Math.min(GROUND_STIFFNESS * dt, 1);
         camera.position.y = groundedY;
+      }
+
+      // Solid architecture: push the capsule out of walls in either mode.
+      if (collider) {
+        resolveCapsule(collider, camera.position);
+        if (!fly) groundedY = camera.position.y;
       }
     },
 

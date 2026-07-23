@@ -27,6 +27,7 @@ import {
   Vector3,
 } from 'three/webgpu';
 import { clamp, color, mix, positionWorld } from 'three/tsl';
+import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { TERRAIN_SIZE, TERRAIN_SEGMENTS, BOWL_CENTER } from './constants';
 import { terrainHeight } from './heightfield';
 
@@ -82,27 +83,52 @@ function buildInstancedMesh(
 
 // ---------------------------------------------------------------- ground
 
-function createGround(desertMaterial: MeshStandardNodeMaterial): Mesh {
-  const geometry = new PlaneGeometry(
-    TERRAIN_SIZE,
-    TERRAIN_SIZE,
-    TERRAIN_SEGMENTS,
-    TERRAIN_SEGMENTS,
-  );
-  geometry.rotateX(-Math.PI / 2);
+/**
+ * Ground as an 8×8 grid of chunks instead of one monolithic plane: each
+ * chunk gets its own bounding sphere, so at ground level the frustum culls
+ * most of the ~1.2M terrain triangles. Normals come from central differences
+ * of the analytic height field — exact, seam-free across chunk borders, and
+ * smoother than mesh-derived normals.
+ */
+function createGround(desertMaterial: MeshStandardNodeMaterial): Group {
+  const group = new Group();
+  group.name = 'terrain-mesa';
 
-  // One-time CPU displacement against the analytic height field.
-  const position = geometry.attributes.position;
-  for (let i = 0; i < position.count; i++) {
-    position.setY(i, terrainHeight(position.getX(i), position.getZ(i)));
+  const CHUNKS = 8;
+  const chunkSize = TERRAIN_SIZE / CHUNKS;
+  const segPerChunk = TERRAIN_SEGMENTS / CHUNKS;
+  const e = 0.9; // central-difference step for analytic normals
+  const n = new Vector3();
+
+  for (let cy = 0; cy < CHUNKS; cy++) {
+    for (let cx = 0; cx < CHUNKS; cx++) {
+      const geometry = new PlaneGeometry(chunkSize, chunkSize, segPerChunk, segPerChunk);
+      geometry.rotateX(-Math.PI / 2);
+      const ox = -TERRAIN_SIZE / 2 + chunkSize * (cx + 0.5);
+      const oz = -TERRAIN_SIZE / 2 + chunkSize * (cy + 0.5);
+      geometry.translate(ox, 0, oz);
+
+      const position = geometry.attributes.position;
+      const normal = geometry.attributes.normal;
+      for (let i = 0; i < position.count; i++) {
+        const x = position.getX(i);
+        const z = position.getZ(i);
+        position.setY(i, terrainHeight(x, z));
+        const dx = (terrainHeight(x + e, z) - terrainHeight(x - e, z)) / (2 * e);
+        const dz = (terrainHeight(x, z + e) - terrainHeight(x, z - e)) / (2 * e);
+        n.set(-dx, 1, -dz).normalize();
+        normal.setXYZ(i, n.x, n.y, n.z);
+      }
+      geometry.computeBoundingSphere();
+
+      const mesh = new Mesh(geometry, desertMaterial);
+      mesh.name = `terrain-chunk-${cx}-${cy}`;
+      mesh.receiveShadow = true;
+      mesh.matrixAutoUpdate = false;
+      group.add(mesh);
+    }
   }
-  position.needsUpdate = true;
-  geometry.computeVertexNormals();
-
-  const mesh = new Mesh(geometry, desertMaterial);
-  mesh.name = 'terrain-mesa';
-  mesh.receiveShadow = true;
-  return mesh;
+  return group;
 }
 
 // ---------------------------------------------------------------- horizon mesas
@@ -123,7 +149,9 @@ function createHorizonMesas(): Group {
     clamp(positionWorld.y.div(55.0), 0.0, 1.0),
   );
 
+  // All mesa silhouettes baked into one geometry — a single draw call.
   const COUNT = 12;
+  const geos: BufferGeometry[] = [];
   for (let i = 0; i < COUNT; i++) {
     const angle = (i / COUNT) * Math.PI * 2 + (hash01(i, 1) - 0.5) * 0.42;
     const radius = 600 + hash01(i, 2) * 300; // 600–900 m
@@ -135,20 +163,17 @@ function createHorizonMesas(): Group {
     const height = 26 + hash01(i, 5) * 44;
     const radialSegments = 5 + Math.floor(hash01(i, 6) * 3.999); // 5–8 facets
 
-    const mesa = new Mesh(
-      new CylinderGeometry(topRadius, baseRadius, height, radialSegments, 1),
-      material,
-    );
+    const geo = new CylinderGeometry(topRadius, baseRadius, height, radialSegments, 1);
+    geo.scale(1 + (hash01(i, 7) - 0.5) * 0.55, 1, 1 + (hash01(i, 8) - 0.5) * 0.55);
+    geo.rotateY(hash01(i, 9) * Math.PI * 2);
     const groundY = terrainHeight(x, z);
-    mesa.position.set(x, groundY + height / 2 - 6, z); // sink base to hide the seam
-    mesa.scale.set(
-      1 + (hash01(i, 7) - 0.5) * 0.55,
-      1,
-      1 + (hash01(i, 8) - 0.5) * 0.55,
-    );
-    mesa.rotation.y = hash01(i, 9) * Math.PI * 2;
-    group.add(mesa);
+    geo.translate(x, groundY + height / 2 - 6, z); // sink base to hide the seam
+    geos.push(geo);
   }
+  const merged = new Mesh(mergeGeometries(geos), material);
+  merged.name = 'horizon-mesas-merged';
+  merged.matrixAutoUpdate = false;
+  group.add(merged);
   return group;
 }
 

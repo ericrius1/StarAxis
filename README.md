@@ -20,7 +20,15 @@ npm run dev        # http://localhost:5173 — needs a WebGPU browser (Chrome/Ed
 
 It opens in **first person** — click to lock the pointer and walk the site.
 Climbing all 147 steps into the tunnel and emerging at the aperture is the
-experience the piece is built around, so walk it.
+experience the piece is built around, so walk it. The route is real: entry
+channel → terrace stair → through the Equatorial Chamber portal → up the
+Star Tunnel. Architecture is solid (capsule-vs-BVH collision via
+three-mesh-bvh), and zone captions name each of the five elements as you
+reach them — on the stair, each step advances the readout through the
+26,000-year precession cycle, Polaris's circle growing from dime-sized
+today toward the whole sky ±13,000 years out. You can step through the
+Hour Chamber's 15° slit into the dark room behind it and look back out at
+the knife of sky.
 
 | Key | Action |
 | --- | --- |
@@ -36,13 +44,16 @@ experience the piece is built around, so walk it.
 | `5` | Night, due north — star trails around Polaris |
 | `D` / `G` / `N` | Day / golden hour / night |
 | `T` | Toggle long-exposure star trails |
+| `/` | Debug stats (fps, frame ms, draw calls, triangles) |
 
 Presets `1`–`5` work in both modes; in first person they are spawn points,
 and a vantage well off the ground (the aerial view) spawns you flying.
 
-The walker follows the terrain heightfield, with the Star Tunnel treads
-overriding it inside the stair channel so you pass *under* the summit
-hillside. It is free-walk, not a physics sim — there is no wall collision.
+The walker follows the terrain heightfield (Star Tunnel treads and the
+terrace flight override it in their channels), while a static BVH over the
+monument blocks walls, parapets and pyramid faces. Knee-height steps pass
+under the capsule so stairs stay climbable. No gravity/jumping — grounding
+is eased, not simulated — and scatter rocks are set dressing, not solid.
 
 URL params for scripted captures: `?nav=orbit&view=1..5&mode=day|goldenHour|night&trails=1&blockout=1`
 or a free camera `?cam=x,y,z&look=x,y,z&fov=55`. `nav=fp|orbit` picks the
@@ -60,8 +71,9 @@ navigation mode; a free camera or blockout implies `orbit`.
 - **Entry channel** — outward-leaning flagstone walls converging on the
   terrace and the A-frame triangular portal.
 - **Solar Pyramid** — solstice-sloped faces in salmon sandstone panels, a
-  granite edge stair to the apex, and the 15° Hour Chamber wedge (one hour
-  of Earth's rotation) cut into the south face.
+  granite edge stair to the apex, and the **Hour Chamber**: a real 15° slit
+  (one hour of Earth's rotation) cut through the south face into a dark
+  chamber with bronze-edged reveals — enterable on foot.
 - **Sky rig** — TSL sky dome with day/golden/night states; at night the star
   field physically rotates about the Polaris axis, with a fragment-shader
   long-exposure trail mode recreating the famous concentric-arc photograph.
@@ -73,8 +85,18 @@ navigation mode; a free camera or blockout implies `orbit`.
 All materials are TSL node graphs with independent albedo / roughness /
 normal / AO channels sampled in world space: Worley-cell masonry (flagstone,
 rubble, ashlar), speckled granite, seamed pyramid sandstone, brushed
-stainless, cast concrete, and a slope-masked desert blend. Palettes were
+stainless, patinated bronze (the five build materials of the real work,
+plus earth), cast concrete, and a slope-masked desert blend. Palettes were
 derived from reference-photo PBR extraction (see `sculpt/`).
+
+## Performance
+
+The terrain is an 8×8 chunk grid with analytic (seam-free) normals so the
+frustum culls most of its ~1.2M triangles; entry-wall segments, coping and
+horizon mesas are merged into single draws; the sun's shadow map redraws
+only while the sun is moving; everything repeated is instanced. Typical
+ground-level frames run ~30–75 draw calls / 0.3–0.5M triangles at 60 fps.
+`/` shows live stats.
 
 ## Source layout
 

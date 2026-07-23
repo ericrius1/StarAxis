@@ -54,11 +54,21 @@ export const TERRACE_BASE_Y = 2.0;
 export const TERRACE_Z = 1.8; // retaining face plane (inside the bowl)
 export const TERRACE_WIDTH = 16.5;
 export const PORTAL_Z = -1.4;
-export const PORTAL_HEIGHT = 5.8; // outer gable height above terrace top
+export const PORTAL_HEIGHT = 6.2; // outer gable height above terrace top
 export const PORTAL_BASE_HALF_WIDTH = 2.3;
 export const PORTAL_DEPTH = 2.4;
-export const PORTAL_VOID_HALF_WIDTH = 0.9;
-export const PORTAL_VOID_HEIGHT = 4.2;
+export const PORTAL_VOID_HALF_WIDTH = 1.15;
+export const PORTAL_VOID_HEIGHT = 4.8;
+
+/** Terrace stair: the walkable flight from path level up through the
+ *  retaining-wall notch onto the court. Top tread surface sits at court
+ *  level; the flight descends due south. */
+export const TERRACE_STAIR_HALF_W = 1.7;
+export const TERRACE_STAIR_RISE = 0.16;
+export const TERRACE_STAIR_RUN = 0.24;
+export const TERRACE_STAIR_TOP_Y = 6.0;
+export const TERRACE_STAIR_TOP_Z = -0.05;
+export const TERRACE_STAIR_COUNT = 25;
 
 // ---------------------------------------------------------------- crescent wall
 export const CRESCENT_RADIUS = 20; // wall face radius around bowl center

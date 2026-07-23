@@ -8,8 +8,8 @@
  * tunnel mouth, and emerge at the aperture — the whole point of the piece.
  */
 
-import { STAIR_BASE, STAIR_TOP, STAIR_WIDTH } from './constants';
-import { terrainHeight, stairSurfaceY } from './heightfield';
+import { STAIR_BASE, STAIR_TOP, STAIR_WIDTH, TERRACE_STAIR_HALF_W } from './constants';
+import { terrainHeight, stairSurfaceY, terraceStairLineY } from './heightfield';
 
 /** Standing eye height above the walking surface. */
 export const EYE_HEIGHT = 1.7;
@@ -22,8 +22,14 @@ export function inStairChannel(x: number, z: number): boolean {
   return Math.abs(x) <= CHANNEL_HALF && z <= STAIR_BASE.z && z >= STAIR_TOP.z;
 }
 
+/** True when (x, z) is on the terrace stair flight (path → court). */
+export function onTerraceStair(x: number, z: number): boolean {
+  return Math.abs(x) <= TERRACE_STAIR_HALF_W - 0.1 && z >= -1.35 && z <= 6.0;
+}
+
 /** Height of the surface a visitor stands on at (x, z). */
 export function walkSurfaceY(x: number, z: number): number {
   if (inStairChannel(x, z)) return stairSurfaceY(z);
+  if (onTerraceStair(x, z)) return terraceStairLineY(z);
   return terrainHeight(x, z);
 }

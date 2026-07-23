@@ -18,6 +18,11 @@ import {
   TUNNEL_MOUTH_T,
   PYRAMID_CENTER,
   PYRAMID_BASE_Y,
+  TERRACE_STAIR_HALF_W,
+  TERRACE_STAIR_RISE,
+  TERRACE_STAIR_RUN,
+  TERRACE_STAIR_TOP_Y,
+  TERRACE_STAIR_TOP_Z,
   crescentCrownY,
 } from './constants';
 
@@ -70,6 +75,13 @@ export function trenchFloorY(z: number): number {
   return lerp(3.0, 2.0, t);
 }
 
+/** Walking line of the terrace stair flight (path level up to the court). */
+export function terraceStairLineY(z: number): number {
+  const line =
+    TERRACE_STAIR_TOP_Y - ((z - TERRACE_STAIR_TOP_Z) * TERRACE_STAIR_RISE) / TERRACE_STAIR_RUN;
+  return Math.min(TERRACE_STAIR_TOP_Y, Math.max(2.0, line));
+}
+
 /**
  * Final terrain height with the three excavations carved in:
  * circular bowl, entry trench, and the stair slot through the summit.
@@ -109,6 +121,12 @@ export function terrainHeight(x: number, z: number): number {
     const carved = Math.min(h, floor + wallRise);
     const along = smooth01((TRENCH_SOUTH_Z + 14 - z) / 14); // fade in from the south
     h = lerp(h, carved, along);
+  }
+
+  // --- terrace stair notch: carve the sand out of the flight so the
+  // granite treads (not a sand ramp) carry the visitor up to the court
+  if (Math.abs(x) < TERRACE_STAIR_HALF_W + 0.25 && z > -1.3 && z < 6.2) {
+    h = Math.min(h, terraceStairLineY(z) - 0.3);
   }
 
   // --- stair slot carve: open channel only up to the tunnel mouth; the

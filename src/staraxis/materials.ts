@@ -149,6 +149,7 @@ export interface StarAxisMaterials {
   graniteCoping: MeshStandardNodeMaterial;
   pyramidSandstone: MeshStandardNodeMaterial;
   stainless: MeshStandardNodeMaterial;
+  bronze: MeshStandardNodeMaterial;
   concrete: MeshStandardNodeMaterial;
   concreteDark: MeshStandardNodeMaterial;
   desert: MeshStandardNodeMaterial;
@@ -269,6 +270,17 @@ export function createMaterials(): StarAxisMaterials {
     stainless.metalnessNode = float(0.35);
   }
 
+  // -- bronze: warm aged metal for the chamber edgings (Star Axis is built
+  // of earth, granite, sandstone, stainless steel and bronze)
+  const bronze = new MeshStandardNodeMaterial();
+  {
+    const p = positionWorld;
+    const patina = mx_fractal_noise_float(p.mul(4.5).add(vec3(13.0, 5.5, 21.0)), 3, 2.0, 0.5, 1.0);
+    bronze.colorNode = mix(color('#8c6a3f'), color('#5f4a30'), patina.mul(0.6));
+    bronze.roughnessNode = clamp(float(0.38).add(patina.sub(0.5).mul(0.2)), 0.25, 0.6);
+    bronze.metalnessNode = float(0.55);
+  }
+
   // -- concrete: pale form-cast panels, faint streaking
   const concrete = new MeshStandardNodeMaterial();
   {
@@ -328,6 +340,7 @@ export function createMaterials(): StarAxisMaterials {
     graniteCoping,
     pyramidSandstone,
     stainless,
+    bronze,
     concrete,
     concreteDark,
     desert,

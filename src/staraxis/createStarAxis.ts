@@ -23,12 +23,16 @@ import {
   InstancedMesh,
   Matrix4,
   Mesh,
+  DoubleSide,
   MeshStandardNodeMaterial,
   Object3D,
   Quaternion,
   Shape,
+  ShapeGeometry,
   Vector3,
 } from 'three/webgpu';
+import { cameraPosition, float, positionWorld, smoothstep } from 'three/tsl';
+import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 
 import {
   BASTION_SIZE,
@@ -74,6 +78,12 @@ import {
   TERRACE_TOP_Y,
   TERRACE_WIDTH,
   TERRACE_Z,
+  TERRACE_STAIR_COUNT,
+  TERRACE_STAIR_HALF_W,
+  TERRACE_STAIR_RISE,
+  TERRACE_STAIR_RUN,
+  TERRACE_STAIR_TOP_Y,
+  TERRACE_STAIR_TOP_Z,
 } from './constants';
 import { stairPoint, crescentCrownY, TUNNEL_MOUTH_T } from './constants';
 import { terrainHeight, trenchFloorY } from './heightfield';
@@ -89,6 +99,7 @@ interface Mats {
   flagstone: MeshStandardNodeMaterial;
   fieldstone: MeshStandardNodeMaterial;
   ashlar: MeshStandardNodeMaterial;
+  bronze: MeshStandardNodeMaterial;
   granite: MeshStandardNodeMaterial;
   graniteCoping: MeshStandardNodeMaterial;
   pyramidSandstone: MeshStandardNodeMaterial;
@@ -110,11 +121,12 @@ function buildEntryChannel(mats: Mats): Group {
   g.name = 'entry-channel';
 
   // Leaning wall: a tapered slab. Plan converges northward, top edge rakes
-  // down toward the south where the trench shallows out.
+  // down toward the south where the trench shallows out. All segments are
+  // baked into two merged meshes (wall + coping) — one draw call each
+  // instead of 48.
+  const wallGeos: BufferGeometry[] = [];
+  const copGeos: BufferGeometry[] = [];
   for (const side of [-1, 1]) {
-    const wall = new Group();
-    wall.name = side < 0 ? 'entry-wall-west' : 'entry-wall-east';
-
     const segments = 12;
     const zSouth = 56;
     const zNorth = 2.4;
@@ -128,25 +140,25 @@ function buildEntryChannel(mats: Mats): Group {
       const half = 10.5 + (5.0 - 10.5) * ((zc - zSouth) / (zNorth - zSouth));
       const floor = trenchFloorY(zc) - 0.6;
       const h = ENTRY_WALL_HEIGHT * (0.35 + 0.65 * ((zSouth - zc) / (zSouth - zNorth)));
+      const lean = side * -ENTRY_WALL_LEAN_RAD;
+
       const geo = new BoxGeometry(1.4, h, Math.abs(z1 - z0) + 0.12);
-      const m = shadowed(new Mesh(geo, mats.flagstone));
-      m.position.set(side * (half + 0.7), floor + h / 2, zc);
-      m.rotation.z = side * -ENTRY_WALL_LEAN_RAD;
-      wall.add(m);
+      geo.rotateZ(lean);
+      geo.translate(side * (half + 0.7), floor + h / 2, zc);
+      wallGeos.push(geo);
 
       // pale coping strip along the raked top edge (overlapped for continuity)
-      const cop = shadowed(new Mesh(new BoxGeometry(1.7, 0.3, Math.abs(z1 - z0) + 0.55), mats.graniteCoping));
-      const lean = side * -ENTRY_WALL_LEAN_RAD;
-      cop.position.set(
-        side * (half + 0.7) - Math.sin(lean) * (h / 2),
-        floor + h + 0.1,
-        zc,
-      );
-      cop.rotation.z = lean;
-      wall.add(cop);
+      const cop = new BoxGeometry(1.7, 0.3, Math.abs(z1 - z0) + 0.55);
+      cop.rotateZ(lean);
+      cop.translate(side * (half + 0.7) - Math.sin(lean) * (h / 2), floor + h + 0.1, zc);
+      copGeos.push(cop);
     }
-    g.add(wall);
   }
+  const wallMesh = shadowed(new Mesh(mergeGeometries(wallGeos), mats.flagstone));
+  wallMesh.name = 'entry-wall-west'; // merged: west + east share the mesh
+  const copMesh = shadowed(new Mesh(mergeGeometries(copGeos), mats.graniteCoping));
+  copMesh.name = 'entry-wall-coping';
+  g.add(wallMesh, copMesh);
   return g;
 }
 
@@ -157,20 +169,86 @@ function buildTerrace(mats: Mats): Group {
   g.name = 'entry-terrace';
 
   // Retaining wall facing south, spanning the trench mouth.
+  // Retaining wall split into two flanking blocks with a central notch for
+  // the terrace stair — the real route from the entry path up to the court.
+  // Faces sit proud of the platform (+0.15 z, +0.1 x) so no coplanar faces
+  // z-fight where the masses meet.
   const wallH = TERRACE_TOP_Y - (trenchFloorY(TERRACE_Z) - 0.4);
-  const wall = shadowed(new Mesh(new BoxGeometry(TERRACE_WIDTH, wallH, 2.4), mats.fieldstone));
-  wall.position.set(0, trenchFloorY(TERRACE_Z) - 0.4 + wallH / 2, TERRACE_Z - 1.2);
-  wall.name = 'terrace-retaining-face';
-  g.add(wall);
+  const wallW = (TERRACE_WIDTH + 0.2) / 2 - TERRACE_STAIR_HALF_W;
+  for (const side of [-1, 1]) {
+    const wall = shadowed(new Mesh(new BoxGeometry(wallW, wallH, 2.4), mats.fieldstone));
+    wall.position.set(
+      side * (TERRACE_STAIR_HALF_W + wallW / 2),
+      trenchFloorY(TERRACE_Z) - 0.4 + wallH / 2,
+      TERRACE_Z - 1.05,
+    );
+    wall.name = side < 0 ? 'terrace-retaining-west' : 'terrace-retaining-east';
+    g.add(wall);
+  }
 
-  // Platform slab behind the wall up to the stair base.
-  const platD = TERRACE_Z - (STAIR_BASE.z - 1.5);
-  const plat = shadowed(new Mesh(new BoxGeometry(TERRACE_WIDTH, 1.0, platD), mats.fieldstone));
-  plat.position.set(0, TERRACE_TOP_Y - 0.5, TERRACE_Z - 1.2 - platD / 2 + 1.2);
+  // Platform behind the wall up to the stair base; top raised 0.06 above
+  // the court-floor terrain so the two never share a plane. Split into two
+  // wings plus a short center slab so the stair flight's notch runs clear
+  // — otherwise its south face blocks the capsule at the top of the climb.
+  const platGeos: BufferGeometry[] = [];
+  const platN = STAIR_BASE.z - 1.5; // north edge
+  const wingD = TERRACE_Z - platN;
+  const wingW = TERRACE_WIDTH / 2 - TERRACE_STAIR_HALF_W;
+  for (const side of [-1, 1]) {
+    const wing = new BoxGeometry(wingW, 1.0, wingD);
+    wing.translate(side * (TERRACE_STAIR_HALF_W + wingW / 2), TERRACE_TOP_Y - 0.5 + 0.06, (TERRACE_Z + platN) / 2);
+    platGeos.push(wing);
+  }
+  const centerN = platN;
+  const centerS = TERRACE_STAIR_TOP_Z - 0.3; // stops where the flight begins
+  const center = new BoxGeometry(TERRACE_STAIR_HALF_W * 2, 1.0, centerS - centerN);
+  center.translate(0, TERRACE_TOP_Y - 0.5 + 0.06, (centerS + centerN) / 2);
+  platGeos.push(center);
+  const plat = shadowed(new Mesh(mergeGeometries(platGeos), mats.fieldstone));
   plat.name = 'terrace-platform';
   g.add(plat);
 
-  // ---- A-frame portal: triangular gable with a triangular void.
+  // ---- terrace stair: the flight from path level up through the notch.
+  const tSteps = new InstancedMesh(
+    new BoxGeometry(TERRACE_STAIR_HALF_W * 2 - 0.4, 0.2, 0.32),
+    mats.granite,
+    TERRACE_STAIR_COUNT,
+  );
+  tSteps.name = 'terrace-stair';
+  const tm = new Matrix4();
+  for (let i = 0; i < TERRACE_STAIR_COUNT; i++) {
+    const y = TERRACE_STAIR_TOP_Y - i * TERRACE_STAIR_RISE;
+    const z = TERRACE_STAIR_TOP_Z + i * TERRACE_STAIR_RUN;
+    tm.setPosition(0, y - 0.1, z);
+    tSteps.setMatrixAt(i, tm);
+  }
+  shadowed(tSteps);
+  g.add(tSteps);
+  // solid masonry mass under the flight so its sides read as built stone
+  const flightLen = Math.hypot(
+    TERRACE_STAIR_COUNT * TERRACE_STAIR_RISE,
+    TERRACE_STAIR_COUNT * TERRACE_STAIR_RUN,
+  );
+  const flightDir = new Vector3(0, TERRACE_STAIR_RISE, -TERRACE_STAIR_RUN).normalize();
+  const flightFill = shadowed(
+    new Mesh(new BoxGeometry(TERRACE_STAIR_HALF_W * 2 - 0.3, 3.0, flightLen + 0.6), mats.fieldstone),
+  );
+  const fq = new Quaternion().setFromUnitVectors(new Vector3(0, 0, -1), flightDir);
+  const fDown = new Vector3(0, -1, 0).applyQuaternion(fq);
+  flightFill.quaternion.copy(fq);
+  flightFill.position
+    .set(
+      0,
+      (TERRACE_STAIR_TOP_Y + (TERRACE_STAIR_TOP_Y - TERRACE_STAIR_COUNT * TERRACE_STAIR_RISE)) / 2,
+      (TERRACE_STAIR_TOP_Z + (TERRACE_STAIR_TOP_Z + TERRACE_STAIR_COUNT * TERRACE_STAIR_RUN)) / 2,
+    )
+    .addScaledVector(fDown, 1.5 + 0.28);
+  flightFill.name = 'terrace-stair-fill';
+  g.add(flightFill);
+
+  // ---- A-frame portal: triangular gable with a real triangular void.
+  // This is the simplified Equatorial Chamber entrance: standing beneath it,
+  // the apex notch frames the band of sky where equatorial stars cross.
   const outer = new Shape();
   outer.moveTo(-PORTAL_BASE_HALF_WIDTH, 0);
   outer.lineTo(PORTAL_BASE_HALF_WIDTH, 0);
@@ -189,17 +267,27 @@ function buildTerrace(mats: Mats): Group {
   portal.name = 'triangle-portal';
   g.add(portal);
 
-  // Inner steps rising through the portal void toward the stair base.
-  const stepCount = 6;
-  const steps = new InstancedMesh(new BoxGeometry(2.0, 0.18, 0.5), mats.granite, stepCount);
-  steps.name = 'portal-inner-steps';
-  const m4 = new Matrix4();
-  for (let i = 0; i < stepCount; i++) {
-    m4.setPosition(0, TERRACE_TOP_Y + 0.09 + i * 0.16, PORTAL_Z - 0.4 - i * 0.42);
-    steps.setMatrixAt(i, m4);
+  // Bronze edging along the void jambs (Star Axis's fifth material).
+  for (const side of [-1, 1]) {
+    const jambLen = Math.hypot(PORTAL_VOID_HALF_WIDTH, PORTAL_VOID_HEIGHT);
+    const jamb = new Mesh(new BoxGeometry(0.07, jambLen, PORTAL_DEPTH + 0.06), mats.bronze);
+    jamb.position.set(side * (PORTAL_VOID_HALF_WIDTH / 2 + 0.03), TERRACE_TOP_Y + PORTAL_VOID_HEIGHT / 2, PORTAL_Z);
+    jamb.rotation.z = side * Math.atan2(PORTAL_VOID_HALF_WIDTH, PORTAL_VOID_HEIGHT);
+    jamb.userData.noCollide = true;
+    g.add(jamb);
   }
-  shadowed(steps);
-  g.add(steps);
+
+  // Flat granite pavers through the void (the old rising steps clipped the
+  // walker; the flight now lives in the terrace notch where it belongs).
+  const pavers = new InstancedMesh(new BoxGeometry(2.0, 0.08, 0.55), mats.granite, 4);
+  pavers.name = 'portal-inner-steps';
+  const m4 = new Matrix4();
+  for (let i = 0; i < 4; i++) {
+    m4.setPosition(0, TERRACE_TOP_Y + 0.1, PORTAL_Z + 0.85 - i * 0.6);
+    pavers.setMatrixAt(i, m4);
+  }
+  shadowed(pavers);
+  g.add(pavers);
 
   return g;
 }
@@ -435,12 +523,17 @@ function buildStarTunnel(mats: Mats): Group {
   lintel.position.set(0, mouthP.y + 3.1, mouthP.z - 1.4);
   lintel.quaternion.setFromUnitVectors(new Vector3(0, 0, -1), slopeDir);
   mouth.add(lintel);
+  // Darkness panel that sells the black mouth from a distance but dissolves
+  // as the visitor approaches, so the tunnel is genuinely enterable.
   const voidMat = new MeshStandardNodeMaterial();
   voidMat.color.set('#0c0b0a');
   voidMat.roughness = 1.0;
+  voidMat.transparent = true;
+  voidMat.opacityNode = smoothstep(float(7), float(14), positionWorld.sub(cameraPosition).length());
   const voidFace = new Mesh(new BoxGeometry(STAIR_WIDTH + 0.2, 3.2, 0.4), voidMat);
   voidFace.position.set(0, mouthP.y + 1.45, mouthP.z - 1.7);
   voidFace.rotation.x = -LATITUDE_RAD * 0.3;
+  voidFace.userData.noCollide = true;
   mouth.add(voidFace);
   g.add(hood, mouth);
 
@@ -528,13 +621,15 @@ function buildSolarPyramid(mats: Mats): Group {
     new Vector3(B * 0.9, 0, -B), // NE
     new Vector3(-B * 0.9, 0, -B), // NW
   ];
+
+  // East, north and west faces plus the base as a triangle fan; the south
+  // face is built separately because it carries the real Hour Chamber slit.
   const pos: number[] = [];
-  for (let i = 0; i < 4; i++) {
+  for (let i = 1; i < 4; i++) {
     const a = corners[i];
     const b = corners[(i + 1) % 4];
     pos.push(a.x, a.y, a.z, b.x, b.y, b.z, apex.x, apex.y, apex.z);
   }
-  // base
   pos.push(
     corners[0].x, 0, corners[0].z,
     corners[2].x, 0, corners[2].z,
@@ -550,30 +645,113 @@ function buildSolarPyramid(mats: Mats): Group {
   body.name = 'pyramid-body';
   g.add(body);
 
-  // ---- hour chamber wedge: dark 15° slot inset on the south face,
-  // opening toward the shadow field like the reference
-  const wedgeHalf = Math.tan(((HOUR_WEDGE_DEG / 2) * Math.PI) / 180) * HOUR_WEDGE_HEIGHT;
-  const wedgeShape = new Shape();
-  wedgeShape.moveTo(-wedgeHalf, 0);
-  wedgeShape.lineTo(wedgeHalf, 0);
-  wedgeShape.lineTo(0, HOUR_WEDGE_HEIGHT);
-  wedgeShape.closePath();
-  const wedgeGeo = new ExtrudeGeometry(wedgeShape, { depth: 2.2, bevelEnabled: false });
-  const voidBlack = new MeshStandardNodeMaterial();
-  voidBlack.color.set('#0a0908');
-  voidBlack.roughness = 1.0;
-  const wedge = new Mesh(wedgeGeo, voidBlack);
-  wedge.name = 'hour-chamber';
-  // Lay the prism parallel to the south face plane, front sunk ~0.1 m in,
-  // so the 15° aperture reads as a slot cut into the face.
-  const faceLean = Math.atan2(B * 0.85 - 1.5, H); // face angle from vertical
-  wedge.rotation.x = -faceLean;
-  wedge.position.set(
-    0,
-    0.05 - 2.2 * Math.sin(faceLean),
-    B * 0.85 + 0.04 - 2.2 * Math.cos(faceLean),
+  // ---- south face with a REAL 15° slit cut through it.
+  // Face-plane frame: origin at the base-edge midpoint, U along the base,
+  // V up the slope toward the apex. The slit is a hole in the ShapeGeometry
+  // triangulation, so sky and chamber genuinely show through it.
+  const M = new Vector3(0, 0, B * 0.85);
+  const U = new Vector3(1, 0, 0);
+  const Vd = apex.clone().sub(M);
+  const faceLen = Vd.length();
+  Vd.divideScalar(faceLen);
+  const Nf = new Vector3().crossVectors(U, Vd).normalize(); // outward (0,~0.44,~0.90)
+  const mapFace = (u: number, v: number, offset = 0): Vector3 =>
+    new Vector3().copy(M).addScaledVector(U, u).addScaledVector(Vd, v).addScaledVector(Nf, offset);
+
+  const slitV0 = 0.5; // sill just above the rubble apron
+  const slitV1 = slitV0 + HOUR_WEDGE_HEIGHT / Vd.y;
+  const slitHalfW = Math.tan(((HOUR_WEDGE_DEG / 2) * Math.PI) / 180) * (slitV1 - slitV0);
+
+  const faceShape = new Shape();
+  faceShape.moveTo(-B, 0);
+  faceShape.lineTo(B, 0);
+  faceShape.lineTo(0, faceLen);
+  faceShape.closePath();
+  const slitHole = new Shape();
+  slitHole.moveTo(-slitHalfW, slitV0);
+  slitHole.lineTo(0, slitV1);
+  slitHole.lineTo(slitHalfW, slitV0);
+  slitHole.closePath();
+  faceShape.holes.push(slitHole);
+
+  const southGeo = new ShapeGeometry(faceShape);
+  {
+    const p = southGeo.getAttribute('position');
+    const vtx = new Vector3();
+    for (let i = 0; i < p.count; i++) {
+      vtx.copy(mapFace(p.getX(i), p.getY(i)));
+      p.setXYZ(i, vtx.x, vtx.y, vtx.z);
+    }
+    southGeo.computeVertexNormals();
+  }
+  // Double-sided: from inside the chamber the back of this face must read
+  // as shadowed masonry, not get backface-culled into a see-through hole.
+  const southMat = mats.pyramidSandstone.clone();
+  southMat.side = DoubleSide;
+  const southFace = shadowed(new Mesh(southGeo, southMat));
+  southFace.name = 'pyramid-south-face';
+  g.add(southFace);
+
+  // ---- hour chamber: the room behind the slit. Dark panels parallel to the
+  // face keep the slit reading near-black from outside; from inside, the
+  // slit frames a knife of sky and desert — one hour of Earth's rotation.
+  const chamber = new Group();
+  chamber.name = 'hour-chamber';
+  const chamberDark = new MeshStandardNodeMaterial();
+  chamberDark.color.set('#151210');
+  chamberDark.roughness = 1.0;
+  chamberDark.side = DoubleSide;
+  const CD = 5.0; // chamber depth along the inward face normal
+  const CU = 3.6; // chamber half-width in face coords
+  const CV0 = -0.6;
+  const CV1 = slitV1 + 1.2;
+  const quad = (a: Vector3, b: Vector3, c: Vector3, d: Vector3): BufferGeometry => {
+    const q = new BufferGeometry();
+    q.setAttribute(
+      'position',
+      new BufferAttribute(
+        new Float32Array([
+          a.x, a.y, a.z, b.x, b.y, b.z, c.x, c.y, c.z,
+          a.x, a.y, a.z, c.x, c.y, c.z, d.x, d.y, d.z,
+        ]),
+        3,
+      ),
+    );
+    q.computeVertexNormals();
+    return q;
+  };
+  // back wall
+  chamber.add(
+    new Mesh(
+      quad(
+        mapFace(-CU, CV0, -CD), mapFace(CU, CV0, -CD),
+        mapFace(CU, CV1, -CD), mapFace(-CU, CV1, -CD),
+      ),
+      chamberDark,
+    ),
   );
-  g.add(wedge);
+  // side walls and ceiling connecting back wall to the face shell
+  chamber.add(
+    new Mesh(quad(mapFace(-CU, CV0, 0), mapFace(-CU, CV0, -CD), mapFace(-CU, CV1, -CD), mapFace(-CU, CV1, 0)), chamberDark),
+    new Mesh(quad(mapFace(CU, CV0, 0), mapFace(CU, CV1, 0), mapFace(CU, CV1, -CD), mapFace(CU, CV0, -CD)), chamberDark),
+    new Mesh(quad(mapFace(-CU, CV1, 0), mapFace(-CU, CV1, -CD), mapFace(CU, CV1, -CD), mapFace(CU, CV1, 0)), chamberDark),
+  );
+  g.add(chamber);
+
+  // Bronze edging plates along the slit reveals (the masonry thickness you
+  // see when passing through, per the interior reference photos).
+  const REVEAL = 0.85;
+  const edgeQuads: Array<[Vector3, Vector3, Vector3, Vector3]> = [
+    // left jamb, right jamb, sill
+    [mapFace(-slitHalfW, slitV0), mapFace(0, slitV1), mapFace(0, slitV1, -REVEAL), mapFace(-slitHalfW, slitV0, -REVEAL)],
+    [mapFace(slitHalfW, slitV0), mapFace(slitHalfW, slitV0, -REVEAL), mapFace(0, slitV1, -REVEAL), mapFace(0, slitV1)],
+    [mapFace(-slitHalfW, slitV0), mapFace(-slitHalfW, slitV0, -REVEAL), mapFace(slitHalfW, slitV0, -REVEAL), mapFace(slitHalfW, slitV0)],
+  ];
+  for (const [a, b, c, d] of edgeQuads) {
+    const plate = new Mesh(quad(a, b, c, d), mats.bronze);
+    plate.material.side = DoubleSide;
+    chamber.add(plate);
+  }
 
   // ---- edge stair up the SE edge (facing the site approach, as in the
   // golden-hour reference photo)
@@ -618,8 +796,9 @@ export function createStarAxis(materials: StarAxisMaterials, options?: { blockou
         const gray = new MeshStandardNodeMaterial();
         gray.color.set('#9a958c');
         return {
-          flagstone: gray, fieldstone: gray, ashlar: gray, granite: gray, graniteCoping: gray,
-          pyramidSandstone: gray, stainless: gray, concrete: gray, concreteDark: gray,
+          flagstone: gray, fieldstone: gray, ashlar: gray, bronze: gray, granite: gray,
+          graniteCoping: gray, pyramidSandstone: gray, stainless: gray, concrete: gray,
+          concreteDark: gray,
         };
       })()
     : materials;

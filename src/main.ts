@@ -33,7 +33,15 @@ import { createStarAxis } from './staraxis/createStarAxis';
 import { createTerrain } from './staraxis/terrain';
 import { createSky } from './staraxis/sky';
 import { createFirstPerson } from './staraxis/firstPerson';
-import { STAIR_TOP, STAIR_BASE } from './staraxis/constants';
+import { buildCollider } from './staraxis/collision';
+import {
+  STAIR_TOP,
+  STAIR_BASE,
+  STAIR_STEP_RUN,
+  STAIR_STEP_COUNT,
+  PORTAL_Z,
+  PYRAMID_CENTER,
+} from './staraxis/constants';
 
 const app = document.getElementById('app') as HTMLDivElement;
 const info = document.getElementById('info') as HTMLDivElement;
@@ -73,6 +81,16 @@ scene.add(sky.group);
 scene.add(sky.sunLight);
 scene.add(sky.sunLight.target);
 scene.add(sky.hemi);
+
+// The monument is static: bake it into one BVH for capsule collision.
+const collider = buildCollider(monument.group);
+fp.setCollider(collider);
+
+// Static scene → render the sun's shadow map only when the sun moves
+// (mode crossfades), not every frame.
+sky.sunLight.shadow.autoUpdate = false;
+sky.sunLight.shadow.needsUpdate = true;
+const sunPrev = new Vector3().copy(sky.sunLight.position);
 
 // Distance haze sells the mesa scale; color tracks the light mode.
 const FOG_COLORS = {
@@ -207,6 +225,10 @@ window.addEventListener('keydown', (e) => {
   else if (k === 't') {
     trails = trails > 0 ? 0 : 1;
     sky.setTrailAmount(trails);
+  } else if (k === '/') {
+    debugOn = !debugOn;
+    if (debugEl) debugEl.style.display = debugOn ? 'block' : 'none';
+    updateDebug();
   }
 });
 
@@ -217,7 +239,7 @@ window.addEventListener('keyup', (e) => {
 function updateInfo(): void {
   if (!info) return;
   const views = '1 entry · 2 pyramid · 3 tunnel · 4 aerial · 5 night';
-  const light = 'D/G/N light · T trails';
+  const light = 'D/G/N light · T trails · / stats';
   const line =
     nav === 'fp'
       ? fp.isLocked()
@@ -231,6 +253,78 @@ function updateInfo(): void {
     `<div>${line}</div>` +
     `<div style="opacity:.62">${views} · ${light}</div>`;
 }
+
+// ---------------------------------------------------------------- zone captions
+// Naming the five elements as the visitor reaches them, per staraxis.org.
+// On the Star Tunnel stair, each step advances through the 26,000-year
+// precession cycle — Polaris's circle grows from dime-sized today to the
+// whole sky ~13,000 years from now.
+const captionEl = document.getElementById('caption') as HTMLDivElement | null;
+let lastCaption = '';
+
+function zoneCaption(x: number, z: number): string {
+  // summit landing at the aperture
+  if (Math.abs(x) < 2.6 && z >= STAIR_TOP.z - 3.2 && z < STAIR_TOP.z + 2.0) {
+    return 'Star Tunnel aperture — sighted on Polaris, the axis of the sky';
+  }
+  // on the stair: walk through layers of celestial time
+  if (Math.abs(x) <= 1.75 && z <= STAIR_BASE.z && z >= STAIR_TOP.z) {
+    const step = Math.min(
+      STAIR_STEP_COUNT,
+      Math.max(1, Math.ceil((STAIR_BASE.z - z) / STAIR_STEP_RUN)),
+    );
+    const year = 2026 + Math.round(((step / STAIR_STEP_COUNT) * 13000) / 50) * 50;
+    return `Star Tunnel — parallel to Earth's axis · step ${step}/${STAIR_STEP_COUNT} · Polaris's circle in AD ${year}`;
+  }
+  // beneath the portal
+  if (Math.abs(x) <= 2.6 && Math.abs(z - PORTAL_Z) <= 2.2) {
+    return 'Equatorial Chamber portal — the notch frames stars crossing the celestial equator';
+  }
+  const px = x - PYRAMID_CENTER.x;
+  const pz = z - PYRAMID_CENTER.z;
+  // inside the hour chamber behind the slit
+  if (Math.abs(px) < 3.6 && pz > 5.0 && pz < 11.0) {
+    return 'Hour Chamber — the 15° slit holds one hour of Earth’s rotation';
+  }
+  if (Math.hypot(px, pz) < 22) {
+    return 'Solar Pyramid & Shadow Field — a year of collected shadows draws the field';
+  }
+  if (Math.abs(x) < 11 && z > 4 && z < 58) {
+    return 'Entry channel — the walk in toward the star';
+  }
+  return '';
+}
+
+function updateCaption(): void {
+  if (!captionEl) return;
+  const text = nav === 'fp' ? zoneCaption(camera.position.x, camera.position.z) : '';
+  if (text !== lastCaption) {
+    lastCaption = text;
+    captionEl.textContent = text;
+    captionEl.style.opacity = text ? '1' : '0';
+  }
+}
+
+// ---------------------------------------------------------------- debug stats
+const debugEl = document.getElementById('debug') as HTMLDivElement | null;
+let debugOn = false;
+let frameMsAccum = 0;
+let frameMsCount = 0;
+
+function updateDebug(): void {
+  if (!debugEl || !debugOn) return;
+  const ms = frameMsCount > 0 ? frameMsAccum / frameMsCount : 0;
+  frameMsAccum = 0;
+  frameMsCount = 0;
+  const p = camera.position;
+  debugEl.innerHTML =
+    `fps ${Math.round(lastFps)} · ${ms.toFixed(2)} ms<br>` +
+    `draws ${renderer.info.render.drawCalls} · tris ${(renderer.info.render.triangles / 1e6).toFixed(2)}M<br>` +
+    `collider ${collider.triangleCount} tris<br>` +
+    `${nav}${fp.fly ? ' · fly' : ''} · ${sky.getMode()}<br>` +
+    `pos ${p.x.toFixed(1)}, ${p.y.toFixed(1)}, ${p.z.toFixed(1)}`;
+}
+setInterval(updateDebug, 500);
 
 // ---------------------------------------------------------------- loop
 window.addEventListener('resize', () => {
@@ -256,8 +350,16 @@ renderer.setAnimationLoop(() => {
   if (scene.fog instanceof Fog) {
     scene.fog.color.lerp(FOG_COLORS[sky.getMode()], Math.min(dt * 2, 1));
   }
+  // redraw the shadow map only while the sun is actually moving
+  if (sky.sunLight.position.distanceToSquared(sunPrev) > 0.25) {
+    sky.sunLight.shadow.needsUpdate = true;
+    sunPrev.copy(sky.sunLight.position);
+  }
+  updateCaption();
   renderer.render(scene, camera);
   frames++;
+  frameMsAccum += dt * 1000;
+  frameMsCount++;
   if (now - fpsWindowStart >= 1000) {
     lastFps = (frames * 1000) / (now - fpsWindowStart);
     frames = 0;

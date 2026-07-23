@@ -77,6 +77,43 @@
         width: 100%;
         margin-top: -0.5px;
       }
+      /* Zone caption: names each of the five elements as you reach it. */
+      #caption {
+        position: fixed;
+        left: 50%;
+        bottom: 34px;
+        transform: translateX(-50%);
+        z-index: 10;
+        max-width: 78vw;
+        text-align: center;
+        color: rgba(228, 232, 244, 0.88);
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 12.5px;
+        letter-spacing: 0.03em;
+        text-shadow: 0 1px 3px rgba(0, 0, 0, 0.55);
+        opacity: 0;
+        transition: opacity 0.35s ease;
+        pointer-events: none;
+        user-select: none;
+      }
+      /* Debug stats, toggled with "/" */
+      #debug {
+        position: fixed;
+        top: 12px;
+        right: 14px;
+        z-index: 10;
+        display: none;
+        padding: 8px 10px;
+        background: rgba(8, 10, 16, 0.62);
+        border-radius: 6px;
+        color: rgba(210, 220, 240, 0.92);
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 11.5px;
+        line-height: 1.55;
+        text-align: right;
+        pointer-events: none;
+        user-select: none;
+      }
     </style>
   </head>
   <body>
@@ -85,6 +122,8 @@
       <div>click to walk &middot; C orbit</div>
     </div>
     <div id="crosshair"></div>
+    <div id="caption"></div>
+    <div id="debug"></div>
     <div id="app"></div>
     <script type="module" src="/src/main.ts"></script>
   </body>
