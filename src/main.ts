@@ -294,15 +294,33 @@ function applyPreset(p: Preset): void {
 // ---------------------------------------------------------------- navigation
 type Nav = 'fp' | 'orbit';
 let nav: Nav = 'fp';
+/** Hold Z + move horizontally to scrub solar time (sun angle / day–night). */
+let scrubbing = false;
+
+function setScrubbing(active: boolean): void {
+  if (active === scrubbing) return;
+  scrubbing = active;
+  if (active) {
+    // Don't let orbit / look steal the pointer while scrubbing.
+    controls.enabled = false;
+    fp.controls.enabled = false;
+  } else if (nav === 'fp') {
+    fp.controls.enabled = fp.enabled;
+  } else {
+    controls.enabled = true;
+  }
+}
 
 function setNav(next: Nav): void {
   nav = next;
   if (nav === 'fp') {
     controls.enabled = false;
     fp.enable();
+    // Scrubbing owns the pointer; keep look disabled until Z is released.
+    if (scrubbing) fp.controls.enabled = false;
   } else {
     fp.disable();
-    controls.enabled = true;
+    controls.enabled = !scrubbing;
     // Hand the orbit rig a target in front of wherever the walker is looking.
     const ahead = camera.getWorldDirection(new Vector3()).multiplyScalar(25);
     controls.target.copy(camera.position).add(ahead);
@@ -430,6 +448,11 @@ if (tourParam !== null) {
 }
 
 window.addEventListener('keydown', (e) => {
+  if (e.code === 'KeyZ' && !e.repeat) {
+    setScrubbing(true);
+    e.preventDefault();
+    return;
+  }
   if (e.key.toLowerCase() === 'm') {
     setTourOpen(!tourOpen);
     return;
@@ -473,13 +496,34 @@ window.addEventListener('keydown', (e) => {
 });
 
 window.addEventListener('keyup', (e) => {
+  if (e.code === 'KeyZ') setScrubbing(false);
   fp.handleKey(e.code, false);
 });
+
+window.addEventListener('blur', () => setScrubbing(false));
+
+window.addEventListener('pointermove', (e) => {
+  if (!scrubbing || e.movementX === 0) return;
+  sky.scrubSolar(e.movementX * 0.0014);
+});
+
+window.addEventListener(
+  'wheel',
+  (e) => {
+    if (!scrubbing) return;
+    // Trackpad horizontal swipe → deltaX; mouse wheel → deltaY as fallback.
+    const delta = Math.abs(e.deltaX) >= Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
+    if (delta === 0) return;
+    e.preventDefault();
+    sky.scrubSolar(delta * 0.0007);
+  },
+  { passive: false },
+);
 
 function updateInfo(): void {
   if (!info) return;
   const views = '1 entry · 2 pyramid · 3 tunnel · 4 aerial · 5 night · M tour';
-  const light = 'D/G/N light · T trails · K sound · / stats';
+  const light = 'Z+drag time · D/G/N light · T trails · K sound · / stats';
   const line =
     tourOpen
       ? 'guided tour · [ / ] previous / next · Esc close'

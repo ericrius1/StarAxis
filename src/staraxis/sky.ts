@@ -49,6 +49,8 @@ export interface SkyRig {
   sunLight: DirectionalLight;
   hemi: HemisphereLight;
   setMode(mode: 'day' | 'goldenHour' | 'night'): void;
+  /** Scrub a continuous solar day; `deltaDays` is a fraction of a full cycle. */
+  scrubSolar(deltaDays: number): void;
   setTrailAmount(a: number): void;
   update(dt: number): void;
   getMode(): 'day' | 'goldenHour' | 'night';
@@ -148,6 +150,66 @@ function cloneState(s: ModeState): ModeState {
 
 function lerp(a: number, b: number, t: number): number {
   return a + (b - a) * t;
+}
+
+function smoothstep01(edge0: number, edge1: number, x: number): number {
+  const t = Math.min(1, Math.max(0, (x - edge0) / (edge1 - edge0)));
+  return t * t * (3 - 2 * t);
+}
+
+/** Representative solar times for the discrete D / G / N presets. */
+const MODE_SOLAR_TIME: Record<SkyMode, number> = {
+  day: 0.5,
+  goldenHour: 0.73,
+  night: 0,
+};
+
+/** Peak solar elevation at local noon (degrees). */
+const NOON_ELEVATION_DEG = 58;
+
+/**
+ * Continuous day cycle: t=0 midnight, 0.25 sunrise (east), 0.5 noon (south),
+ * 0.75 sunset (west). Scene axes: +X east, +Z south, -X west.
+ */
+function stateFromSolarTime(t: number): ModeState {
+  const phase = ((t % 1) + 1) % 1;
+  const elevDeg = NOON_ELEVATION_DEG * Math.sin(Math.PI * 2 * (phase - 0.25));
+  const az = Math.PI * 2 * (phase - 0.25);
+  const sunDir = makeSunDir(elevDeg, Math.cos(az), Math.sin(az));
+
+  const dayNight = smoothstep01(-6, 14, elevDeg);
+  // Warm lobe around ~8° elevation (sunrise / sunset), off at night and noon.
+  const golden = dayNight * Math.exp(-(((elevDeg - 8) / 14) ** 2));
+
+  const day = MODES.day;
+  const gold = MODES.goldenHour;
+  const night = MODES.night;
+  const s = cloneState(night);
+  s.dayNight = dayNight;
+  s.golden = Math.min(1, golden);
+  s.sunDir.copy(sunDir);
+  s.sunColor.lerpColors(night.sunColor, day.sunColor, dayNight).lerp(gold.sunColor, s.golden);
+  s.sunIntensity = lerp(
+    lerp(night.sunIntensity, day.sunIntensity, dayNight),
+    gold.sunIntensity,
+    s.golden,
+  );
+  s.hemiSky.lerpColors(night.hemiSky, day.hemiSky, dayNight).lerp(gold.hemiSky, s.golden);
+  s.hemiGround
+    .lerpColors(night.hemiGround, day.hemiGround, dayNight)
+    .lerp(gold.hemiGround, s.golden);
+  s.hemiIntensity = lerp(
+    lerp(night.hemiIntensity, day.hemiIntensity, dayNight),
+    gold.hemiIntensity,
+    s.golden,
+  );
+  return s;
+}
+
+function nearestMode(dayNight: number, golden: number): SkyMode {
+  if (dayNight < 0.35) return 'night';
+  if (golden > 0.45) return 'goldenHour';
+  return 'day';
 }
 
 // ---------------------------------------------------------------- entry point
@@ -354,6 +416,7 @@ export function createSky(): SkyRig {
 
   // ------------------------------------------------------------- state
   let mode: SkyMode = 'day';
+  let solarTime = MODE_SOLAR_TIME.day;
   let fadeT = 1; // 1 = fade complete
   let fromState = cloneState(MODES.day);
   let toState = cloneState(MODES.day);
@@ -373,14 +436,34 @@ export function createSky(): SkyRig {
     hemi.intensity = s.hemiIntensity;
   };
 
+  const copyStateInto = (target: ModeState, source: ModeState): void => {
+    target.dayNight = source.dayNight;
+    target.golden = source.golden;
+    target.sunDir.copy(source.sunDir);
+    target.sunColor.copy(source.sunColor);
+    target.sunIntensity = source.sunIntensity;
+    target.hemiSky.copy(source.hemiSky);
+    target.hemiGround.copy(source.hemiGround);
+    target.hemiIntensity = source.hemiIntensity;
+  };
+
   applyState(current);
 
   const setMode = (next: SkyMode): void => {
-    if (next === mode && fadeT >= 1) return;
     mode = next;
+    solarTime = MODE_SOLAR_TIME[next];
     fromState = cloneState(current);
     toState = cloneState(MODES[next]);
     fadeT = 0;
+  };
+
+  const scrubSolar = (deltaDays: number): void => {
+    if (deltaDays === 0) return;
+    solarTime = ((solarTime + deltaDays) % 1 + 1) % 1;
+    fadeT = 1; // cancel any in-flight discrete fade
+    copyStateInto(current, stateFromSolarTime(solarTime));
+    mode = nearestMode(current.dayNight, current.golden);
+    applyState(current);
   };
 
   const setTrailAmount = (a: number): void => {
@@ -420,5 +503,5 @@ export function createSky(): SkyRig {
 
   const getMode = (): SkyMode => mode;
 
-  return { group, sunLight, hemi, setMode, setTrailAmount, update, getMode };
+  return { group, sunLight, hemi, setMode, scrubSolar, setTrailAmount, update, getMode };
 }
