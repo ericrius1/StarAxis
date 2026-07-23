@@ -1,0 +1,110 @@
+{
+  "sourceImage": "/Users/eric/Library/Application Support/CleanShot/media/media_fmUkWaPPnb/CleanShot 2026-07-23 at 11.29.22@2x.png",
+  "zonesDir": "/Users/eric/.codex/worktrees/d088/StarAxis/sculpt/rebuild/reference-zones",
+  "detailInventory": {
+    "scanMethod": "component-zones",
+    "targetMinDetails": 10,
+    "details": [
+      {
+        "id": "front-needle-slit",
+        "kind": "hole",
+        "description": "Tall south-face slit is widest at grade and tapers to a needle point below the upper aperture.",
+        "scale": "meso",
+        "affects": "negative space and front silhouette",
+        "mapsTo": { "type": "component", "ref": "front-slit-chamber" },
+        "evidenceRef": "reference-zones/front-slit.png",
+        "confidence": 0.98
+      },
+      {
+        "id": "front-slit-depth",
+        "kind": "recessed-groove",
+        "description": "The slit reveals a deep shadowed chamber rather than a flat black mark.",
+        "scale": "meso",
+        "affects": "parallax, shadow and chamber thickness",
+        "mapsTo": { "type": "component", "ref": "hour-chamber-shadow" },
+        "evidenceRef": "reference-zones/front-slit.png",
+        "confidence": 0.9
+      },
+      {
+        "id": "front-aperture",
+        "kind": "hole",
+        "description": "Circular steel-lined star aperture sits above the slit near the truncated crown.",
+        "scale": "meso",
+        "affects": "front recognizability",
+        "mapsTo": { "type": "component", "ref": "front-polaris-aperture-rim" },
+        "evidenceRef": "reference-zones/front-slit.png",
+        "confidence": 0.98
+      },
+      {
+        "id": "truncated-crown",
+        "kind": "bevel",
+        "description": "Pyramid terminates in a narrow flat crown instead of a mathematical point.",
+        "scale": "macro",
+        "affects": "upper silhouette",
+        "mapsTo": { "type": "component", "ref": "pyramid-summit-cap" },
+        "evidenceRef": "reference-zones/front-slit.png",
+        "confidence": 0.94
+      },
+      {
+        "id": "stone-panel-course",
+        "kind": "linework",
+        "description": "Large irregular stone slabs break the facade into visible horizontal and vertical joints.",
+        "scale": "micro",
+        "affects": "shell albedo, normal and roughness",
+        "mapsTo": { "type": "material", "ref": "pyramidSandstone" },
+        "evidenceRef": "reference-zones/front-slit.png",
+        "confidence": 0.96
+      },
+      {
+        "id": "rear-147-step-rhythm",
+        "kind": "linework",
+        "description": "Dense repeated tread edges create the long polar stair rhythm.",
+        "scale": "meso",
+        "affects": "rear cut structure",
+        "mapsTo": { "type": "component", "ref": "star-tunnel-147-steps" },
+        "evidenceRef": "reference-zones/rear-stair.png",
+        "confidence": 0.99
+      },
+      {
+        "id": "pale-stair-stringers",
+        "kind": "raised-ridge",
+        "description": "Two bright continuous stone rails frame the dark stair flight.",
+        "scale": "meso",
+        "affects": "stair contrast and convergence",
+        "mapsTo": { "type": "component", "ref": "star-tunnel-west-stringer" },
+        "evidenceRef": "reference-zones/rear-stair.png",
+        "confidence": 0.97
+      },
+      {
+        "id": "rear-face-excavation",
+        "kind": "recessed-groove",
+        "description": "Rear pyramid face parts around the stair as one deep tapered cut.",
+        "scale": "macro",
+        "affects": "single-mass reading and rear silhouette",
+        "mapsTo": { "type": "component", "ref": "rear-star-tunnel-stair" },
+        "evidenceRef": "reference-zones/rear-stair.png",
+        "confidence": 0.92
+      },
+      {
+        "id": "rear-triangular-sky-slot",
+        "kind": "hole",
+        "description": "Sloping inner faces converge above the stair and leave a triangular band of sky.",
+        "scale": "macro",
+        "affects": "interior negative space",
+        "mapsTo": { "type": "component", "ref": "rear-cut-west-return" },
+        "evidenceRef": "reference-zones/rear-stair.png",
+        "confidence": 0.9
+      },
+      {
+        "id": "rear-apron-break",
+        "kind": "seam-line",
+        "description": "A level plane continues behind the stair before the mesa breaks into a broad slope.",
+        "scale": "macro",
+        "affects": "terrain profile and monument seating",
+        "mapsTo": { "type": "component", "ref": "terrain-mesa" },
+        "evidenceRef": "supporting aerial-side reference",
+        "confidence": 0.86
+      }
+    ]
+  }
+}

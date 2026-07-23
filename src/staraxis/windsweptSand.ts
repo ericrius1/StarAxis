@@ -236,9 +236,11 @@ export class WindsweptSand {
 
   private createBand(config: BandConfig): SandBand {
     const count = config.grid * config.grid * config.lanes;
-    const positions = instancedArray(count, 'vec3').setName(`Sand ${config.name} positions`);
-    const velocities = instancedArray(count, 'vec3').setName(`Sand ${config.name} velocities`);
-    const particleData = instancedArray(count, 'vec4').setName(`Sand ${config.name} data`);
+    // Storage-buffer names become WGSL struct identifiers. Keep them free of
+    // spaces so WebGPU validation does not reject the generated compute shader.
+    const positions = instancedArray(count, 'vec3').setName(`Sand_${config.name}_positions`);
+    const velocities = instancedArray(count, 'vec3').setName(`Sand_${config.name}_velocities`);
+    const particleData = instancedArray(count, 'vec4').setName(`Sand_${config.name}_data`);
     const step = uniform(1 / config.stepHz);
     const diameter = config.radius * 2;
 

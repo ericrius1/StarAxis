@@ -6,7 +6,14 @@
  * location, movement, elevation, and light.
  */
 
-import { PYRAMID_BASE_Y, PYRAMID_CENTER, STAIR_BASE, STAIR_TOP } from './staraxis/constants';
+import {
+  FRONT_CHAMBER_DEPTH,
+  PYRAMID_BASE_Y,
+  PYRAMID_CENTER,
+  PYRAMID_FRONT_Z,
+  STAIR_BASE,
+  STAIR_TOP,
+} from './staraxis/constants';
 
 export type SoundscapeMode = 'day' | 'goldenHour' | 'night';
 
@@ -158,26 +165,25 @@ export class StarAxisSoundscape {
 
     const stairAxis = smoothstep(4.2, 1.8, Math.abs(x));
     const stairRun =
-      smoothstep(STAIR_BASE.z + 2, STAIR_BASE.z - 1, z) *
-      smoothstep(STAIR_TOP.z - 2, STAIR_TOP.z + 3, z);
-    const tunnelDepth =
-      stairAxis * stairRun * smoothstep(STAIR_BASE.z - 6, STAIR_TOP.z + 8, z);
+      smoothstep(STAIR_BASE.z - 2, STAIR_BASE.z + 1, z) *
+      smoothstep(STAIR_TOP.z + 3, STAIR_TOP.z - 1, z);
+    const tunnelDepth = stairAxis * stairRun;
     const aperture =
       stairAxis *
-      smoothstep(STAIR_TOP.z + 7, STAIR_TOP.z + 2, z) *
-      smoothstep(STAIR_TOP.z - 4, STAIR_TOP.z - 1, z);
+      smoothstep(STAIR_TOP.z - 5, STAIR_TOP.z - 1, z) *
+      smoothstep(STAIR_TOP.z + 4, STAIR_TOP.z + 1, z);
     const pyramidDistance = Math.hypot(x - PYRAMID_CENTER.x, z - PYRAMID_CENTER.z);
     const solar = smoothstep(34, 10, pyramidDistance);
     const hour =
-      smoothstep(5.5, 2.8, Math.abs(x - PYRAMID_CENTER.x)) *
-      smoothstep(PYRAMID_CENTER.z - 14, PYRAMID_CENTER.z - 10, z) *
-      smoothstep(PYRAMID_CENTER.z + 14, PYRAMID_CENTER.z + 10, z) *
+      smoothstep(2.2, 0.9, Math.abs(x - PYRAMID_CENTER.x)) *
+      smoothstep(PYRAMID_FRONT_Z - FRONT_CHAMBER_DEPTH - 2, PYRAMID_FRONT_Z - FRONT_CHAMBER_DEPTH + 1, z) *
+      smoothstep(PYRAMID_FRONT_Z + 3, PYRAMID_FRONT_Z, z) *
       smoothstep(PYRAMID_BASE_Y - 2, PYRAMID_BASE_Y + 2, y) *
-      smoothstep(PYRAMID_BASE_Y + 14, PYRAMID_BASE_Y + 10, y);
+      smoothstep(PYRAMID_BASE_Y + 18, PYRAMID_BASE_Y + 14, y);
     const entry =
       smoothstep(14, 7, Math.abs(x)) *
-      smoothstep(62, 51, z) *
-      smoothstep(-1, 5, z);
+      smoothstep(70, 56, z) *
+      smoothstep(PYRAMID_FRONT_Z - 1, PYRAMID_FRONT_Z + 4, z);
     this.tunnelAmount = clamp(Math.max(tunnelDepth, aperture * 0.55));
 
     const nextPlace =

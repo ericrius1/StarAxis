@@ -29,9 +29,13 @@ import {
 import { clamp, color, mix, positionWorld } from 'three/tsl';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import {
+  APRON_FRONT_Z,
+  APRON_HALF_WIDTH,
+  APRON_REAR_Z,
   TERRAIN_SIZE,
   TERRAIN_SEGMENTS,
-  BOWL_CENTER,
+  PYRAMID_FRONT_Z,
+  PYRAMID_REAR_Z,
   STAIR_BASE,
   STAIR_TOP,
 } from './constants';
@@ -57,9 +61,13 @@ function slopeMag(x: number, z: number): number {
 function inStairSlot(x: number, z: number): boolean {
   return (
     Math.abs(x) < 4.25 &&
-    z > STAIR_TOP.z - 4 &&
-    z < STAIR_BASE.z + 20
+    z > STAIR_BASE.z - 4 &&
+    z < STAIR_TOP.z + 4
   );
+}
+
+function inPyramidFootprint(x: number, z: number): boolean {
+  return Math.abs(x) < 16.5 && z > PYRAMID_REAR_Z - 1 && z < PYRAMID_FRONT_Z + 1;
 }
 
 const _pos = new Vector3();
@@ -142,12 +150,17 @@ function createGround(desertMaterial: MeshStandardNodeMaterial): Group {
           0.24 * Math.sin(x * 0.071 + z * 0.043) +
           0.18 * Math.sin(x * 0.019 - z * 0.031);
         const slope = Math.min(1, Math.hypot(dx, dz) * 2.8);
-        const inTrench =
-          Math.abs(x) < 8.5 && z > 7 && z < 61
-            ? Math.max(0, 1 - Math.abs(x) / 8.5)
+        const approach =
+          Math.abs(x) < 6.5 && z > PYRAMID_FRONT_Z && z < 68
+            ? Math.max(0, 1 - Math.abs(x) / 6.5)
             : 0;
-        const inBowl = Math.max(0, 1 - Math.hypot(x - BOWL_CENTER.x, z - BOWL_CENTER.z) / 20);
-        const path = Math.max(inTrench, inBowl);
+        const apron =
+          Math.abs(x) < APRON_HALF_WIDTH &&
+          z < APRON_FRONT_Z &&
+          z > APRON_REAR_Z
+            ? 0.36
+            : 0;
+        const path = Math.max(approach, apron);
         baked
           .copy(sand)
           .lerp(rubble, Math.min(0.72, slope * 0.65 + Math.max(0, patch - 0.58) * 0.35))
@@ -240,9 +253,7 @@ function createRockRubble(): InstancedMesh {
     const z = Math.sin(a) * r;
     if (inStairSlot(x, z)) continue;
     if (slopeMag(x, z) <= 0.15) continue; // rubble collects on meaningful slopes
-    // keep the bowl floor and terrace clear; rubble on flanks/berm is right
-    const dBowl = Math.hypot(x, z);
-    if (dBowl < 13) continue;
+    if (inPyramidFootprint(x, z)) continue;
 
     // Non-uniform angular scale, each axis kept within 0.22–0.85 m.
     const base = 0.22 + hash01(i, 13) * 0.55;
@@ -296,18 +307,16 @@ function createGravel(): InstancedMesh {
   for (let i = 0; i < 60000 && placements.length < TARGET; i++) {
     let x: number;
     let z: number;
-    if (hash01(i, 31) < 0.68) {
-      // Entry-path corridor: |x| < 18, z in [8, 60].
-      x = (hash01(i, 32) - 0.5) * 36;
-      z = 8 + hash01(i, 33) * 52;
+    if (hash01(i, 31) < 0.62) {
+      // South forecourt leading directly to the front slit.
+      x = (hash01(i, 32) - 0.5) * 26;
+      z = 10 + hash01(i, 33) * 46;
     } else {
-      // Bowl floor.
-      const r = Math.sqrt(hash01(i, 34)) * 19;
-      const a = hash01(i, 35) * Math.PI * 2;
-      x = BOWL_CENTER.x + Math.cos(a) * r;
-      z = BOWL_CENTER.z + Math.sin(a) * r;
+      // The visibly level plane behind the rear stair.
+      x = (hash01(i, 34) - 0.5) * 48;
+      z = -62 - hash01(i, 35) * 25;
     }
-    if (inStairSlot(x, z)) continue;
+    if (inStairSlot(x, z) || inPyramidFootprint(x, z)) continue;
 
     const s = 0.06 + hash01(i, 36) * 0.09; // 0.06–0.15 m
     const y = terrainHeight(x, z) + 0.03; // seated just at grade, bottom embedded
@@ -378,8 +387,12 @@ function createGrassTufts(): InstancedMesh {
     const x = Math.cos(a) * r;
     const z = Math.sin(a) * r;
 
-    if (Math.abs(x) < 9 && z > 10 && z < 60) continue; // keep the entry path clear
-    if (Math.hypot(x - BOWL_CENTER.x, z - BOWL_CENTER.z) < 22) continue; // no grass in the bowl
+    if (
+      Math.abs(x) < APRON_HALF_WIDTH + 2 &&
+      z < APRON_FRONT_Z + 2 &&
+      z > APRON_REAR_Z - 2
+    ) continue; // preserve the authored flat apron and its crisp break lines
+    if (Math.abs(x) < 9 && z > 8 && z < 66) continue; // keep the front approach clear
     if (inStairSlot(x, z)) continue;
     if (slopeMag(x, z) > 0.42) continue; // gentle slopes only
 

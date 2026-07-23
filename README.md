@@ -19,10 +19,10 @@ npm run dev        # http://localhost:5173 — needs a WebGPU browser (Chrome/Ed
 ## Controls
 
 It opens in **first person** — click to lock the pointer and walk the site.
-Climbing all 147 steps into the tunnel and emerging at the aperture is the
-experience the piece is built around, so walk it. The route is real: entry
-channel → terrace stair → through the Equatorial Chamber portal → up the
-Star Tunnel. Architecture is solid (capsule-vs-BVH collision via
+Climbing the 147-step stair carved into the rear of the pyramid and emerging
+at the aperture is the experience the piece is built around, so walk it. The
+front route instead approaches the narrow Hour Chamber slit. Architecture is
+solid (capsule-vs-BVH collision via
 three-mesh-bvh), and zone captions name each of the five elements as you
 reach them — on the stair, each step advances the readout through the
 26,000-year precession cycle, Polaris's circle growing from dime-sized
@@ -40,9 +40,9 @@ Earth's rotation.
 | **`M`** | **Open the eight-stop guided tour** |
 | `[` / `]` | Previous / next guided-tour stop |
 | **`K`** | **Start or pause the generative soundscape** |
-| `1` | Entry channel (matches the aerial reference photo) |
-| `2` | Solar Pyramid at golden hour |
-| `3` | Top of the stair, sighting up the aperture toward Polaris |
+| `1` | South/front slit |
+| `2` | North/rear stair and level apron |
+| `3` | On the Star Tunnel stair, sighting the aperture |
 | `4` | High aerial overview |
 | `5` | Night, due north — star trails around Polaris |
 | `D` / `G` / `N` | Day / golden hour / night |
@@ -65,19 +65,20 @@ opens the field guide at a specific stop.
 
 ## What's modeled
 
-- **Star Tunnel** — 147 instanced granite steps rising at the site latitude
-  angle (34.5°) due north, parallel to Earth's axis; open causeway through
-  the excavated bowl and an open-to-sky upper run between tall walls, ending
-  at a summit headwall with a real slot and brushed-stainless aperture tube
-  aimed at Polaris.
-- **Crescent wall** — fieldstone rubble arc with ashlar band, granite coping,
-  and twin bastion pylons, notched by the stair slot.
-- **Entry channel** — outward-leaning flagstone walls converging on the
-  terrace and the A-frame triangular portal.
-- **Solar Pyramid** — solstice-sloped faces in salmon sandstone panels, a
-  granite edge stair to the apex, and the **Hour Chamber**: a real 15° slit
-  (one hour of Earth's rotation) cut through the south and north faces as a
-  continuous, bronze-edged sightline — enterable on foot.
+- **Unified pyramid shell** — one long, tapered stone mass. The south/front
+  face contains the needle-like Hour Chamber slit; the north/rear face parts
+  around the Star Tunnel stair; both terminate at the same upper room.
+- **Rear Star Tunnel** — 147 instanced granite steps rise through a deep cut
+  in the back of the pyramid. The stair bed, pale stringers, dark return
+  walls and exterior shell meet continuously rather than reading as a
+  detached causeway.
+- **Front Hour Chamber slit** — a true negative space in the facade with
+  bronze reveals, a recessed floor and deep shadowed sightline.
+- **Upper Room** — the final stair lands beneath a circular, steel-lined
+  aperture with a fixed Polaris point.
+- **Earthwork apron** — level graded terrain continues behind the stair and
+  only then transitions into a broad natural slope, matching the reference
+  profile.
 - **Guided tour** — eight teleporting viewpoints for the approach,
   Equatorial Chamber, Star Tunnel, Upper Room, Solar Pyramid, Hour Chamber,
   and Shadow Field, with concise reference-based interpretation.
@@ -93,8 +94,9 @@ opens the field guide at a specific stop.
 - **Sky rig** — TSL sky dome with day/golden/night states; at night the star
   field physically rotates about the Polaris axis, with a fragment-shader
   long-exposure trail mode recreating the famous concentric-arc photograph.
-- **Terrain** — analytic heightfield (mesa plateau, bowl, entry trench,
-  stair slot all carved in code) with instanced talus, gravel, and grass.
+- **Terrain** — analytic heightfield with a flat rectangular apron, authored
+  front/rear/side break lines, broad slope transitions, and deterministic
+  talus, gravel, and grass.
 
 ## Materials
 
@@ -118,9 +120,9 @@ ground-level frames run ~30–75 draw calls / 0.3–0.5M triangles at 60 fps.
 
 | File | Role |
 | --- | --- |
-| `src/staraxis/constants.ts` | Site layout — the 34.5° stair axis, bowl, terrace, pyramid |
-| `src/staraxis/heightfield.ts` | Analytic terrain: mesa, bowl, trench and stair-slot carves |
-| `src/staraxis/createStarAxis.ts` | The monument factory (29 named component pivots) |
+| `src/staraxis/constants.ts` | Unified pyramid, slit, rear stair, aperture, and apron layout |
+| `src/staraxis/heightfield.ts` | Analytic terrain: flat apron followed by broad falloffs |
+| `src/staraxis/createStarAxis.ts` | The rebuilt monument factory (30 named runtime components) |
 | `src/staraxis/materials.ts` | TSL procedural material families |
 | `src/staraxis/terrain.ts` | Terrain mesh, horizon mesas, instanced scatter |
 | `src/staraxis/sky.ts` | Sky dome, sun/hemisphere rig, Polaris star field + trails |
