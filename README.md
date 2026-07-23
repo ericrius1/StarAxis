@@ -39,6 +39,7 @@ Earth's rotation.
 | **`C`** | **Switch first person ⇄ orbit** |
 | **`M`** | **Open the eight-stop guided tour** |
 | `[` / `]` | Previous / next guided-tour stop |
+| **`K`** | **Start or pause the generative soundscape** |
 | `1` | Entry channel (matches the aerial reference photo) |
 | `2` | Solar Pyramid at golden hour |
 | `3` | Top of the stair, sighting up the aperture toward Polaris |
@@ -80,6 +81,10 @@ opens the field guide at a specific stop.
 - **Guided tour** — eight teleporting viewpoints for the approach,
   Equatorial Chamber, Star Tunnel, Upper Room, Solar Pyramid, Hour Chamber,
   and Shadow Field, with concise reference-based interpretation.
+- **Generative soundscape** — synthesized in the browser from mesa wind,
+  near-subsonic earth tones, caliche and stone footsteps, chamber resonance,
+  solar harmonics, and sparse nocturnal bells. The mix changes continuously
+  with position, movement, elevation, and light.
 - **Sky rig** — TSL sky dome with day/golden/night states; at night the star
   field physically rotates about the Polaris axis, with a fragment-shader
   long-exposure trail mode recreating the famous concentric-arc photograph.

@@ -35,6 +35,7 @@ import { createTerrain } from './staraxis/terrain';
 import { createSky } from './staraxis/sky';
 import { createFirstPerson } from './staraxis/firstPerson';
 import { buildCollider } from './staraxis/collision';
+import { StarAxisSoundscape } from './soundscape';
 import {
   STAIR_TOP,
   STAIR_BASE,
@@ -60,6 +61,36 @@ const tourStopsEl = document.getElementById('tour-stops') as HTMLDivElement | nu
 const tourProgress = document.getElementById('tour-progress') as HTMLSpanElement | null;
 const tourPrev = document.getElementById('tour-prev') as HTMLButtonElement | null;
 const tourNext = document.getElementById('tour-next') as HTMLButtonElement | null;
+const soundToggle = document.getElementById('sound-toggle') as HTMLButtonElement | null;
+const soundLabel = document.getElementById('sound-label') as HTMLSpanElement | null;
+const soundStatus = document.getElementById('sound-status') as HTMLSpanElement | null;
+const soundVolume = document.getElementById('sound-volume') as HTMLInputElement | null;
+
+const soundscape = new StarAxisSoundscape();
+soundscape.onChange((state) => {
+  const soundRoot = document.getElementById('soundscape');
+  if (soundRoot) {
+    soundRoot.dataset.started = String(state.started);
+    soundRoot.dataset.audible = String(state.audible);
+  }
+  soundToggle?.setAttribute('aria-pressed', String(state.audible));
+  if (soundLabel) {
+    soundLabel.textContent = !state.started
+      ? 'Awaken sound'
+      : state.audible
+        ? `Sounding · ${state.place}`
+        : 'Sound paused';
+  }
+  if (soundStatus) {
+    soundStatus.textContent = !state.started
+      ? 'Generative soundscape is off'
+      : state.audible
+        ? `Generative soundscape active in ${state.place}`
+        : 'Generative soundscape paused';
+  }
+});
+soundToggle?.addEventListener('click', () => void soundscape.toggle());
+soundVolume?.addEventListener('input', () => soundscape.setVolume(Number(soundVolume.value)));
 
 const renderer = new WebGPURenderer({ antialias: true });
 // A 2× backing buffer quadrupled fragment work on Retina displays and was
@@ -432,6 +463,8 @@ window.addEventListener('keydown', (e) => {
   else if (k === 't') {
     trails = trails > 0 ? 0 : 1;
     sky.setTrailAmount(trails);
+  } else if (k === 'k') {
+    void soundscape.toggle();
   } else if (k === '/') {
     debugOn = !debugOn;
     if (debugEl) debugEl.style.display = debugOn ? 'block' : 'none';
@@ -446,7 +479,7 @@ window.addEventListener('keyup', (e) => {
 function updateInfo(): void {
   if (!info) return;
   const views = '1 entry · 2 pyramid · 3 tunnel · 4 aerial · 5 night · M tour';
-  const light = 'D/G/N light · T trails · / stats';
+  const light = 'D/G/N light · T trails · K sound · / stats';
   const line =
     tourOpen
       ? 'guided tour · [ / ] previous / next · Esc close'
@@ -546,6 +579,7 @@ let last = performance.now();
 let frames = 0;
 let fpsWindowStart = performance.now();
 let lastFps = 0;
+const previousCameraPosition = new Vector3().copy(camera.position);
 
 await renderer.init();
 
@@ -564,6 +598,16 @@ renderer.setAnimationLoop(() => {
     sky.sunLight.shadow.needsUpdate = true;
     sunPrev.copy(sky.sunLight.position);
   }
+  const cameraTravel = camera.position.distanceTo(previousCameraPosition);
+  soundscape.update({
+    x: camera.position.x,
+    y: camera.position.y,
+    z: camera.position.z,
+    dt,
+    mode: sky.getMode(),
+    moving: nav === 'fp' && cameraTravel > 0.0005,
+  });
+  previousCameraPosition.copy(camera.position);
   updateCaption();
   renderer.render(scene, camera);
   frames++;
@@ -617,5 +661,6 @@ window.__runtime = () => ({
   componentIds: Object.keys(monument.components).sort(),
   tourOpen,
   tourStop: TOUR_STOPS[tourIndex].label,
+  soundscape: soundscape.snapshot(),
   sculptRuntime: monument.group.userData.sculptRuntime,
 });
