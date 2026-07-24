@@ -97,7 +97,43 @@ const _mat = new Matrix4();
 const _up = new Vector3(0, 1, 0);
 const _normal = new Vector3();
 const _twist = new Quaternion();
-const _rockTilt = new Quaternion();
+
+/**
+ * Reject placements where one tangent plane cannot plausibly support the
+ * whole stone. This keeps wide boulders away from trench lips and other sharp
+ * height-field breaks, where seating only the center would leave an edge in
+ * the air.
+ */
+function terrainPlaneDeviation(
+  x: number,
+  z: number,
+  radius: number,
+  normal: Vector3,
+): number {
+  const centerY = terrainHeight(x, z);
+  const gradientX = -normal.x / normal.y;
+  const gradientZ = -normal.z / normal.y;
+  const diagonal = radius * 0.7;
+  const samples: readonly (readonly [number, number])[] = [
+    [radius, 0],
+    [-radius, 0],
+    [0, radius],
+    [0, -radius],
+    [diagonal, diagonal],
+    [-diagonal, diagonal],
+    [diagonal, -diagonal],
+    [-diagonal, -diagonal],
+  ];
+  let deviation = 0;
+  for (const [dx, dz] of samples) {
+    const tangentY = centerY + gradientX * dx + gradientZ * dz;
+    deviation = Math.max(
+      deviation,
+      Math.abs(terrainHeight(x + dx, z + dz) - tangentY),
+    );
+  }
+  return deviation;
+}
 
 interface Placement {
   matrix: Matrix4;
@@ -780,29 +816,46 @@ function createRockRubble(): Group {
   const gray = new Color('#7b7871');
   const tint = new Color();
 
-  const TARGET = 1600;
+  // Keep the landscape sparse enough that bare earth remains a major shape.
+  // A small set of large anchors carries the silhouette; ordinary rocks and
+  // pebbles provide only intermittent secondary detail.
+  const TARGET = 360;
+  const bottomDepths = [0.52, 0.42, 0.51, 0.54, 0.44];
   const placements: VariantPlacement[] = [];
   for (let i = 0; i < 250000 && placements.length < TARGET; i++) {
-    // bias toward the monument so talus reads dense at the wall and flanks
+    // Bias toward the monument without filling every visible slope.
     const r = Math.pow(hash01(i, 11), 1.2) * 200 + 8;
     const a = hash01(i, 12) * Math.PI * 2;
     const x = Math.cos(a) * r;
     const z = Math.sin(a) * r;
     if (inStairSlot(x, z)) continue;
-    if (slopeMag(x, z) <= 0.15) continue; // rubble collects on meaningful slopes
+    const slope = slopeMag(x, z);
+    if (slope <= 0.06 || slope > 0.72) continue;
     if (inPyramidFootprint(x, z)) continue;
 
-    // Large-scale wave interference creates erosion drifts and open sand gaps.
+    // A hard low-frequency cutoff leaves genuine empty ground between talus
+    // islands. Inside an island, the density still rises toward its center.
     const drift =
       0.5 +
       Math.sin(x * 0.071 + z * 0.031) * 0.26 +
       Math.sin(z * 0.053 - x * 0.024 + 1.7) * 0.24;
-    if (hash01(i, 90) > Math.max(0.12, Math.min(0.92, drift))) continue;
+    if (drift < 0.42) continue;
+    const islandDensity = Math.pow((drift - 0.42) / 0.58, 1.45);
+    if (hash01(i, 90) > 0.16 + Math.min(1, islandDensity) * 0.72) continue;
 
-    const sizeSeed = hash01(i, 13);
-    let base = 0.17 + Math.pow(sizeSeed, 2.7) * 0.67;
-    if (hash01(i, 91) > 0.975) base += 0.35 + hash01(i, 92) * 0.42;
-    const useHeroGeometry = base > 0.72;
+    // Deliberately separated size bands avoid the former field of uniformly
+    // small stones: roughly one third are boulders, while the smallest band
+    // is only a short pebble tail rather than continuous noise.
+    const sizeClass = hash01(i, 13);
+    const sizeWithinClass = hash01(i, 92);
+    const isBoulder = sizeClass < 0.3;
+    const base = isBoulder
+      ? 0.78 + Math.pow(sizeWithinClass, 0.72) * 0.68
+      : sizeClass < 0.82
+        ? 0.34 + Math.pow(sizeWithinClass, 1.15) * 0.42
+        : 0.11 + Math.pow(sizeWithinClass, 1.8) * 0.18;
+    if (isBoulder && slope > 0.55) continue;
+    const useHeroGeometry = isBoulder || base > 0.68;
     const geometryIndex = useHeroGeometry
       ? 3 + Math.floor(hash01(i, 17) * 2)
       : Math.floor(hash01(i, 17) * 3);
@@ -815,21 +868,28 @@ function createRockRubble(): Group {
         : 0.9 + hash01(i, 15) * 0.4);
     const sz = base * (0.78 + hash01(i, 16) * 0.52);
 
-    // Follow the slope, then spin around the local up axis. The lower geometry
-    // ring remains buried, producing a stable contact rather than a point.
+    // Follow the slope and spin around the local up axis. Avoid a second,
+    // arbitrary tilt: it lifted one edge after the rock had already been
+    // aligned to the ground and made some instances appear point-balanced.
     terrainNormal(x, z, _normal);
+    const supportRadius = Math.max(sx, sz) * 0.92;
+    if (
+      terrainPlaneDeviation(x, z, supportRadius, _normal) >
+      0.12 + supportRadius * 0.12
+    ) {
+      continue;
+    }
     _quat.setFromUnitVectors(_up, _normal);
     _twist.setFromAxisAngle(_up, hash01(i, 18) * Math.PI * 2);
-    _euler.set(
-      (hash01(i, 99) - 0.5) * 0.24,
-      0,
-      (hash01(i, 100) - 0.5) * 0.24,
-    );
-    _rockTilt.setFromEuler(_euler);
-    _quat.multiply(_twist).multiply(_rockTilt);
-    const y = terrainHeight(x, z) + sy * 0.27;
+    _quat.multiply(_twist);
 
-    _pos.set(x, y, z);
+    // Seat from each shape's actual bottom and move along the terrain normal,
+    // not world Y. About 18% of the vertical scale remains below the tangent
+    // plane, hiding the narrow base ring and producing a weight-bearing edge.
+    const centerOffset = sy * (bottomDepths[geometryIndex] - 0.18);
+    _pos
+      .set(x, terrainHeight(x, z), z)
+      .addScaledVector(_normal, centerOffset);
     _scale.set(sx, sy, sz);
     _mat.compose(_pos, _quat, _scale);
 
@@ -918,7 +978,10 @@ function createGravel(): Group {
   const warm = new Color('#aa8c6f');
   const tint = new Color();
 
-  const TARGET = 1500;
+  // Gravel is punctuation in the two walking areas, not a uniform surface
+  // treatment. Most of the packed caliche should remain visibly empty.
+  const TARGET = 300;
+  const bottomDepths = [0.36, 0.31, 0.4];
   const placements: VariantPlacement[] = [];
   for (let i = 0; i < 90000 && placements.length < TARGET; i++) {
     let x: number;
@@ -938,23 +1001,27 @@ function createGravel(): Group {
       0.52 +
       Math.sin(x * 0.46 + z * 0.16) * 0.23 +
       Math.sin(z * 0.31 - x * 0.19 + 0.8) * 0.2;
-    if (hash01(i, 95) > Math.max(0.18, Math.min(0.9, drift))) continue;
+    if (drift < 0.48) continue;
+    const patchDensity = Math.pow((drift - 0.48) / 0.47, 1.35);
+    if (hash01(i, 95) > 0.12 + Math.min(1, patchDensity) * 0.7) continue;
 
-    const s = 0.055 + Math.pow(hash01(i, 36), 1.7) * 0.115;
+    const s = 0.045 + Math.pow(hash01(i, 36), 2.1) * 0.13;
     const sx = s * (0.78 + hash01(i, 40) * 0.5);
     const sy = s * (0.62 + hash01(i, 41) * 0.34);
     const sz = s * (0.76 + hash01(i, 43) * 0.54);
-    const y = terrainHeight(x, z) + sy * 0.22;
 
     terrainNormal(x, z, _normal);
     _quat.setFromUnitVectors(_up, _normal);
     _twist.setFromAxisAngle(_up, hash01(i, 38) * Math.PI * 2);
     _quat.multiply(_twist);
-    _pos.set(x, y, z);
+    const geometryIndex = Math.floor(hash01(i, 39) * geometries.length);
+    const centerOffset = sy * (bottomDepths[geometryIndex] - 0.14);
+    _pos
+      .set(x, terrainHeight(x, z), z)
+      .addScaledVector(_normal, centerOffset);
     _scale.set(sx, sy, sz);
     _mat.compose(_pos, _quat, _scale);
 
-    const geometryIndex = Math.floor(hash01(i, 39) * geometries.length);
     tint.lerpColors(dark, light, hash01(i, 42));
     if (hash01(i, 96) > 0.78) tint.lerp(warm, 0.25 + hash01(i, 97) * 0.25);
     tint.multiplyScalar(0.94 + hash01(i, 98) * 0.13);

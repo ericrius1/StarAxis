@@ -49,6 +49,17 @@
         width: 100%;
         height: 100%;
       }
+      /* Immersive mode (I): hide every HUD chrome; canvas stays. */
+      body.immersive #info,
+      body.immersive #crosshair,
+      body.immersive #caption,
+      body.immersive #debug,
+      body.immersive #soundscape,
+      body.immersive #tour-toggle,
+      body.immersive #tour-panel,
+      body.immersive .effects-pane {
+        display: none !important;
+      }
       #info {
         position: fixed;
         top: 16px;
@@ -605,7 +616,7 @@
         }
       }
     </style>
-    <script type="module" crossorigin src="/assets/index-CY3ylFPe.js"></script>
+    <script type="module" crossorigin src="/assets/index-Viq8A4Eg.js"></script>
   </head>
   <body>
     <div id="info">
