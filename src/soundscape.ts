@@ -1,9 +1,9 @@
 /**
  * A position-aware generative score for Star Axis.
  *
- * No samples are downloaded. Wind, resonance, footsteps, and sparse stellar
- * tones are synthesized in the browser, allowing the score to respond to
- * location, movement, elevation, and light.
+ * No samples are downloaded. Wind, resonance, and footsteps are synthesized
+ * in the browser, allowing the score to respond to location, movement,
+ * elevation, and light.
  */
 
 import {
@@ -91,8 +91,6 @@ export class StarAxisSoundscape {
   private footTravel = 0;
   private nextFoot = 0.8;
   private lastUpdate = 0;
-  private lastBellAt = 0;
-  private bellIntensity = 0;
   private tunnelAmount = 0;
 
   onChange(listener: (snapshot: SoundscapeSnapshot) => void): () => void {
@@ -282,7 +280,6 @@ export class StarAxisSoundscape {
       this.setLayer(this.hourPulse, 0.0005 + hour * 0.035, 1.2);
       this.reverbSend?.gain.setTargetAtTime(0.08 + enclosed * 0.75, now, 0.8);
       this.reverbReturn?.gain.setTargetAtTime(0.05 + enclosed * 0.42, now, 0.9);
-      this.bellIntensity = clamp(night * 0.55 + aperture * 0.9 + hour * 0.35 + gold * 0.12);
     }
 
     if (!teleport && frame.moving && distance < 2) {
@@ -296,11 +293,6 @@ export class StarAxisSoundscape {
       this.footTravel = Math.min(this.footTravel, 0.35);
     }
 
-    const bellInterval = 2.8 + Math.random() * 3.8;
-    if (this.bellIntensity > 0.08 && now - this.lastBellAt > bellInterval) {
-      this.lastBellAt = now;
-      if (Math.random() < this.bellIntensity) this.starBell(now, mode);
-    }
   }
 
   private outputGain(): number {
@@ -608,33 +600,4 @@ export class StarAxisSoundscape {
     }
   }
 
-  private starBell(now: number, mode: SoundscapeMode): void {
-    if (!this.context || !this.master) return;
-    const scale = [293.66, 367, 440, 587.33, 660, 880];
-    const base = scale[Math.floor(Math.random() * scale.length)] * (mode === 'night' ? 1 : 0.5);
-    const pan = this.context.createStereoPanner();
-    pan.pan.value = Math.random() * 1.5 - 0.75;
-    const bus = this.context.createGain();
-    pan.connect(bus);
-    bus.connect(this.master);
-    if (this.reverbSend) bus.connect(this.reverbSend);
-
-    [1, 2.003, 3.01].forEach((ratio, index) => {
-      const oscillator = this.context!.createOscillator();
-      oscillator.type = 'sine';
-      oscillator.frequency.value = base * ratio;
-      oscillator.detune.value = (Math.random() - 0.5) * 8;
-      const gain = this.context!.createGain();
-      bellEnvelope(
-        gain.gain,
-        now + index * 0.025,
-        this.bellIntensity * [0.018, 0.007, 0.0035][index],
-        0.02,
-        2.6 + index * 0.8,
-      );
-      oscillator.connect(gain).connect(pan);
-      oscillator.start(now);
-      oscillator.stop(now + 5.5);
-    });
-  }
 }
