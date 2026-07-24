@@ -45,9 +45,11 @@ Earth's rotation.
 | `3` | On the Star Tunnel stair, sighting the aperture |
 | `4` | High aerial overview |
 | `5` | Night, due north — star trails around Polaris |
-| `D` / `G` / `N` | Day / golden hour / night |
+| `D` / `G` / `H` | Day / golden hour / night (`Shift+N` also selects night) |
 | `T` | Toggle long-exposure star trails |
-| **`L`** | **Toggle WebGPU global illumination and post-processing** |
+| **`N`** | **Toggle Performance ⇄ Cinematic rendering** |
+| **`P`** | **Explicitly enter or leave progressive Path Traced rendering** |
+| **`L`** | **Open or close the Render Lab** |
 | `/` | Debug stats (fps, frame ms, draw calls, triangles) |
 
 Presets `1`–`5` work in both modes; in first person they are spawn points,
@@ -97,9 +99,13 @@ opens the field guide at a specific stop.
 - **Sky rig** — TSL sky dome with day/golden/night states; at night the star
   field physically rotates about the Polaris axis, with a fragment-shader
   long-exposure trail mode recreating the famous concentric-arc photograph.
-- **Light Lab** — a compact Tweakpane panel controls WebGPU screen-space global
-  illumination, ambient occlusion, shadows, bloom, color finish, exposure and
-  three quality profiles. `L` bypasses the full enhancement stack in one tap.
+- **Three WebGPU render modes** — Performance preserves the responsive
+  half-DPR walking path; Cinematic switches to full device DPR, HDR buffers,
+  high-sample screen-space global illumination, temporal AA, bloom, color
+  finishing and adaptive sharpening; Path Traced lazily builds a scene BVH and
+  progressively accumulates multi-bounce HDR lighting for locked-off captures.
+  `N` toggles Performance/Cinematic, while `P` explicitly enters or leaves the
+  separate Path Traced mode.
 - **Terrain** — analytic heightfield with a flat rectangular apron, authored
   front/rear/side break lines, broad slope transitions, and deterministic
   talus, gravel, and grass.
@@ -113,7 +119,7 @@ stainless, patinated bronze (the five build materials of the real work,
 plus earth), cast concrete, and a slope-masked desert blend. Palettes were
 derived from reference-photo PBR extraction (see `sculpt/`).
 
-## Performance
+## Render modes and performance
 
 The terrain is an 8×8 chunk grid with analytic (seam-free) normals so the
 frustum culls most of the ground. Entry-wall segments, coping and the layered
@@ -123,7 +129,10 @@ path that submitted thousands of visible sub-draws. Physically large boulders
 select denser smooth variants while ordinary scatter stays cheaper. The sun's
 shadow map redraws only while the sun is moving. The pyramid-front review runs
 about 95 total scene draws / 0.93M triangles and targets 60 fps. `/` shows live
-stats.
+stats. Cinematic and Path Traced intentionally trade frame rate for native
+device resolution and capture quality; the path tracer excludes tiny grass
+blades from its acceleration structure but retains the monument, terrain,
+horizon, rocks, gravel, instance colors, and material response.
 
 ## Source layout
 

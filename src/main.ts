@@ -15,9 +15,11 @@
  *   3  on the Star Tunnel stair looking toward the aperture
  *   4  high aerial overview
  *   5  night view due north (star trails around Polaris)
- *   D / G / N   day / golden hour / night
+ *   D / G / H   day / golden hour / night
  *   T  toggle star trails (night)
- *   L  toggle enhanced lighting and post-processing
+ *   N  toggle Performance / Cinematic render mode
+ *   P  toggle the explicit progressive Path Traced mode
+ *   L  open or close the render lab
  *   I  toggle immersive mode (hide all UI)
  */
 
@@ -128,14 +130,11 @@ soundToggle?.addEventListener('click', () => void soundscape.toggle());
 soundVolume?.addEventListener('input', () => soundscape.setVolume(Number(soundVolume.value)));
 
 const renderer = new WebGPURenderer({ antialias: true });
-// A 2× backing buffer quadrupled fragment work on Retina displays and was
-// the single largest frame-time cost. Native CSS resolution remains crisp
-// for a full-window WebGPU scene; ?quality=high opts into a larger buffer.
+// Performance intentionally preserves the original half-resolution backing
+// buffer. Cinematic and Path Traced switch to the device's full DPR inside
+// createVisualEffects(); ?quality=high starts directly in Cinematic.
 const requestedQuality = new URLSearchParams(location.search).get('quality');
-// The monument is fill-rate bound in the close aperture view. A modest
-// default render scale preserves the full geometry/material stack while
-// keeping the most demanding first-person composition at 60 fps.
-const pixelRatioCap = requestedQuality === 'high' ? 1.25 : 0.5;
+const pixelRatioCap = requestedQuality === 'high' ? window.devicePixelRatio : 0.5;
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, pixelRatioCap));
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.toneMapping = ACESFilmicToneMapping;
@@ -202,7 +201,8 @@ const visualEffects = createVisualEffects({
   scene,
   camera,
   sunLight: sky.sunLight,
-  constrainedDevice,
+  hemisphereLight: sky.hemi,
+  traceRoots: [monument.group, terrain.group],
   highQualityRequested: requestedQuality === 'high',
 });
 
@@ -603,15 +603,20 @@ window.addEventListener('keydown', (e) => {
     updateInfo();
   } else if (k === 'd') sky.setMode('day');
   else if (k === 'g') sky.setMode('goldenHour');
-  else if (k === 'n') sky.setMode('night');
-  else if (k === 't') {
+  else if (k === 'h' || (k === 'n' && e.shiftKey)) sky.setMode('night');
+  else if (k === 'n' && !e.repeat) {
+    visualEffects.toggleCinematic();
+    updateInfo();
+  } else if (k === 'p' && !e.repeat) {
+    visualEffects.togglePathTracing();
+    updateInfo();
+  } else if (k === 't') {
     trails = trails > 0 ? 0 : 1;
     sky.setTrailAmount(trails);
   } else if (k === 'k') {
     void soundscape.toggle();
   } else if (k === 'l' && !e.repeat) {
-    visualEffects.toggle();
-    updateInfo();
+    visualEffects.togglePane();
   } else if (k === 'i' && !e.repeat) {
     setImmersive(!immersive);
   } else if (k === '/') {
@@ -649,7 +654,8 @@ window.addEventListener(
 function updateInfo(): void {
   if (!info) return;
   const views = '1 Avenue · 2 pyramid front · 3 Star Tunnel · 4 aerial · 5 aperture night · M tour';
-  const light = 'Z+drag time · D/G/N light · T trails · L light lab · K sound · I immersive · / stats';
+  const light =
+    'Z+drag time · D/G/H light · T trails · N cinematic · P path trace · L render lab · K sound · I immersive · / stats';
   const line =
     tourOpen
       ? 'guided tour · drag orbit · scroll zoom · [ / ] previous / next · Esc close'
@@ -742,7 +748,7 @@ function updateDebug(): void {
     `draws ${renderer.info.render.drawCalls} · tris ${(renderer.info.render.triangles / 1e6).toFixed(2)}M<br>` +
     `sand volume + ${(sand.totalCount / 1000).toFixed(1)}k micro · wind ${Math.round(latestWind.strength * 100)}%<br>` +
     `collider ${collider.triangleCount} tris<br>` +
-    `${nav}${fp.fly ? ' · fly' : ''} · ${sky.getMode()} · fx ${visualEffects.snapshot().active ? 'on' : 'off'}<br>` +
+    `${nav}${fp.fly ? ' · fly' : ''} · ${sky.getMode()} · ${visualEffects.getMode()}<br>` +
     `pos ${p.x.toFixed(1)}, ${p.y.toFixed(1)}, ${p.z.toFixed(1)}`;
 }
 setInterval(updateDebug, 500);
@@ -751,7 +757,7 @@ setInterval(updateDebug, 500);
 window.addEventListener('resize', () => {
   camera.aspect = window.innerWidth / window.innerHeight;
   camera.updateProjectionMatrix();
-  renderer.setSize(window.innerWidth, window.innerHeight);
+  visualEffects.resize(window.innerWidth, window.innerHeight);
 });
 
 let last = performance.now();
@@ -777,7 +783,9 @@ renderer.setAnimationLoop(() => {
   }
   const cameraTravel = camera.position.distanceTo(previousCameraPosition);
   latestWind = mesaWind.update(dt, camera.position.x, camera.position.z, sky.getMode());
-  sand.update(renderer, latestWind, camera.position, dt, sky.getMode());
+  if (visualEffects.getMode() !== 'path-traced') {
+    sand.update(renderer, latestWind, camera.position, dt, sky.getMode());
+  }
   soundscape.update({
     x: camera.position.x,
     y: camera.position.y,
