@@ -301,22 +301,196 @@ export function createPathTracer({
     [hashRandom] as any,
   );
 
-  const environmentRadiance = wgslFn(/* wgsl */ `
-    fn environmentRadiance(
-      direction: vec3f,
-      sunDirection: vec3f,
-      sunColor: vec3f,
-      sunIntensity: f32,
-      skyColor: vec3f,
-      groundColor: vec3f,
-      skyIntensity: f32
-    ) -> vec3f {
-      let horizon = smoothstep(-0.28, 0.68, direction.y);
-      let atmosphere = mix(groundColor, skyColor, horizon) * skyIntensity;
-      let sunDisc = pow(max(dot(direction, sunDirection), 0.0), 32000.0);
-      return atmosphere + sunColor * sunIntensity * sunDisc * 4.0;
+  const hashPosition = wgslFn(/* wgsl */ `
+    fn hashPosition(position: vec3f) -> f32 {
+      var value = fract(position * 0.1031);
+      value += dot(value, value.yzx + vec3f(33.33));
+      return fract((value.x + value.y) * value.z);
     }
   `);
+
+  const valueNoise = wgslFn(
+    /* wgsl */ `
+      fn valueNoise(position: vec3f) -> f32 {
+        let cell = floor(position);
+        var blend = fract(position);
+        blend = blend * blend * (vec3f(3.0) - 2.0 * blend);
+
+        let lower = mix(
+          mix(
+            hashPosition(cell),
+            hashPosition(cell + vec3f(1.0, 0.0, 0.0)),
+            blend.x
+          ),
+          mix(
+            hashPosition(cell + vec3f(0.0, 1.0, 0.0)),
+            hashPosition(cell + vec3f(1.0, 1.0, 0.0)),
+            blend.x
+          ),
+          blend.y
+        );
+        let upper = mix(
+          mix(
+            hashPosition(cell + vec3f(0.0, 0.0, 1.0)),
+            hashPosition(cell + vec3f(1.0, 0.0, 1.0)),
+            blend.x
+          ),
+          mix(
+            hashPosition(cell + vec3f(0.0, 1.0, 1.0)),
+            hashPosition(cell + vec3f(1.0, 1.0, 1.0)),
+            blend.x
+          ),
+          blend.y
+        );
+        return mix(lower, upper, blend.z);
+      }
+    `,
+    [hashPosition] as any,
+  );
+
+  const cloudFbm = wgslFn(
+    /* wgsl */ `
+      fn cloudFbm(position: vec3f) -> f32 {
+        var point = position;
+        var amplitude = 0.5;
+        var density = 0.0;
+        for (var octave = 0u; octave < 4u; octave += 1u) {
+          density += valueNoise(point) * amplitude;
+          point = point * 2.03 + vec3f(7.1, 3.7, -5.4);
+          amplitude *= 0.5;
+        }
+        return density;
+      }
+    `,
+    [valueNoise] as any,
+  );
+
+  const starField = wgslFn(
+    /* wgsl */ `
+      fn starField(direction: vec3f) -> vec3f {
+        let sphericalUv = vec2f(
+          atan2(direction.z, direction.x) * 0.15915494309 + 0.5,
+          acos(clamp(direction.y, -1.0, 1.0)) * 0.31830988618
+        );
+        let starGrid = sphericalUv * vec2f(900.0, 450.0);
+        let cell = floor(starGrid);
+        let cellUv = fract(starGrid) - 0.5;
+        let seed = hashPosition(vec3f(cell, 19.17));
+        let temperature = hashPosition(vec3f(cell, 73.41));
+        let exists = smoothstep(0.994, 1.0, seed);
+        let core = 1.0 - smoothstep(0.025, 0.19, length(cellUv));
+        let rareSparkle = smoothstep(0.9992, 1.0, seed);
+        let starColor = mix(
+          vec3f(0.56, 0.72, 1.0),
+          vec3f(1.0, 0.72, 0.42),
+          pow(temperature, 5.0)
+        );
+        return starColor * exists * core * (4.5 + rareSparkle * 10.0);
+      }
+    `,
+    [hashPosition] as any,
+  );
+
+  const environmentRadiance = wgslFn(
+    /* wgsl */ `
+      fn environmentRadiance(
+        direction: vec3f,
+        sunDirection: vec3f,
+        sunColor: vec3f,
+        sunIntensity: f32,
+        skyColor: vec3f,
+        groundColor: vec3f,
+        skyIntensity: f32
+      ) -> vec3f {
+        let sunElevation = sunDirection.y;
+        let dayAmount = smoothstep(-0.08, 0.12, sunElevation);
+        let nightAmount = 1.0 - dayAmount;
+        let goldenAmount =
+          dayAmount * (1.0 - smoothstep(0.16, 0.52, sunElevation));
+        let horizon = smoothstep(-0.22, 0.68, direction.y);
+        let skyMask = smoothstep(-0.08, 0.12, direction.y);
+
+        let daylight = mix(groundColor, skyColor, horizon) * skyIntensity;
+        let sunset = mix(
+          vec3f(0.48, 0.14, 0.032),
+          vec3f(0.065, 0.095, 0.24),
+          smoothstep(-0.04, 0.78, direction.y)
+        );
+        var atmosphere = mix(daylight, sunset, goldenAmount * 0.76);
+
+        let sunFacing = max(dot(direction, sunDirection), 0.0);
+        atmosphere +=
+          vec3f(0.9, 0.26, 0.045) *
+          pow(sunFacing, 7.0) *
+          goldenAmount;
+
+        // Two differently scaled density fields give the clouds a layered,
+        // volumetric silhouette without adding another scene render pass.
+        let broadClouds = cloudFbm(
+          direction * vec3f(3.7, 8.5, 3.7) + vec3f(1.4, -0.8, 2.1)
+        );
+        let fineClouds = cloudFbm(
+          direction * vec3f(8.2, 18.0, 8.2) + vec3f(-4.3, 2.7, 1.2)
+        );
+        let cloudNoise = broadClouds * 0.72 + fineClouds * 0.28;
+        let cloudBand =
+          skyMask *
+          (1.0 - smoothstep(0.68, 0.96, direction.y));
+        let cloudDensity =
+          smoothstep(0.48, 0.69, cloudNoise) * cloudBand;
+        let cloudPresence = mix(0.24, 0.94, goldenAmount) * dayAmount;
+        let cloudLight = 0.28 + 0.72 * pow(sunFacing, 1.4);
+        let dayCloud = mix(
+          vec3f(0.16, 0.20, 0.28),
+          vec3f(0.92, 0.96, 1.0),
+          cloudLight
+        );
+        let sunsetCloud = mix(
+          vec3f(0.12, 0.035, 0.065),
+          vec3f(1.25, 0.38, 0.055),
+          cloudLight
+        );
+        let cloudColor = mix(dayCloud, sunsetCloud, goldenAmount);
+        atmosphere = mix(
+          atmosphere,
+          cloudColor,
+          cloudDensity * cloudPresence * 0.78
+        );
+        atmosphere +=
+          cloudDensity *
+          goldenAmount *
+          pow(sunFacing, 5.0) *
+          vec3f(1.4, 0.38, 0.055);
+
+        // Night has a real exposure floor, cool horizon-to-zenith color, a
+        // textured Milky Way band, and stable sub-pixel procedural stars.
+        var nightSky = mix(
+          vec3f(0.014, 0.018, 0.032),
+          vec3f(0.038, 0.075, 0.19),
+          smoothstep(-0.20, 0.72, direction.y)
+        );
+        let galacticAxis = normalize(vec3f(0.31, 0.91, -0.27));
+        let galacticBand = pow(
+          max(1.0 - abs(dot(direction, galacticAxis)) * 4.2, 0.0),
+          2.0
+        );
+        let milkyTexture = cloudFbm(
+          direction * 21.0 + vec3f(8.4, -3.1, 6.7)
+        );
+        nightSky +=
+          vec3f(0.035, 0.055, 0.11) *
+          galacticBand *
+          (0.35 + milkyTexture);
+        nightSky += starField(direction) * skyMask;
+
+        let sunDisc = pow(sunFacing, 32000.0);
+        let daytimeSky =
+          atmosphere + sunColor * sunIntensity * sunDisc * 4.0;
+        return mix(daytimeSky, nightSky, nightAmount);
+      }
+    `,
+    [cloudFbm, starField] as any,
+  );
 
   const computeShader = wgslFn(
     /* wgsl */ `
@@ -483,10 +657,11 @@ export function createPathTracer({
     uv: attribute('uv'),
   });
   const tracedColor = texture(accumulation[0], vUv);
+  const displayExposure = uniform(0.58);
   const edgeDistance = uv().sub(0.5).length();
   const vignette = float(1).sub(smoothstep(0.32, 0.75, edgeDistance).mul(0.12));
   displayMaterial.colorNode = vec4(
-    vibrance(tracedColor.rgb, 0.06).mul(vignette),
+    vibrance(tracedColor.rgb.mul(displayExposure), 0.06).mul(vignette),
     tracedColor.a,
   );
   const fullscreenQuad = new FullScreenQuad(displayMaterial);
@@ -555,6 +730,15 @@ export function createPathTracer({
     skyColor.value.copy(hemisphereLight.color);
     groundColor.value.copy(hemisphereLight.groundColor);
     skyIntensity.value = hemisphereLight.intensity;
+    if (sunLight.intensity < 0.05) {
+      displayExposure.value = 1.55;
+    } else {
+      const highSun = Math.min(
+        1,
+        Math.max(0, (_sunDirection.y - 0.16) / 0.42),
+      );
+      displayExposure.value = 0.98 + (0.58 - 0.98) * highSun;
+    }
   };
 
   const render = (samplesPerFrame: number, maxBounces: number) => {
