@@ -1,12 +1,13 @@
 /**
  * Star Axis — Charles Ross. Procedural Three.js (WebGPU + TSL) recreation.
  *
- * Navigation (first person by default; C switches to orbit):
+ * Navigation (first person by default; C switches to orbit / camera mode):
  *   click        lock the pointer and walk
  *   W A S D      move · Shift sprint · F fly · Space/Q up/down while flying
  *   arrows       look, for touring without a mouse
  *   Esc          release the pointer
- *   M            open the guided field tour
+ *   C            orbit camera (drag rotate · scroll/pinch zoom)
+ *   M            open the guided field tour (same CameraControls rig)
  *
  * Keys:
  *   1  Avenue / south excavation
@@ -21,12 +22,34 @@
 
 import {
   ACESFilmicToneMapping,
+  Box3,
+  Matrix4,
   PerspectiveCamera,
+  Quaternion,
+  Raycaster,
   Scene,
+  Sphere,
+  Spherical,
+  Vector2,
   Vector3,
+  Vector4,
   WebGPURenderer,
 } from 'three/webgpu';
-import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import CameraControls from 'camera-controls';
+
+CameraControls.install({
+  THREE: {
+    Vector2,
+    Vector3,
+    Vector4,
+    Quaternion,
+    Matrix4,
+    Spherical,
+    Box3,
+    Sphere,
+    Raycaster,
+  },
+});
 
 import { createMaterials } from './staraxis/materials';
 import { createStarAxis } from './staraxis/createStarAxis';
@@ -111,7 +134,7 @@ const requestedQuality = new URLSearchParams(location.search).get('quality');
 // The monument is fill-rate bound in the close aperture view. A modest
 // default render scale preserves the full geometry/material stack while
 // keeping the most demanding first-person composition at 60 fps.
-const pixelRatioCap = requestedQuality === 'high' ? 1.25 : 0.55;
+const pixelRatioCap = requestedQuality === 'high' ? 1.25 : 0.5;
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, pixelRatioCap));
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.toneMapping = ACESFilmicToneMapping;
@@ -122,12 +145,18 @@ app.appendChild(renderer.domElement);
 const scene = new Scene();
 const camera = new PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.1, 4000);
 
-const controls = new OrbitControls(camera, renderer.domElement);
-controls.enableDamping = true;
-controls.dampingFactor = 0.08;
+// One CameraControls rig for orbit mode and the guided tour: drag to orbit,
+// scroll/pinch to dolly (zoom), and setLookAt() for preset / tour framing.
+const controls = new CameraControls(camera, renderer.domElement);
+controls.smoothTime = 0.35;
+controls.draggingSmoothTime = 0.12;
+controls.minDistance = 1.5;
+controls.maxDistance = 900;
+controls.dollySpeed = 1.15;
 // Allow steep upward views (sighting Polaris through the aperture needs
 // the camera well below its target).
 controls.maxPolarAngle = Math.PI * 0.88;
+controls.enabled = false;
 
 const fp = createFirstPerson(camera, renderer.domElement);
 
@@ -143,7 +172,10 @@ scene.add(terrain.group);
 const deviceMemory =
   (navigator as Navigator & { deviceMemory?: number }).deviceMemory ?? 8;
 const constrainedDevice = navigator.hardwareConcurrency <= 4 || deviceMemory <= 4;
-const sandQuality = requestedQuality === 'high' ? 1.25 : constrainedDevice ? 0.65 : 1;
+// Four lanes preserve the visible saltation sheet while cutting the default
+// per-frame compute workload by one third. High quality restores the denser
+// six-to-eight-lane field.
+const sandQuality = requestedQuality === 'high' ? 1.25 : constrainedDevice ? 0.55 : 0.65;
 const sand = new WindsweptSand(sandQuality);
 scene.add(sand.group);
 scene.fogNode = sand.fogNode;
@@ -338,15 +370,23 @@ const TOUR_STOPS: TourStop[] = [
   },
 ];
 
-function applyPreset(p: Preset): void {
-  camera.position.set(...p.pos);
-  controls.target.set(...p.target);
+function applyPreset(p: Preset, transition = false): void {
+  const animate = transition && nav === 'orbit';
+  controls.normalizeRotations();
+  void controls.setLookAt(
+    p.pos[0],
+    p.pos[1],
+    p.pos[2],
+    p.target[0],
+    p.target[1],
+    p.target[2],
+    animate,
+  );
   if (p.fov) {
     camera.fov = p.fov;
     camera.updateProjectionMatrix();
   }
   if (p.mode) sky.setMode(p.mode);
-  controls.update();
   // In first person the same vantage becomes a spawn point: the rig decides
   // whether to stand there or hold it in flight.
   if (nav === 'fp') fp.placeAt(p.pos, p.target);
@@ -373,6 +413,7 @@ function setScrubbing(active: boolean): void {
 }
 
 function setNav(next: Nav): void {
+  const prev = nav;
   nav = next;
   if (nav === 'fp') {
     controls.enabled = false;
@@ -382,10 +423,22 @@ function setNav(next: Nav): void {
   } else {
     fp.disable();
     controls.enabled = !scrubbing;
-    // Hand the orbit rig a target in front of wherever the walker is looking.
-    const ahead = camera.getWorldDirection(new Vector3()).multiplyScalar(25);
-    controls.target.copy(camera.position).add(ahead);
-    controls.update();
+    // Only hand off from the walker. Presets / tour stops already framed
+    // the CameraControls rig; don't collapse their orbit distance.
+    if (prev === 'fp') {
+      const ahead = camera.getWorldDirection(new Vector3()).multiplyScalar(25);
+      const target = ahead.add(camera.position);
+      controls.normalizeRotations();
+      void controls.setLookAt(
+        camera.position.x,
+        camera.position.y,
+        camera.position.z,
+        target.x,
+        target.y,
+        target.z,
+        false,
+      );
+    }
   }
   updateInfo();
 }
@@ -410,7 +463,7 @@ function renderTourStop(): void {
 function goToTourStop(index: number): void {
   tourIndex = (index + TOUR_STOPS.length) % TOUR_STOPS.length;
   if (nav !== 'orbit') setNav('orbit');
-  applyPreset(TOUR_STOPS[tourIndex]);
+  applyPreset(TOUR_STOPS[tourIndex], true);
   renderTourStop();
 }
 
@@ -474,14 +527,13 @@ if (camParam && lookParam) {
   const c = camParam.split(',').map(Number);
   const l = lookParam.split(',').map(Number);
   if (c.length === 3 && l.length === 3 && [...c, ...l].every(Number.isFinite)) {
-    camera.position.set(c[0], c[1], c[2]);
-    controls.target.set(l[0], l[1], l[2]);
+    controls.normalizeRotations();
+    void controls.setLookAt(c[0], c[1], c[2], l[0], l[1], l[2], false);
     const fovParam = Number(params.get('fov'));
     if (Number.isFinite(fovParam) && fovParam > 10) {
       camera.fov = fovParam;
       camera.updateProjectionMatrix();
     }
-    controls.update();
     if (nav === 'fp') fp.placeAt([c[0], c[1], c[2]], [l[0], l[1], l[2]]);
   }
 }
@@ -536,7 +588,7 @@ window.addEventListener('keydown', (e) => {
     return;
   }
   const k = e.key.toLowerCase();
-  if (PRESETS[k]) applyPreset(PRESETS[k]);
+  if (PRESETS[k]) applyPreset(PRESETS[k], nav === 'orbit');
   else if (k === 'c') setNav(nav === 'fp' ? 'orbit' : 'fp');
   else if (k === 'f' && nav === 'fp') {
     fp.toggleFly();
@@ -590,7 +642,7 @@ function updateInfo(): void {
   const light = 'Z+drag time · D/G/N light · T trails · L light lab · K sound · / stats';
   const line =
     tourOpen
-      ? 'guided tour · [ / ] previous / next · Esc close'
+      ? 'guided tour · drag orbit · scroll zoom · [ / ] previous / next · Esc close'
       : nav === 'fp'
       ? fp.isLocked()
         ? `WASD move · Shift sprint · F ${fp.fly ? 'walk' : 'fly'}${
@@ -706,7 +758,7 @@ renderer.setAnimationLoop(() => {
   const dt = Math.min((now - last) / 1000, 0.1);
   last = now;
   if (nav === 'fp') fp.update(dt);
-  else controls.update();
+  else controls.update(dt);
   sky.update(dt);
   // redraw the shadow map only while the sun is actually moving
   if (sky.sunLight.position.distanceToSquared(sunPrev) > 0.25) {

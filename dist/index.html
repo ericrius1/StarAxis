@@ -239,7 +239,9 @@
           rgba(18, 17, 15, 0.94);
         color: #f2eadc;
         box-shadow: 0 26px 80px rgba(0, 0, 0, 0.38);
-        backdrop-filter: blur(22px);
+        /* The panel is already effectively opaque. A full-height backdrop
+           blur forced the WebGPU canvas to be recomposited every frame and
+           cost ~6 fps while the tour was open. */
         transform: translateX(calc(100% + 32px));
         opacity: 0;
         pointer-events: none;
@@ -603,7 +605,7 @@
         }
       }
     </style>
-    <script type="module" crossorigin src="/assets/index-D8aUvZ8x.js"></script>
+    <script type="module" crossorigin src="/assets/index-Cgptoyxu.js"></script>
   </head>
   <body>
     <div id="info">

@@ -91,7 +91,11 @@ export function createVisualEffects({
   highQualityRequested = false,
 }: CreateVisualEffectsOptions): VisualEffects {
   const settings: VisualEffectsSettings = {
-    enabled: true,
+    // Keep the normal experience on the direct, baked-material path. The
+    // screen-space GI stack is still available in Light Lab (or through
+    // ?quality=high), but making it opt-in holds the demanding aperture view
+    // at 60 fps instead of spending every frame on hidden off-screen passes.
+    enabled: highQualityRequested,
     quality: highQualityRequested ? 'cinematic' : constrainedDevice ? 'efficient' : 'balanced',
     globalIllumination: true,
     ambientOcclusion: true,
