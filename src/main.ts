@@ -18,6 +18,7 @@
  *   D / G / N   day / golden hour / night
  *   T  toggle star trails (night)
  *   L  toggle enhanced lighting and post-processing
+ *   I  toggle immersive mode (hide all UI)
  */
 
 import {
@@ -560,6 +561,13 @@ if (tourParam !== null) {
   setTourOpen(true);
 }
 
+let immersive = false;
+
+function setImmersive(on: boolean): void {
+  immersive = on;
+  document.body.classList.toggle('immersive', immersive);
+}
+
 window.addEventListener('keydown', (e) => {
   if (e.code === 'KeyZ' && !e.repeat) {
     setScrubbing(true);
@@ -604,6 +612,8 @@ window.addEventListener('keydown', (e) => {
   } else if (k === 'l' && !e.repeat) {
     visualEffects.toggle();
     updateInfo();
+  } else if (k === 'i' && !e.repeat) {
+    setImmersive(!immersive);
   } else if (k === '/') {
     debugOn = !debugOn;
     if (debugEl) debugEl.style.display = debugOn ? 'block' : 'none';
@@ -639,7 +649,7 @@ window.addEventListener(
 function updateInfo(): void {
   if (!info) return;
   const views = '1 Avenue · 2 pyramid front · 3 Star Tunnel · 4 aerial · 5 aperture night · M tour';
-  const light = 'Z+drag time · D/G/N light · T trails · L light lab · K sound · / stats';
+  const light = 'Z+drag time · D/G/N light · T trails · L light lab · K sound · I immersive · / stats';
   const line =
     tourOpen
       ? 'guided tour · drag orbit · scroll zoom · [ / ] previous / next · Esc close'

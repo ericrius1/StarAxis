@@ -196,85 +196,82 @@ export function createVisualEffects({
   pane.element.classList.add('effects-pane');
   pane.element.setAttribute('aria-label', 'Lighting and post-processing controls');
 
+  // Master switch for the expensive SSGI / finish stack. The stack stays off
+  // until the lab is opened, L is pressed, or any control is edited.
   pane.addBinding(settings, 'enabled', {
     label: 'Enhanced light',
   });
   const lightingFolder = pane.addFolder({ title: 'LIGHTING' });
-  const managedBindings: Array<{ disabled: boolean }> = [];
-  managedBindings.push(
-    lightingFolder.addBinding(settings, 'quality', {
-      label: 'Quality',
-      options: {
-        Efficient: 'efficient',
-        Balanced: 'balanced',
-        Cinematic: 'cinematic',
-      },
-    }),
-    lightingFolder.addBinding(settings, 'globalIllumination', {
-      label: 'Global illumination',
-    }),
-    lightingFolder.addBinding(settings, 'ambientOcclusion', {
-      label: 'Ambient occlusion',
-    }),
-    lightingFolder.addBinding(settings, 'sunShadows', {
-      label: 'Sun shadows',
-    }),
-    lightingFolder.addBinding(settings, 'giIntensity', {
-      label: 'GI strength',
-      min: 0,
-      max: 18,
-      step: 0.1,
-    }),
-    lightingFolder.addBinding(settings, 'aoIntensity', {
-      label: 'AO strength',
-      min: 0,
-      max: 3,
-      step: 0.05,
-    }),
-    lightingFolder.addBinding(settings, 'radius', {
-      label: 'Light radius',
-      min: 1,
-      max: 25,
-      step: 0.5,
-    }),
-  );
+  lightingFolder.addBinding(settings, 'quality', {
+    label: 'Quality',
+    options: {
+      Efficient: 'efficient',
+      Balanced: 'balanced',
+      Cinematic: 'cinematic',
+    },
+  });
+  lightingFolder.addBinding(settings, 'globalIllumination', {
+    label: 'Global illumination',
+  });
+  lightingFolder.addBinding(settings, 'ambientOcclusion', {
+    label: 'Ambient occlusion',
+  });
+  lightingFolder.addBinding(settings, 'sunShadows', {
+    label: 'Sun shadows',
+  });
+  lightingFolder.addBinding(settings, 'giIntensity', {
+    label: 'GI strength',
+    min: 0,
+    max: 18,
+    step: 0.1,
+  });
+  lightingFolder.addBinding(settings, 'aoIntensity', {
+    label: 'AO strength',
+    min: 0,
+    max: 3,
+    step: 0.05,
+  });
+  lightingFolder.addBinding(settings, 'radius', {
+    label: 'Light radius',
+    min: 1,
+    max: 25,
+    step: 0.5,
+  });
 
   const finishFolder = pane.addFolder({ title: 'POST-PROCESSING' });
-  managedBindings.push(
-    finishFolder.addBinding(settings, 'postProcessing', {
-      label: 'Post-processing',
-    }),
-    finishFolder.addBinding(settings, 'bloom', {
-      label: 'Sun bloom',
-    }),
-    finishFolder.addBinding(settings, 'bloomStrength', {
-      label: 'Bloom strength',
-      min: 0,
-      max: 0.8,
-      step: 0.01,
-    }),
-    finishFolder.addBinding(settings, 'colorFinish', {
-      label: 'Color finish',
-    }),
-    finishFolder.addBinding(settings, 'vibrance', {
-      label: 'Vibrance',
-      min: -0.2,
-      max: 0.35,
-      step: 0.01,
-    }),
-    finishFolder.addBinding(settings, 'vignette', {
-      label: 'Vignette',
-      min: 0,
-      max: 0.5,
-      step: 0.01,
-    }),
-    finishFolder.addBinding(settings, 'exposure', {
-      label: 'Exposure',
-      min: 0.55,
-      max: 1.65,
-      step: 0.01,
-    }),
-  );
+  finishFolder.addBinding(settings, 'postProcessing', {
+    label: 'Post-processing',
+  });
+  finishFolder.addBinding(settings, 'bloom', {
+    label: 'Sun bloom',
+  });
+  finishFolder.addBinding(settings, 'bloomStrength', {
+    label: 'Bloom strength',
+    min: 0,
+    max: 0.8,
+    step: 0.01,
+  });
+  finishFolder.addBinding(settings, 'colorFinish', {
+    label: 'Color finish',
+  });
+  finishFolder.addBinding(settings, 'vibrance', {
+    label: 'Vibrance',
+    min: -0.2,
+    max: 0.35,
+    step: 0.01,
+  });
+  finishFolder.addBinding(settings, 'vignette', {
+    label: 'Vignette',
+    min: 0,
+    max: 0.5,
+    step: 0.01,
+  });
+  finishFolder.addBinding(settings, 'exposure', {
+    label: 'Exposure',
+    min: 0.55,
+    max: 1.65,
+    step: 0.01,
+  });
 
   const resetButton = pane.addButton({ title: 'Restore cinematic defaults' });
 
@@ -322,14 +319,29 @@ export function createVisualEffects({
     sunLight.castShadow = renderer.shadowMap.enabled;
     if (renderer.shadowMap.enabled) sunLight.shadow.needsUpdate = true;
 
-    managedBindings.forEach((binding) => {
-      binding.disabled = !settings.enabled;
-    });
     pane.element.dataset.active = String(settings.enabled);
     if (refreshPane) pane.refresh();
   };
 
-  pane.on('change', () => apply());
+  const enableStack = () => {
+    if (settings.enabled) return false;
+    settings.enabled = true;
+    return true;
+  };
+
+  pane.on('change', (ev) => {
+    // Editing any control while the stack is cold turns it on so sliders and
+    // checkboxes always feel live. Compare by binding key — pane-level change
+    // events wrap a fresh API instance, so object identity is unreliable.
+    const key = 'key' in ev.target ? String(ev.target.key) : '';
+    if (key !== 'enabled') enableStack();
+    apply(true);
+  });
+  // Expanding the lab means the visitor wants to edit; unlock the stack.
+  pane.on('fold', (ev) => {
+    if (!ev.expanded || !enableStack()) return;
+    apply(true);
+  });
   resetButton.on('click', () => {
     Object.assign(settings, {
       enabled: true,
@@ -352,11 +364,15 @@ export function createVisualEffects({
       vignette: 0.16,
       exposure: 1,
     } satisfies VisualEffectsSettings);
+    pane.expanded = true;
     apply(true);
   });
 
   const toggle = () => {
     settings.enabled = !settings.enabled;
+    // L is advertised as "light lab": show the panel when enabling, hide it
+    // when disabling so the shortcut and the UI stay in sync.
+    pane.expanded = settings.enabled;
     apply(true);
   };
 

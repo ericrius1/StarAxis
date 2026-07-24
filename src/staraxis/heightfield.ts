@@ -10,9 +10,12 @@ import {
   BOWL_CENTER,
   BOWL_FLOOR_Y,
   CRESCENT_ARC_HALF_RAD,
+  FRONT_SLIT_HALF_WIDTH,
   PYRAMID_BASE_HALF,
   PYRAMID_BASE_Y,
   PYRAMID_CENTER,
+  PYRAMID_FRONT_Z,
+  PYRAMID_REAR_Z,
   STAIR_BASE,
   STAIR_TOP,
   SUMMIT_CENTER,
@@ -125,18 +128,26 @@ export function terrainHeight(x: number, z: number): number {
     h = lerp(h, carved, along);
   }
 
-  // Seat the unified Solar Pyramid on the mesa around—not on top of—the
-  // tunnel slot. The center channel remains governed by the stair carve.
+  // Seat the Solar Pyramid into the mesa. Bank sand against the full base
+  // perimeter (especially the north/public face, which otherwise floats).
+  // Keep the rear Star Tunnel slot and Hour Chamber interior unfilled.
   const localX = Math.abs(x - PYRAMID_CENTER.x);
   const localZ = Math.abs(z - PYRAMID_CENTER.z);
-  const pyramidApron =
-    localX < PYRAMID_BASE_HALF + 5 && localZ < PYRAMID_BASE_HALF + 9;
-  if (pyramidApron && localX > 4.1) {
-    const edge = Math.max(
-      localX / (PYRAMID_BASE_HALF + 5),
-      localZ / (PYRAMID_BASE_HALF + 9),
-    );
-    h = Math.max(h, lerp(PYRAMID_BASE_Y + 0.2, h, smooth01((edge - 0.62) / 0.38)));
+  const apronHalfX = PYRAMID_BASE_HALF + 6.5;
+  const apronHalfZ = PYRAMID_BASE_HALF + 12;
+  const pyramidApron = localX < apronHalfX && localZ < apronHalfZ;
+  const inTunnelSlot =
+    localX < 4.1 && z > STAIR_TOP.z - 3.5 && z < STAIR_BASE.z + 2.2;
+  // Strictly inside the north wall — the base line itself must still seat.
+  const inHourChamber =
+    localX < FRONT_SLIT_HALF_WIDTH + 0.35 &&
+    z > PYRAMID_FRONT_Z + 0.2 &&
+    z <= PYRAMID_REAR_Z - 0.5;
+  if (pyramidApron && !inTunnelSlot && !inHourChamber) {
+    const edge = Math.max(localX / apronHalfX, localZ / apronHalfZ);
+    // Slight bury so low camera angles cannot see daylight under the shell.
+    const padY = PYRAMID_BASE_Y + 0.4;
+    h = Math.max(h, lerp(padY, h, smooth01((edge - 0.62) / 0.38)));
   }
 
   return h;
