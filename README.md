@@ -90,8 +90,8 @@ opens the field guide at a specific stop.
   and Shadow Field, with concise reference-based interpretation.
 - **Generative soundscape** — synthesized in the browser from mesa wind,
   near-subsonic earth tones, caliche and stone footsteps, chamber resonance,
-  solar harmonics, and sparse nocturnal bells. The mix changes continuously
-  with position, movement, elevation, and light.
+  and solar harmonics. The mix changes continuously with position, movement,
+  elevation, and light.
 - **Windswept sand** — a shared deterministic wind field drives both the
   soundscape and an animated, terrain-relative height volume. Wind-aligned
   density noise forms broad translucent veils with turbulent edges; only a
