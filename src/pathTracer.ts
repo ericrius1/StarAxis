@@ -36,6 +36,9 @@ import * as BVHWebGPU from 'three-mesh-bvh/webgpu';
 const ndcToCameraRay = (
   BVHWebGPU as unknown as { ndcToCameraRay: unknown }
 ).ndcToCameraRay;
+const wgslTagFn = (
+  BVHWebGPU as unknown as { wgslTagFn: (tokens: TemplateStringsArray, ...args: any[]) => any }
+).wgslTagFn;
 
 const WORKGROUP_SIZE: [number, number, number] = [8, 8, 1];
 const _drawingBufferSize = new Vector2();
@@ -198,6 +201,11 @@ export function createPathTracer({
 
   const bvhData = new PathTracingBVHData(traceObjects);
   bvhData.update();
+  const getPathTransform = wgslTagFn/* wgsl */`
+    fn getPathTransform(objectIndex: u32) -> ${pathTransformStruct} {
+      return ${bvhData.storage.transforms}[objectIndex];
+    }
+  `;
 
   const accumulation = [
     new StorageTexture(1, 1),
@@ -242,20 +250,25 @@ export function createPathTracer({
     localId,
   };
 
-  const computeShader = wgslFn(
-    /* wgsl */ `
-      fn hashRandom(state: ptr<function, u32>) -> f32 {
-        var value = (*state);
-        value = value ^ 2747636419u;
-        value = value * 2654435769u;
-        value = value ^ (value >> 16u);
-        value = value * 2654435769u;
-        value = value ^ (value >> 16u);
-        value = value * 2654435769u;
-        (*state) = value;
-        return f32(value) / 4294967296.0;
-      }
+  // wgslFn parses exactly one function declaration. Keep every helper in its
+  // own FunctionNode so Three can resolve the inputs, register dependencies,
+  // and strip the parser-only `-> void` return type before emitting WGSL.
+  const hashRandom = wgslFn(/* wgsl */ `
+    fn hashRandom(state: ptr<function, u32>) -> f32 {
+      var value = (*state);
+      value = value ^ 2747636419u;
+      value = value * 2654435769u;
+      value = value ^ (value >> 16u);
+      value = value * 2654435769u;
+      value = value ^ (value >> 16u);
+      value = value * 2654435769u;
+      (*state) = value;
+      return f32(value) / 4294967296.0;
+    }
+  `);
 
+  const cosineHemisphere = wgslFn(
+    /* wgsl */ `
       fn cosineHemisphere(normal: vec3f, state: ptr<function, u32>) -> vec3f {
         let angle = 6.28318530718 * hashRandom(state);
         let radiusSquared = hashRandom(state);
@@ -270,7 +283,12 @@ export function createPathTracer({
         let bitangent = cross(normal, tangent);
         return normalize(tangent * local.x + bitangent * local.y + normal * local.z);
       }
+    `,
+    [hashRandom] as any,
+  );
 
+  const sampleSunDirection = wgslFn(
+    /* wgsl */ `
       fn sampleSunDirection(direction: vec3f, state: ptr<function, u32>) -> vec3f {
         let helper = select(vec3f(0.0, 1.0, 0.0), vec3f(1.0, 0.0, 0.0), abs(direction.y) > 0.92);
         let tangent = normalize(cross(helper, direction));
@@ -279,22 +297,29 @@ export function createPathTracer({
         let radius = sqrt(hashRandom(state)) * 0.0064;
         return normalize(direction + tangent * cos(angle) * radius + bitangent * sin(angle) * radius);
       }
+    `,
+    [hashRandom] as any,
+  );
 
-      fn environmentRadiance(
-        direction: vec3f,
-        sunDirection: vec3f,
-        sunColor: vec3f,
-        sunIntensity: f32,
-        skyColor: vec3f,
-        groundColor: vec3f,
-        skyIntensity: f32
-      ) -> vec3f {
-        let horizon = smoothstep(-0.28, 0.68, direction.y);
-        let atmosphere = mix(groundColor, skyColor, horizon) * skyIntensity;
-        let sunDisc = pow(max(dot(direction, sunDirection), 0.0), 32000.0);
-        return atmosphere + sunColor * sunIntensity * sunDisc * 4.0;
-      }
+  const environmentRadiance = wgslFn(/* wgsl */ `
+    fn environmentRadiance(
+      direction: vec3f,
+      sunDirection: vec3f,
+      sunColor: vec3f,
+      sunIntensity: f32,
+      skyColor: vec3f,
+      groundColor: vec3f,
+      skyIntensity: f32
+    ) -> vec3f {
+      let horizon = smoothstep(-0.28, 0.68, direction.y);
+      let atmosphere = mix(groundColor, skyColor, horizon) * skyIntensity;
+      let sunDisc = pow(max(dot(direction, sunDirection), 0.0), 32000.0);
+      return atmosphere + sunColor * sunIntensity * sunDisc * 4.0;
+    }
+  `);
 
+  const computeShader = wgslFn(
+    /* wgsl */ `
       fn compute(
         outputTex: texture_storage_2d<rgba16float, write>,
         previousTex: texture_2d<f32>,
@@ -354,7 +379,7 @@ export function createPathTracer({
           }
 
           let surface = bvh_sampleTrianglePoint(hit.barycoord, hit.indices.xyz);
-          let transform = bvh_transforms[hit.objectIndex];
+          let transform = getPathTransform(hit.objectIndex);
           var normal = normalize(
             (transpose(transform.inverseMatrixWorld) * vec4f(surface.normal.xyz, 0.0)).xyz
           );
@@ -420,6 +445,11 @@ export function createPathTracer({
       }
     `,
     [
+      hashRandom,
+      cosineHemisphere,
+      sampleSunDirection,
+      environmentRadiance,
+      getPathTransform,
       ndcToCameraRay,
       bvhData.fns.raycastFirstHit,
       bvhData.fns.sampleTrianglePoint,
