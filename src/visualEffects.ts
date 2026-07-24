@@ -506,6 +506,11 @@ export function createVisualEffects({
 
   pane.on('change', (event) => {
     const key = 'key' in event.target ? String(event.target.key) : '';
+    // Readonly bindings are monitors in Tweakpane. Refreshing one emits a
+    // pane-level change event, so treating it like user input would recurse
+    // through apply() -> refreshModeChrome() -> pathStatusBinding.refresh().
+    if (key === 'pathStatus') return;
+
     if (key === 'mode') {
       setMode(settings.mode);
       return;
