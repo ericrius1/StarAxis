@@ -3447,6 +3447,46 @@
       "cameraView": "",
       "notes": "",
       "aiVisionNotes": "Performance optimization preserves the accepted silhouette, openings, cladding joints, and interior traversal."
+    },
+    {
+      "timestamp": "2026-07-24T00:17:38.427428+00:00",
+      "passId": "unified-site-acceptance-pass",
+      "estimatedFidelity": 0.88,
+      "aiVisionScore": 0.88,
+      "visualAcceptanceThreshold": 0.75,
+      "layerScores": {
+        "silhouetteProportion": 0.9,
+        "componentStructure": 0.94,
+        "formDetail": 0.86,
+        "materialSurface": 0.8,
+        "lightingCamera": 0.88
+      },
+      "featureReviews": [
+        {
+          "id": "dual-sighting-openings",
+          "score": 0.92,
+          "visible": true,
+          "notes": "The live sky circle now occupies most of the inner view without a blocking disc or sight-box bars."
+        },
+        {
+          "id": "hour-chamber-entry",
+          "score": 0.93,
+          "visible": true,
+          "notes": "The front slit retains both walls and looks through to the rear stair and open sky."
+        },
+        {
+          "id": "star-tunnel-route",
+          "score": 0.96,
+          "visible": true,
+          "notes": "Mid-stair first-person evidence shows 147 treads above the terrain and a full circular aperture with no false wall."
+        }
+      ],
+      "referenceScreenshot": "/Users/eric/Library/Application Support/CleanShot/media/media_uv5HHijzZd/CleanShot 2026-07-23 at 09.50.33@2x.png",
+      "renderScreenshot": "/Users/eric/codeprojects/StarAxis/sculpt/unified-site-v2/aperture-first-person-final-accepted.png",
+      "comparisonImage": "/Users/eric/codeprojects/StarAxis/sculpt/unified-site-v2/comparison-aperture-final.png",
+      "cameraView": "first-person upper viewing bay plus route traversal",
+      "notes": "Reviewed reference/render contact sheet and independent first-person screenshots for the tunnel, Hour Chamber, and tour.",
+      "aiVisionNotes": "The accepted render matches the reference framing with a broad, shallow aperture and a dominant live star field. The remaining visual delta is surface character: the realtime rim is brighter, smoother, and more symmetric than the weathered photographic ring. Route screenshots confirm that the reconstructed front chamber and rear Star Tunnel no longer intersect."
     }
   ],
   "reviewHistory": [
@@ -3839,6 +3879,72 @@
         "notes": "",
         "aiVisionNotes": "Performance optimization preserves the accepted silhouette, openings, cladding joints, and interior traversal."
       }
+    },
+    {
+      "timestamp": "2026-07-24T00:17:38.427428+00:00",
+      "passId": "unified-site-acceptance-pass",
+      "estimatedFidelity": 0.88,
+      "aiVisionScore": 0.88,
+      "visualAcceptanceThreshold": 0.75,
+      "layerScores": {
+        "silhouetteProportion": 0.9,
+        "componentStructure": 0.94,
+        "formDetail": 0.86,
+        "materialSurface": 0.8,
+        "lightingCamera": 0.88
+      },
+      "featureReviews": [
+        {
+          "id": "dual-sighting-openings",
+          "score": 0.92,
+          "visible": true,
+          "notes": "The live sky circle now occupies most of the inner view without a blocking disc or sight-box bars."
+        },
+        {
+          "id": "hour-chamber-entry",
+          "score": 0.93,
+          "visible": true,
+          "notes": "The front slit retains both walls and looks through to the rear stair and open sky."
+        },
+        {
+          "id": "star-tunnel-route",
+          "score": 0.96,
+          "visible": true,
+          "notes": "Mid-stair first-person evidence shows 147 treads above the terrain and a full circular aperture with no false wall."
+        }
+      ],
+      "action": "stop",
+      "summary": "The rebuilt site reads as one continuous Avenue-to-Pyramid sequence, preserves clear front and rear sightlines, and holds 60 FPS in a cold first-person aperture session.",
+      "matched": [
+        "continuous excavated Avenue and triangular Equinoctial threshold",
+        "147 visible instanced treads above the terrain",
+        "large unobstructed circular live-sky aperture",
+        "front Hour Chamber slit looks through to the rear stair and sky",
+        "complete dark interior side walls",
+        "eight-stop guided tour",
+        "60 FPS cold-session runtime"
+      ],
+      "mismatches": [
+        "the realtime steel ring is brighter and cleaner than the weathered dark rim in the night reference",
+        "distant mesa geology remains simplified"
+      ],
+      "specFixes": [],
+      "codeFixes": [],
+      "evidence": [
+        "sculpt/unified-site-v2/aperture-first-person-final-accepted.png",
+        "sculpt/unified-site-v2/star-tunnel-mid-first-person-final-clean.png",
+        "sculpt/unified-site-v2/hour-chamber-first-person-final.png",
+        "sculpt/unified-site-v2/guided-tour-aperture-final.png",
+        "sculpt/unified-site-v2/comparison-aperture-final.png"
+      ],
+      "visualEvidence": {
+        "referenceScreenshot": "/Users/eric/Library/Application Support/CleanShot/media/media_uv5HHijzZd/CleanShot 2026-07-23 at 09.50.33@2x.png",
+        "renderScreenshot": "/Users/eric/codeprojects/StarAxis/sculpt/unified-site-v2/aperture-first-person-final-accepted.png",
+        "comparisonImage": "/Users/eric/codeprojects/StarAxis/sculpt/unified-site-v2/comparison-aperture-final.png",
+        "cameraView": "first-person upper viewing bay plus route traversal",
+        "notes": "Reviewed reference/render contact sheet and independent first-person screenshots for the tunnel, Hour Chamber, and tour.",
+        "aiVisionNotes": "The accepted render matches the reference framing with a broad, shallow aperture and a dominant live star field. The remaining visual delta is surface character: the realtime rim is brighter, smoother, and more symmetric than the weathered photographic ring. Route screenshots confirm that the reconstructed front chamber and rear Star Tunnel no longer intersect."
+      }
     }
   ],
   "lodPlan": [
@@ -3862,11 +3968,11 @@
     "optimizationPolicy": "Reach accepted visual fidelity first, then optimize without removing reference-critical geometry or surface layers.",
     "measuredDesktopRuntime": {
       "fps": 60,
-      "drawCalls": 46,
-      "triangles": 228768,
-      "geometries": 63,
-      "pixelRatioCap": 1,
-      "notes": "Measured in Chrome at the final reference-angle Solar Pyramid view after replacing the runtime pyramid TSL material with the baked granite albedo and merging the existing GPU-resident windswept-sand system."
+      "drawCalls": 34,
+      "triangles": 84731,
+      "geometries": 74,
+      "pixelRatioCap": 0.55,
+      "notes": "Measured from a cold Chrome session at the final first-person night aperture view. The same session held 60 FPS along the Avenue and through the 147-step Star Tunnel after replacing the runtime masonry TSL stacks with the baked granite albedo, instancing repeated treads, and using the existing GPU-resident windswept-sand system."
     }
   },
   "lightingFromPhoto": [

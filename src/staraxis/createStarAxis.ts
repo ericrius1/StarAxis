@@ -56,7 +56,6 @@ import {
   ENTRY_WALL_HALF_GAP_SOUTH,
   ENTRY_WALL_HEIGHT,
   ENTRY_WALL_LEAN_RAD,
-  FRONT_CHAMBER_DEPTH,
   FRONT_SLIT_HALF_WIDTH,
   FRONT_SLIT_TOP_Y,
   PORTAL_BASE_HALF_WIDTH,
@@ -68,6 +67,7 @@ import {
   PYRAMID_APEX,
   PYRAMID_BASE_HALF,
   PYRAMID_BASE_Y,
+  PYRAMID_CENTER,
   PYRAMID_HEIGHT,
   PYRAMID_FRONT_Z,
   PYRAMID_REAR_Z,
@@ -167,6 +167,16 @@ function faceMesh(
   return mesh;
 }
 
+function addWorldUv(geometry: BufferGeometry, scale = 0.09): void {
+  const positions = geometry.getAttribute('position') as BufferAttribute;
+  const uvs = new Float32Array(positions.count * 2);
+  for (let i = 0; i < positions.count; i++) {
+    uvs[i * 2] = positions.getZ(i) * scale;
+    uvs[i * 2 + 1] = positions.getY(i) * scale;
+  }
+  geometry.setAttribute('uv', new BufferAttribute(uvs, 2));
+}
+
 function beamBetween(
   name: string,
   start: Vector3,
@@ -239,10 +249,10 @@ function frontFaceGeometryWithOpenings(): BufferGeometry {
   // the face plane.
   const sightY = apertureFrontPoint().y;
   const aperture = new Path();
-  aperture.moveTo(-2.15, sightY - 1.8);
-  aperture.lineTo(-2.15, sightY + 1.8);
-  aperture.lineTo(2.15, sightY + 1.8);
-  aperture.lineTo(2.15, sightY - 1.8);
+  aperture.moveTo(-2.35, sightY - 2.1);
+  aperture.lineTo(-2.35, sightY + 2.1);
+  aperture.lineTo(2.35, sightY + 2.1);
+  aperture.lineTo(2.35, sightY - 2.1);
   aperture.closePath();
   shape.holes.push(aperture);
 
@@ -329,6 +339,7 @@ function buildAvenue(mats: Mats): Group {
       new BufferAttribute(new Float32Array(wallPositions), 3),
     );
     wallGeometry.setIndex(wallIndices);
+    addWorldUv(wallGeometry);
     wallGeometry.computeVertexNormals();
     const wall = shadowed(new Mesh(wallGeometry, mats.avenueStone));
     wall.name = side < 0 ? 'avenue-wall-west' : 'avenue-wall-east';
@@ -339,6 +350,7 @@ function buildAvenue(mats: Mats): Group {
       new BufferAttribute(new Float32Array(copingPositions), 3),
     );
     copingGeometry.setIndex(copingIndices);
+    addWorldUv(copingGeometry);
     copingGeometry.computeVertexNormals();
     const coping = shadowed(new Mesh(copingGeometry, mats.paleStone));
     coping.name = side < 0 ? 'avenue-coping-west' : 'avenue-coping-east';
@@ -492,6 +504,7 @@ function buildExcavationWall(mats: Mats): Group {
   const geometry = new BufferGeometry();
   geometry.setAttribute('position', new BufferAttribute(new Float32Array(positions), 3));
   geometry.setIndex(indices);
+  addWorldUv(geometry);
   geometry.computeVertexNormals();
   const wall = shadowed(new Mesh(geometry, mats.cutStone));
   wall.name = 'excavation-crescent-masonry';
@@ -603,24 +616,37 @@ function buildPyramidShell(mats: Mats): Group {
     y0 + 3.1,
     y0 + 6.4,
     y0 + 9.5,
-    y0 + 12.2,
-    y0 + 15.0,
   ];
+  const slitHalfAt = (y: number): number =>
+    y >= FRONT_SLIT_TOP_Y
+      ? 0
+      : FRONT_SLIT_HALF_WIDTH *
+        (1 - Math.max(0, y - y0) / (FRONT_SLIT_TOP_Y - y0));
   for (let row = 0; row < courseYs.length; row++) {
     const y = courseYs[row];
     const t = (y - y0) / (yt - y0);
     const half = x0 + (xt - x0) * t;
-    const horizontal = beamBetween(
-      `pyramid-front-course-${row + 1}`,
-      new Vector3(...frontFacePoint(-half + 0.18, y)),
-      new Vector3(...frontFacePoint(half - 0.18, y)),
-      0.055,
-      0.045,
-      mats.darkStone,
-    );
-    horizontal.position.z -= 0.045;
-    horizontal.userData.noCollide = true;
-    shell.add(horizontal);
+    const slitHalf = slitHalfAt(y) + 0.09;
+    const courseSegments: Array<[number, number]> =
+      slitHalf > 0.1
+        ? [
+            [-half + 0.18, -slitHalf],
+            [slitHalf, half - 0.18],
+          ]
+        : [[-half + 0.18, half - 0.18]];
+    courseSegments.forEach(([xStart, xEnd], segment) => {
+      const horizontal = beamBetween(
+        `pyramid-front-course-${row + 1}-${segment + 1}`,
+        new Vector3(...frontFacePoint(xStart, y)),
+        new Vector3(...frontFacePoint(xEnd, y)),
+        0.055,
+        0.045,
+        mats.darkStone,
+      );
+      horizontal.position.z -= 0.045;
+      horizontal.userData.noCollide = true;
+      shell.add(horizontal);
+    });
 
     const lowerY = row === 0 ? y0 + 0.15 : courseYs[row - 1] + 0.08;
     const ratios = row % 2 === 0 ? [-0.48, 0.12, 0.62] : [-0.68, -0.08, 0.46];
@@ -628,10 +654,14 @@ function buildPyramidShell(mats: Mats): Group {
       const ratio = ratios[seam];
       const lowerT = (lowerY - y0) / (yt - y0);
       const lowerHalf = x0 + (xt - x0) * lowerT;
+      const xStart = ratio * lowerHalf;
+      const xEnd = ratio * half;
+      const slitClearance = Math.max(slitHalfAt(lowerY), slitHalfAt(y)) + 0.08;
+      if (Math.abs((xStart + xEnd) / 2) < slitClearance) continue;
       const vertical = beamBetween(
         `pyramid-front-joint-${row + 1}-${seam + 1}`,
-        new Vector3(...frontFacePoint(ratio * lowerHalf, lowerY)),
-        new Vector3(...frontFacePoint(ratio * half, y - 0.08)),
+        new Vector3(...frontFacePoint(xStart, lowerY)),
+        new Vector3(...frontFacePoint(xEnd, y - 0.08)),
         0.055,
         0.045,
         mats.darkStone,
@@ -685,10 +715,13 @@ function buildFrontChamber(mats: Mats): Group {
   const chamber = new Group();
   chamber.name = 'front-slit-chamber';
 
-  // A continuous floor carries the eye through the pyramid. There is no
-  // opaque terminus: the rear notch and live scene remain visible.
-  const chamberDepth = Math.abs(FRONT_CHAMBER_DEPTH);
-  const chamberCenterZ = (PYRAMID_FRONT_Z + PYRAMID_REAR_Z) / 2;
+  // The Hour Chamber occupies the north/front half of the Pyramid. Ending its
+  // floor and walls before the rear stair arrives prevents a hidden slab from
+  // crossing the Star Tunnel while preserving a clear view through the slit
+  // toward the opposite opening.
+  const chamberRearZ = PYRAMID_CENTER.z - 3;
+  const chamberDepth = Math.abs(PYRAMID_FRONT_Z - chamberRearZ);
+  const chamberCenterZ = (PYRAMID_FRONT_Z + chamberRearZ) / 2;
   const floor = shadowed(
     new Mesh(
       new BoxGeometry(FRONT_SLIT_HALF_WIDTH * 2 - 0.12, 0.16, chamberDepth),
@@ -697,6 +730,7 @@ function buildFrontChamber(mats: Mats): Group {
   );
   floor.name = 'hour-chamber-floor';
   floor.position.set(0, PYRAMID_BASE_Y + 0.02, chamberCenterZ);
+  floor.userData.noCollide = true;
   chamber.add(floor);
 
   for (const side of [-1, 1]) {
@@ -768,13 +802,16 @@ function buildRearStair(mats: Mats): Group {
     ),
   );
   flight.name = 'star-tunnel-stair-bed';
+  flight.userData.noCollide = true;
   flight.position
     .copy(new Vector3(STAIR_BASE.x, STAIR_BASE.y, STAIR_BASE.z))
     .add(new Vector3(STAIR_TOP.x, STAIR_TOP.y, STAIR_TOP.z))
     .multiplyScalar(0.5)
     .add(new Vector3(0, -0.48, 0));
   flight.quaternion.setFromUnitVectors(new Vector3(0, 0, 1), runDirection.clone().normalize());
-  stair.add(flight);
+  // The real stair reads as a sequence of treads between side stringers.
+  // Keeping the former full-width sloped slab here both flattened the steps
+  // visually and blocked the independent Hour Chamber sightline below.
 
   // Pale granite stringers visually bind the staircase into the rear cut.
   for (const side of [-1, 1]) {
@@ -979,40 +1016,40 @@ function buildUpperRoom(mats: Mats): Group {
 
   // The real tube sits inside a deep rectangular sight box. Four recessed
   // returns keep the oculus from reading as a ring pasted onto the facade.
-  const sightHalfW = 2.05;
-  const sightHalfH = 1.72;
+  const sightHalfW = 2.25;
+  const sightHalfH = 2.0;
   const sightY = frontSurface.y;
   const sightReturns = [
     beamBetween(
       'front-sight-box-lintel',
       new Vector3(...frontFacePoint(-sightHalfW, sightY + sightHalfH)),
       new Vector3(...frontFacePoint(sightHalfW, sightY + sightHalfH)),
-      0.34,
-      0.46,
+      0.2,
+      0.32,
       mats.darkStone,
     ),
     beamBetween(
       'front-sight-box-sill',
       new Vector3(...frontFacePoint(-sightHalfW, sightY - sightHalfH)),
       new Vector3(...frontFacePoint(sightHalfW, sightY - sightHalfH)),
-      0.34,
-      0.46,
+      0.2,
+      0.32,
       mats.darkStone,
     ),
     beamBetween(
       'front-sight-box-west',
       new Vector3(...frontFacePoint(-sightHalfW, sightY - sightHalfH)),
       new Vector3(...frontFacePoint(-sightHalfW, sightY + sightHalfH)),
-      0.34,
-      0.46,
+      0.2,
+      0.32,
       mats.darkStone,
     ),
     beamBetween(
       'front-sight-box-east',
       new Vector3(...frontFacePoint(sightHalfW, sightY - sightHalfH)),
       new Vector3(...frontFacePoint(sightHalfW, sightY + sightHalfH)),
-      0.34,
-      0.46,
+      0.2,
+      0.32,
       mats.darkStone,
     ),
   ];
@@ -1023,7 +1060,7 @@ function buildUpperRoom(mats: Mats): Group {
 
   // A quiet local wash keeps the steel rim and chamber thickness legible at
   // night without competing with the star field.
-  const viewingLight = new PointLight('#afcfff', 18, 10, 1.8);
+  const viewingLight = new PointLight('#afcfff', 6, 10, 1.8);
   viewingLight.name = 'upper-room-night-wash';
   viewingLight.position.set(0, apertureY + 0.75, APERTURE_REAR_Z - 1.6);
   viewingLight.castShadow = false;
@@ -1035,10 +1072,12 @@ function buildUpperRoom(mats: Mats): Group {
   const landingFrontZ = UPPER_LANDING_FRONT_Z;
   const landingDepth = Math.abs(landingFrontZ - landingRearZ);
   const landing = shadowed(
-    new Mesh(new BoxGeometry(4.25, 0.32, landingDepth), mats.stair),
+    new Mesh(new PlaneGeometry(4.25, landingDepth), mats.stair),
   );
   landing.name = 'upper-room-landing';
-  landing.position.set(0, STAIR_TOP.y - 0.12, (landingRearZ + landingFrontZ) / 2);
+  landing.userData.noCollide = true;
+  landing.rotation.x = -Math.PI / 2;
+  landing.position.set(0, STAIR_TOP.y + 0.04, (landingRearZ + landingFrontZ) / 2);
   upper.add(landing);
 
   return upper;

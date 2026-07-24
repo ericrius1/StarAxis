@@ -53,7 +53,7 @@ export function onTerraceStair(x: number, z: number): boolean {
 function inHourChamber(x: number, z: number): boolean {
   const zMin = Math.min(PYRAMID_FRONT_Z, PYRAMID_REAR_Z);
   const zMax = Math.max(PYRAMID_FRONT_Z, PYRAMID_REAR_Z);
-  return Math.abs(x) < 0.72 && z >= zMin && z <= zMax;
+  return Math.abs(x) < 0.72 && z >= zMin - 5 && z <= zMax;
 }
 
 export function walkSurfaceY(x: number, z: number): number {

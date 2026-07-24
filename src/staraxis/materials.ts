@@ -158,83 +158,65 @@ export interface StarAxisMaterials {
   desert: MeshStandardNodeMaterial;
 }
 
-export function createMaterials(): StarAxisMaterials {
-  // -- flagstone: big polygonal slabs, pink/tan with occasional rust
-  const flagstone = masonryMaterial({
-    cellScale: 0.52,
-    jointWidth: 0.035,
-    paletteA: '#c2a084',
-    paletteB: '#ad805f',
-    paletteC: '#d6bda1',
-    jointColor: '#a99680',
-    roughnessBase: 0.82,
-    roughnessVar: 0.14,
-    bumpScale: 0.11,
-    tintAmplitude: 0.28,
-  });
+export async function createMaterials(): Promise<StarAxisMaterials> {
+  // The large masonry surfaces previously evaluated several Worley/FBM
+  // stacks per pixel. One baked granite albedo now supplies their mineral
+  // breakup, with geometry and lighting carrying the larger-scale variation.
+  const stoneBake = await new TextureLoader().loadAsync(
+    '/textures/pyramid-granite-albedo.png',
+  );
+  stoneBake.wrapS = RepeatWrapping;
+  stoneBake.wrapT = RepeatWrapping;
+  stoneBake.repeat.set(3, 3);
+  stoneBake.colorSpace = SRGBColorSpace;
+  stoneBake.anisotropy = 4;
 
-  // -- fieldstone: smaller irregular rubble, buff/gray, deep joints
-  const fieldstone = masonryMaterial({
-    cellScale: 1.35,
-    jointWidth: 0.075,
-    paletteA: '#b3a184',
-    paletteB: '#96876d',
-    paletteC: '#a89a8c',
-    jointColor: '#79705f',
-    roughnessBase: 0.88,
-    roughnessVar: 0.1,
-    bumpScale: 0.16,
-    tintAmplitude: 0.34,
+  const flagstone = new MeshStandardNodeMaterial({
+    map: stoneBake,
+    color: '#caa487',
+    roughness: 0.86,
+    metalness: 0,
   });
-
-  // -- ashlar: neat coursed blocks, lighter band along the crescent rim
-  const ashlar = masonryMaterial({
-    cellScale: 2.3,
-    jointWidth: 0.05,
-    paletteA: '#c8bba4',
-    paletteB: '#b5a88f',
-    paletteC: '#d4c9b4',
-    jointColor: '#948a76',
-    roughnessBase: 0.8,
-    roughnessVar: 0.1,
-    bumpScale: 0.04,
-    tintAmplitude: 0.2,
+  const fieldstone = new MeshStandardNodeMaterial({
+    map: stoneBake,
+    color: '#aa9a82',
+    roughness: 0.92,
+    metalness: 0,
+  });
+  const ashlar = new MeshStandardNodeMaterial({
+    map: stoneBake,
+    color: '#c9bda7',
+    roughness: 0.84,
+    metalness: 0,
   });
 
   // -- granite: pale speckled, subtle joints (used for treads/stringers)
-  const granite = new MeshStandardNodeMaterial();
-  {
-    const p = positionWorld;
-    const speck = mx_fractal_noise_float(p.mul(24.0), 2, 2.0, 0.5, 1.0);
-    const drift = mx_fractal_noise_float(p.mul(0.35).add(vec3(9.0, 1.0, 4.0)), 3, 2.0, 0.5, 1.0);
-    const base = mix(color('#cfc8bc'), color('#b9b2a6'), smoothstep(0.35, 0.75, drift));
-    granite.colorNode = base.mul(float(0.92).add(speck.mul(0.16)));
-    const rSeed = mx_fractal_noise_float(p.mul(2.2).add(vec3(3.7, 8.8, 1.2)), 2, 2.0, 0.5, 1.0);
-    granite.roughnessNode = clamp(float(0.6).add(rSeed.sub(0.5).mul(0.3)), 0.4, 0.85);
-    granite.normalNode = bumpMap(speck, float(0.015));
-    granite.aoNode = float(1.0);
-  }
+  const granite = new MeshStandardNodeMaterial({
+    map: stoneBake,
+    color: '#d4cec4',
+    roughness: 0.64,
+    metalness: 0,
+  });
 
   // -- coping variant: palest, smoother — reads near-white in sun
-  const graniteCoping = new MeshStandardNodeMaterial();
-  {
-    const p = positionWorld;
-    const speck = mx_fractal_noise_float(p.mul(30.0).add(vec3(2.0, 6.0, 12.0)), 2, 2.0, 0.5, 1.0);
-    graniteCoping.colorNode = color('#e2dcd2').mul(float(0.95).add(speck.mul(0.1)));
-    graniteCoping.roughnessNode = float(0.5).add(speck.sub(0.5).mul(0.12));
-    graniteCoping.normalNode = bumpMap(speck, float(0.008));
-  }
+  const graniteCoping = new MeshStandardNodeMaterial({
+    map: stoneBake,
+    color: '#eee8df',
+    roughness: 0.56,
+    metalness: 0,
+  });
 
   // -- solar pyramid: the slab layout is modeled explicitly on the face.
   // Keeping this base response constant removes a relatively expensive
   // full-screen procedural shader from the monument's largest surfaces.
   const pyramidSandstone = new MeshStandardNodeMaterial();
-  const pyramidGrain = new TextureLoader().load('/textures/pyramid-granite-albedo.png');
+  const pyramidGrain = stoneBake.clone();
   pyramidGrain.wrapS = RepeatWrapping;
   pyramidGrain.wrapT = RepeatWrapping;
   pyramidGrain.repeat.set(5, 8);
   pyramidGrain.colorSpace = SRGBColorSpace;
   pyramidGrain.anisotropy = 8;
+  pyramidGrain.needsUpdate = true;
   pyramidSandstone.map = pyramidGrain;
   pyramidSandstone.color.set('#f0ded9');
   pyramidSandstone.roughness = 0.82;
@@ -243,43 +225,26 @@ export function createMaterials(): StarAxisMaterials {
   // -- stainless: brushed metal, circumferential streaks. Metalness is kept
   // moderate: with no environment map a full metal goes black in shadow,
   // while the reference bore reads as bright sky-lit brushed steel.
-  const stainless = new MeshStandardNodeMaterial();
-  {
-    const p = positionWorld;
-    const streak = mx_fractal_noise_float(
-      vec3(p.x.mul(2.0), p.y.mul(60.0), p.z.mul(2.0)),
-      2,
-      2.0,
-      0.5,
-      1.0,
-    );
-    stainless.colorNode = mix(color('#c3c9ce'), color('#eef2f5'), streak.mul(0.7));
-    stainless.roughnessNode = clamp(float(0.24).add(streak.sub(0.5).mul(0.16)), 0.12, 0.4);
-    stainless.metalnessNode = float(0.35);
-  }
+  const stainless = new MeshStandardNodeMaterial({
+    color: '#dbe2e8',
+    roughness: 0.27,
+    metalness: 0.38,
+  });
 
   // -- bronze: warm aged metal for the chamber edgings (Star Axis is built
   // of earth, granite, sandstone, stainless steel and bronze)
-  const bronze = new MeshStandardNodeMaterial();
-  {
-    const p = positionWorld;
-    const patina = mx_fractal_noise_float(p.mul(4.5).add(vec3(13.0, 5.5, 21.0)), 3, 2.0, 0.5, 1.0);
-    bronze.colorNode = mix(color('#8c6a3f'), color('#5f4a30'), patina.mul(0.6));
-    bronze.roughnessNode = clamp(float(0.38).add(patina.sub(0.5).mul(0.2)), 0.25, 0.6);
-    bronze.metalnessNode = float(0.55);
-  }
+  const bronze = new MeshStandardNodeMaterial({
+    color: '#76583a',
+    roughness: 0.43,
+    metalness: 0.5,
+  });
 
   // -- concrete: pale form-cast panels, faint streaking
-  const concrete = new MeshStandardNodeMaterial();
-  {
-    const p = positionWorld;
-    const streakDown = mx_fractal_noise_float(vec3(p.x.mul(3.0), p.y.mul(0.3), p.z.mul(3.0)), 3, 2.0, 0.5, 1.0);
-    const drift = mx_fractal_noise_float(p.mul(0.4).add(vec3(4.4, 9.9, 0.5)), 3, 2.0, 0.5, 1.0);
-    concrete.colorNode = mix(color('#c2bdb2'), color('#a9a498'), streakDown.mul(0.45).add(drift.mul(0.25)));
-    concrete.roughnessNode = clamp(float(0.72).add(drift.sub(0.5).mul(0.24)), 0.5, 0.95);
-    const grain = mx_fractal_noise_float(p.mul(8.0).add(vec3(1.0, 2.0, 3.0)), 2, 2.0, 0.5, 1.0);
-    concrete.normalNode = bumpMap(grain, float(0.006));
-  }
+  const concrete = new MeshStandardNodeMaterial({
+    color: '#b8b2a7',
+    roughness: 0.78,
+    metalness: 0,
+  });
 
   // -- darker concrete/granite for shadowed interiors (hood, chambers)
   const concreteDark = new MeshStandardNodeMaterial({

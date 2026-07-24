@@ -37,6 +37,7 @@ import { MesaWind, type MesaWindFrame } from './staraxis/wind';
 import { WindsweptSand } from './staraxis/windsweptSand';
 import { StarAxisSoundscape } from './soundscape';
 import {
+  APERTURE_APPROACH_DISTANCE,
   APERTURE_CENTER_Y,
   APERTURE_ELEVATION_RAD,
   APERTURE_REAR_Z,
@@ -103,9 +104,12 @@ soundVolume?.addEventListener('input', () => soundscape.setVolume(Number(soundVo
 const renderer = new WebGPURenderer({ antialias: true });
 // A 2× backing buffer quadrupled fragment work on Retina displays and was
 // the single largest frame-time cost. Native CSS resolution remains crisp
-// for a full-window WebGPU scene; ?quality=high opts back into 1.5×.
+// for a full-window WebGPU scene; ?quality=high opts into a larger buffer.
 const requestedQuality = new URLSearchParams(location.search).get('quality');
-const pixelRatioCap = requestedQuality === 'high' ? 1.5 : 1;
+// The monument is fill-rate bound in the close aperture view. A modest
+// default render scale preserves the full geometry/material stack while
+// keeping the most demanding first-person composition at 60 fps.
+const pixelRatioCap = requestedQuality === 'high' ? 1.25 : 0.55;
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, pixelRatioCap));
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.toneMapping = ACESFilmicToneMapping;
@@ -127,7 +131,7 @@ const fp = createFirstPerson(camera, renderer.domElement);
 
 // ---------------------------------------------------------------- scene build
 const bootParams = new URLSearchParams(location.search);
-const materials = createMaterials();
+const materials = await createMaterials();
 const monument = createStarAxis(materials, { blockout: bootParams.get('blockout') === '1' });
 scene.add(monument.group);
 
@@ -181,6 +185,11 @@ const APERTURE_VIEW: [number, number, number] = [
   APERTURE_CENTER_Y + Math.sin(APERTURE_ELEVATION_RAD) * 40,
   APERTURE_REAR_Z - Math.cos(APERTURE_ELEVATION_RAD) * 40,
 ];
+const APERTURE_THRESHOLD: [number, number, number] = [
+  0,
+  APERTURE_CENTER_Y,
+  APERTURE_REAR_Z,
+];
 
 const PRESETS: Record<string, Preset> = {
   '1': {
@@ -197,15 +206,19 @@ const PRESETS: Record<string, Preset> = {
   },
   '3': {
     pos: [STAIR_BASE.x, STAIR_BASE.y + EYE_HEIGHT + 0.35, STAIR_BASE.z + 2.2],
-    target: APERTURE_VIEW,
+    target: APERTURE_THRESHOLD,
     fov: 48,
     mode: 'day',
   },
   '4': { pos: [-105, 92, 118], target: [0, 18, -24], fov: 48, mode: 'day' },
   '5': {
-    pos: [0, STAIR_TOP.y + EYE_HEIGHT, APERTURE_REAR_Z + 1.35],
+    pos: [
+      0,
+      STAIR_TOP.y + EYE_HEIGHT,
+      APERTURE_REAR_Z + APERTURE_APPROACH_DISTANCE,
+    ],
     target: APERTURE_VIEW,
-    fov: 62,
+    fov: 45,
     mode: 'night',
   },
 };
@@ -258,7 +271,7 @@ const TOUR_STOPS: TourStop[] = [
       'The stair rises due north at the local latitude angle. Instanced granite treads and paired open masonry walls preserve the sightline while keeping the scene light enough for real-time exploration.',
     fact: 'The model uses 147 treads and an 8.25-inch published rise.',
     pos: [0, STAIR_BASE.y + EYE_HEIGHT + 0.25, STAIR_BASE.z + 2.2],
-    target: APERTURE_VIEW,
+    target: APERTURE_THRESHOLD,
     fov: 48,
     mode: 'day',
   },
@@ -280,7 +293,7 @@ const TOUR_STOPS: TourStop[] = [
       'The side walls stay above the carved ground and remain open to the sky. Looking ahead, the broad circular aperture stays centered instead of collapsing into a tiny dot.',
     fact: 'Each tread advances toward the same aperture housed in the pyramid crown.',
     pos: [0, 23.1, -29.2],
-    target: APERTURE_VIEW,
+    target: APERTURE_THRESHOLD,
     fov: 48,
     mode: 'day',
   },
@@ -290,9 +303,13 @@ const TOUR_STOPS: TourStop[] = [
     description:
       'The stair ends on a level eye-height viewing bay. The broad steel-lined mouth now opens through a flared passage to the live sky, so stars carry real depth and parallax instead of sitting on a flat card.',
     fact: 'The opening is centered on a six-foot visitor and fills peripheral vision at the threshold.',
-    pos: [0, STAIR_TOP.y + EYE_HEIGHT, APERTURE_REAR_Z + 1.35],
+    pos: [
+      0,
+      STAIR_TOP.y + EYE_HEIGHT,
+      APERTURE_REAR_Z + APERTURE_APPROACH_DISTANCE,
+    ],
     target: APERTURE_VIEW,
-    fov: 60,
+    fov: 45,
     mode: 'night',
   },
   {
@@ -580,7 +597,11 @@ const captionEl = document.getElementById('caption') as HTMLDivElement | null;
 let lastCaption = '';
 
 function zoneCaption(x: number, z: number): string {
-  if (Math.abs(x) < 2.8 && Math.abs(z - STAIR_TOP.z) < 3.2) {
+  if (
+    Math.abs(x) < 2.8 &&
+    z <= STAIR_TOP.z + 1 &&
+    z >= APERTURE_REAR_Z - 2
+  ) {
     return 'Upper Room — the Star Tunnel reaches the live Polaris aperture inside the Solar Pyramid';
   }
   if (

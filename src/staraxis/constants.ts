@@ -108,11 +108,22 @@ export const FRONT_CHAMBER_DEPTH = PYRAMID_FRONT_Z - PYRAMID_REAR_Z;
 /** Visitor eye line at the top landing, aligned to the polar axis. */
 export const PLAYER_HEIGHT = 1.83;
 export const EYE_HEIGHT = 1.7;
-export const APERTURE_CENTER_Y = STAIR_TOP.y + EYE_HEIGHT;
-export const APERTURE_REAR_Z = STAIR_TOP.z - 0.45;
+/** Horizontal viewing distance from the standing eye to the rear steel rim. */
+export const APERTURE_APPROACH_DISTANCE = 5.6;
+/**
+ * Raise the rear rim along the polar axis so a visitor standing on the level
+ * landing looks through the center of both openings instead of across the top
+ * of the flared bore.
+ */
+export const APERTURE_CENTER_Y =
+  STAIR_TOP.y +
+  EYE_HEIGHT +
+  Math.tan(LATITUDE_RAD) * APERTURE_APPROACH_DISTANCE;
+/** The eye-height viewing bay advances into the Pyramid before the bore. */
+export const APERTURE_REAR_Z = STAIR_TOP.z - 6.8;
 export const APERTURE_ELEVATION_RAD = LATITUDE_RAD;
-export const APERTURE_INNER_RADIUS = 1.18;
-export const APERTURE_EXIT_RADIUS = 1.32;
+export const APERTURE_INNER_RADIUS = 1.95;
+export const APERTURE_EXIT_RADIUS = 2.0;
 export const APERTURE_WALL = 0.1;
 export const APERTURE_LENGTH = 0.52;
 export const UPPER_LANDING_FRONT_Z = APERTURE_REAR_Z - 0.55;
