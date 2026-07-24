@@ -47,16 +47,18 @@ Earth's rotation.
 | `5` | Night, due north — star trails around Polaris |
 | `D` / `G` / `N` | Day / golden hour / night |
 | `T` | Toggle long-exposure star trails |
+| **`L`** | **Toggle WebGPU global illumination and post-processing** |
 | `/` | Debug stats (fps, frame ms, draw calls, triangles) |
 
 Presets `1`–`5` work in both modes; in first person they are spawn points,
 and a vantage well off the ground (the aerial view) spawns you flying.
 
-The walker follows the terrain heightfield (Star Tunnel treads and the
-terrace flight override it in their channels), while a static BVH over the
-monument blocks walls, parapets and pyramid faces. Knee-height steps pass
-under the capsule so stairs stay climbable. No gravity/jumping — grounding
-is eased, not simulated — and scatter rocks are set dressing, not solid.
+Walking casts directly against a static `three-mesh-bvh` built from the
+rendered terrain, architectural meshes, and every instanced stair tread.
+A separate solid-geometry BVH resolves the full-height visitor capsule
+against visible walls, parapets, and continuous stair stringers, while
+bounded movement substeps stop at ledges instead of falling through seams.
+Scatter rocks and grass remain non-solid set dressing.
 
 URL params for scripted captures: `?nav=orbit&view=1..5&mode=day|goldenHour|night&trails=1&blockout=1`
 or a free camera `?cam=x,y,z&look=x,y,z&fov=55`. `nav=fp|orbit` picks the
@@ -95,6 +97,9 @@ opens the field guide at a specific stop.
 - **Sky rig** — TSL sky dome with day/golden/night states; at night the star
   field physically rotates about the Polaris axis, with a fragment-shader
   long-exposure trail mode recreating the famous concentric-arc photograph.
+- **Light Lab** — a compact Tweakpane panel controls WebGPU screen-space global
+  illumination, ambient occlusion, shadows, bloom, color finish, exposure and
+  three quality profiles. `L` bypasses the full enhancement stack in one tap.
 - **Terrain** — analytic heightfield with a flat rectangular apron, authored
   front/rear/side break lines, broad slope transitions, and deterministic
   talus, gravel, and grass.

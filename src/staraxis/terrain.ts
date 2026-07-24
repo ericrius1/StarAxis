@@ -380,6 +380,7 @@ function createGround(desertMaterial: MeshStandardNodeMaterial): Group {
       mesh.name = `terrain-chunk-${cx}-${cy}`;
       mesh.receiveShadow = true;
       mesh.matrixAutoUpdate = false;
+      mesh.userData.collisionSurfaceOnly = true;
       group.add(mesh);
     }
   }
@@ -900,6 +901,7 @@ function createGrassTufts(): InstancedMesh {
   const mesh = buildInstancedMesh(geometry, material, placements, 'grass-tufts');
   mesh.castShadow = false;
   mesh.receiveShadow = true;
+  mesh.userData.noCollide = true;
   return mesh;
 }
 

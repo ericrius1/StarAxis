@@ -456,8 +456,8 @@
       /* Debug stats, toggled with "/" — sits below #tour-toggle */
       #debug {
         position: fixed;
-        top: 68px;
-        right: 14px;
+        right: 18px;
+        bottom: 76px;
         z-index: 10;
         display: none;
         padding: 8px 10px;
@@ -470,6 +470,71 @@
         text-align: right;
         pointer-events: none;
         user-select: none;
+      }
+      /* Tweakpane is kept deliberately compact: it reads as an instrument
+         panel, and collapses to one quiet line over the landscape. */
+      .effects-pane {
+        --tp-base-background-color: rgba(14, 16, 17, 0.88);
+        --tp-base-shadow-color: rgba(0, 0, 0, 0.42);
+        --tp-button-background-color: rgba(205, 171, 115, 0.13);
+        --tp-button-background-color-active: rgba(205, 171, 115, 0.3);
+        --tp-button-background-color-focus: rgba(205, 171, 115, 0.24);
+        --tp-button-background-color-hover: rgba(205, 171, 115, 0.2);
+        --tp-button-foreground-color: rgba(255, 239, 215, 0.9);
+        --tp-container-background-color: rgba(255, 255, 255, 0.035);
+        --tp-container-background-color-active: rgba(205, 171, 115, 0.13);
+        --tp-container-background-color-focus: rgba(205, 171, 115, 0.1);
+        --tp-container-background-color-hover: rgba(255, 255, 255, 0.06);
+        --tp-container-foreground-color: rgba(239, 230, 215, 0.74);
+        --tp-groove-foreground-color: #c39b61;
+        --tp-input-background-color: rgba(0, 0, 0, 0.27);
+        --tp-input-background-color-active: rgba(0, 0, 0, 0.42);
+        --tp-input-background-color-focus: rgba(0, 0, 0, 0.36);
+        --tp-input-background-color-hover: rgba(0, 0, 0, 0.32);
+        --tp-input-foreground-color: rgba(255, 245, 229, 0.9);
+        --tp-label-foreground-color: rgba(239, 230, 215, 0.65);
+        --tp-monitor-background-color: rgba(0, 0, 0, 0.25);
+        --tp-monitor-foreground-color: #d8b174;
+        position: fixed !important;
+        top: 72px !important;
+        right: 18px !important;
+        z-index: 18 !important;
+        width: min(292px, calc(100vw - 36px)) !important;
+        overflow: hidden;
+        border: 1px solid rgba(232, 211, 177, 0.2);
+        border-radius: 14px;
+        box-shadow: 0 22px 70px rgba(0, 0, 0, 0.32);
+        backdrop-filter: blur(22px) saturate(1.15);
+      }
+      .effects-pane::before {
+        content: '';
+        position: absolute;
+        top: 17px;
+        right: 14px;
+        z-index: 2;
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: rgba(128, 128, 128, 0.7);
+        box-shadow: 0 0 0 4px rgba(128, 128, 128, 0.08);
+        pointer-events: none;
+        transition:
+          background 0.25s ease,
+          box-shadow 0.25s ease;
+      }
+      .effects-pane[data-active='true']::before {
+        background: #d5ad70;
+        box-shadow:
+          0 0 0 4px rgba(213, 173, 112, 0.1),
+          0 0 14px rgba(213, 173, 112, 0.58);
+      }
+      .effects-pane .tp-rotv {
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 10px;
+      }
+      .effects-pane .tp-fldv_t,
+      .effects-pane .tp-rotv_t {
+        letter-spacing: 0.105em;
       }
       @media (max-width: 680px) {
         #info {
@@ -489,8 +554,13 @@
           font-size: 10px;
         }
         #debug {
-          top: 58px;
           right: 12px;
+          bottom: 68px;
+        }
+        .effects-pane {
+          top: 58px !important;
+          right: 12px !important;
+          width: min(270px, calc(100vw - 24px)) !important;
         }
         #soundscape {
           left: 10px;
@@ -533,7 +603,7 @@
         }
       }
     </style>
-    <script type="module" crossorigin src="/assets/index-C_en2CMP.js"></script>
+    <script type="module" crossorigin src="/assets/index-D8aUvZ8x.js"></script>
   </head>
   <body>
     <div id="info">
