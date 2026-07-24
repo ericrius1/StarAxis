@@ -184,10 +184,10 @@ const mesaWind = new MesaWind();
 let latestWind: MesaWindFrame = {
   directionX: 1,
   directionZ: 0,
-  strength: 0.4,
+  strength: 0.26,
   gust: 0,
-  turbulence: 0.4,
-  speed: 8,
+  turbulence: 0.24,
+  speed: 0.86,
   elapsed: 0,
 };
 

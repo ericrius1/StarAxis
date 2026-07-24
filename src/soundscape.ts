@@ -220,32 +220,42 @@ export class StarAxisSoundscape {
       const gust = clamp(frame.windGust);
       const turbulence = clamp(frame.windTurbulence);
       const openAir = 1 - enclosed * 0.86;
+      const windPresence = smoothstep(0.015, 0.16, wind);
+      const sandLift = smoothstep(0.16, 0.56, wind);
 
       // Four complementary noise bands share the visual wind envelope.
-      // The body stays present while the brighter bands only bloom in gusts.
+      // All four close fully during a calm; gusts only brighten active air.
       this.setLayer(
         this.windBody,
-        (0.035 + wind * 0.062 + gust * 0.028 + height * 0.012) * (0.4 + openAir * 0.6),
+        windPresence *
+          (wind * 0.082 + gust * 0.022 + height * wind * 0.01) *
+          (0.4 + openAir * 0.6),
         0.75,
       );
       this.setLayer(
         this.windMid,
-        (0.022 + wind * 0.047 + gust * 0.04 + movementAir * 0.008) * (0.26 + openAir * 0.74),
+        windPresence *
+          (wind * 0.057 + gust * 0.032 + movementAir * wind * 0.006) *
+          (0.26 + openAir * 0.74),
         0.48,
       );
       this.setLayer(
         this.windGust,
-        (0.002 + gust * 0.105 + wind * wind * 0.018) * openAir,
+        windPresence * (gust * 0.078 + wind * wind * 0.011) * openAir,
         0.32,
       );
       this.setLayer(
         this.sandHiss,
-        (0.002 + wind * 0.012 + gust * 0.034 + turbulence * 0.012) * openAir,
+        sandLift *
+          (wind * 0.008 + gust * 0.022 + turbulence * 0.005) *
+          openAir,
         0.25,
       );
       this.setLayer(
         this.highAir,
-        (0.004 + height * 0.016 + wind * 0.012 + night * 0.003) * (0.35 + openAir * 0.65),
+        windPresence *
+          (wind * 0.01 + height * wind * 0.016 + night * wind * 0.002) *
+          (0.35 + openAir * 0.65),
         0.65,
       );
       if (this.windBody?.filter) {
@@ -359,10 +369,9 @@ export class StarAxisSoundscape {
     windBodyFilter.frequency.value = 320;
     windBodyFilter.Q.value = 0.38;
     const windBodyGain = context.createGain();
-    windBodyGain.gain.value = 0.04;
+    windBodyGain.gain.value = 0.0001;
     windBodySource.connect(windBodyFilter).connect(windBodyGain).connect(master);
     windBodyGain.connect(reverbSend);
-    this.modulate(windBodyGain.gain, 0.04, 0.009, 0.037);
     this.modulate(windBodyFilter.frequency, 320, 55, 0.021);
     this.windBody = { gain: windBodyGain, filter: windBodyFilter };
 
@@ -374,10 +383,9 @@ export class StarAxisSoundscape {
     windMidFilter.frequency.value = 690;
     windMidFilter.Q.value = 0.34;
     const windMidGain = context.createGain();
-    windMidGain.gain.value = 0.03;
+    windMidGain.gain.value = 0.0001;
     windMidSource.connect(windMidFilter).connect(windMidGain).connect(master);
     windMidGain.connect(reverbSend);
-    this.modulate(windMidGain.gain, 0.03, 0.01, 0.067);
     this.modulate(windMidFilter.frequency, 690, 95, 0.043);
     this.windMid = { gain: windMidGain, filter: windMidFilter };
 
@@ -408,9 +416,8 @@ export class StarAxisSoundscape {
     sandFilter.frequency.value = 2700;
     sandFilter.Q.value = 0.7;
     const sandGain = context.createGain();
-    sandGain.gain.value = 0.002;
+    sandGain.gain.value = 0.0001;
     sandSource.connect(sandHigh).connect(sandFilter).connect(sandGain).connect(master);
-    this.modulate(sandGain.gain, 0.004, 0.002, 0.19);
     this.sandHiss = { gain: sandGain, filter: sandFilter };
 
     // Fine airborne altitude is now only the top octave, not the main wind.
@@ -422,9 +429,8 @@ export class StarAxisSoundscape {
     airLow.type = 'lowpass';
     airLow.frequency.value = 8200;
     const airGain = context.createGain();
-    airGain.gain.value = 0.006;
+    airGain.gain.value = 0.0001;
     airSource.connect(airHigh).connect(airLow).connect(airGain).connect(master);
-    this.modulate(airGain.gain, 0.007, 0.003, 0.113);
     this.highAir = { gain: airGain, filter: airLow };
 
     // An almost-felt fundamental: fifty years of labor under 26,000 years.

@@ -138,9 +138,9 @@ export class WindsweptSand {
   private readonly heightTexture = buildHeightTexture();
   private readonly cameraPosition = uniform(new Vector3());
   private readonly windDirection = uniform(new Vector2(1, 0));
-  private readonly windStrength = uniform(0.4);
+  private readonly windStrength = uniform(0.26);
   private readonly gust = uniform(0);
-  private readonly turbulence = uniform(0.4);
+  private readonly turbulence = uniform(0.24);
   private readonly elapsed = uniform(0);
   private readonly light = uniform(1);
   private readonly distanceFogColor = uniform(new Color('#cfd8e4'));
@@ -271,20 +271,29 @@ export class WindsweptSand {
         ),
       );
       const floor = sampleTerrain(position.xz);
+      const saltation = smoothstep(0.16, 0.62, this.windStrength);
       position.y.assign(
-        floor.add(seedC.mul(seedC).mul(config.hop).mul(this.windStrength.add(0.25))),
+        floor.add(seedC.mul(seedC).mul(config.hop).mul(saltation)),
       );
 
       const crosswind = vec2(this.windDirection.y.negate(), this.windDirection.x)
         .mul(seedB.sub(0.5))
-        .mul(2.4);
+        .mul(this.turbulence)
+        .mul(saltation)
+        .mul(1.2);
       velocity.xz.assign(
         this.windDirection
-          .mul(float(2.2).add(this.windStrength.mul(8.5)))
+          .mul(
+            saltation.mul(
+              float(0.55)
+                .add(this.windStrength.mul(3.4))
+                .add(this.gust.mul(1.1)),
+            ),
+          )
           .mul(config.speedScale)
           .add(crosswind),
       );
-      velocity.y.assign(seedC.mul(config.hop).add(0.18));
+      velocity.y.assign(seedC.mul(config.hop).mul(saltation));
       data.assign(vec4(seedA, seedB, seedC, 0));
     })()
       .compute(count, [128])
@@ -306,11 +315,16 @@ export class WindsweptSand {
       const sideways = vec2(this.windDirection.y.negate(), this.windDirection.x)
         .mul(seed.sub(0.5))
         .mul(this.turbulence)
-        .mul(4.8);
-      const targetSpeed = float(1.7)
-        .add(this.windStrength.mul(11.5))
-        .add(this.gust.mul(4.2))
-        .add(localPulse.mul(1.6))
+        .mul(smoothstep(0.16, 0.62, this.windStrength))
+        .mul(1.3);
+      const saltation = smoothstep(0.16, 0.62, this.windStrength);
+      const targetSpeed = saltation
+        .mul(
+          float(0.55)
+            .add(this.windStrength.mul(3.4))
+            .add(this.gust.mul(1.1))
+            .add(localPulse.mul(0.45)),
+        )
         .mul(config.speedScale);
       const targetVelocity = this.windDirection.mul(targetSpeed).add(sideways);
       const response = clamp(step.mul(config.drag), 0, 1);
@@ -345,17 +359,22 @@ export class WindsweptSand {
       const floor = sampleTerrain(position.xz).add(0.025);
       If(teleported, () => {
         position.y.assign(
-          floor.add(data.z.mul(data.z).mul(config.hop).mul(this.windStrength.add(0.2))),
+          floor.add(data.z.mul(data.z).mul(config.hop).mul(saltation)),
         );
-        velocity.y.assign(data.z.mul(config.hop).add(0.12));
+        velocity.y.assign(data.z.mul(config.hop).mul(saltation));
       });
 
       If(position.y.lessThan(floor), () => {
         position.y.assign(floor);
-        const burst = float(0.24)
-          .add(this.windStrength.mul(0.82))
-          .add(this.gust.mul(0.65))
-          .add(localPulse.mul(0.2));
+        const lift = smoothstep(0.2, 0.68, this.windStrength);
+        const burst = float(0.025).add(
+          lift.mul(
+            float(0.12)
+              .add(this.windStrength.mul(0.34))
+              .add(this.gust.mul(0.22))
+              .add(localPulse.mul(0.07)),
+          ),
+        );
         const rareLift = smoothstep(0.82, 0.99, data.y).mul(1.35).add(1);
         velocity.y.assign(
           burst
@@ -379,10 +398,9 @@ export class WindsweptSand {
       config.innerRadius > 0
         ? smoothstep(config.innerRadius * 0.74, config.innerRadius, distance)
         : float(1);
-    const windVisibility = smoothstep(0.28, 0.72, this.windStrength)
-      .mul(0.38)
-      .add(this.gust.mul(0.52))
-      .add(0.025);
+    const windVisibility = smoothstep(0.16, 0.6, this.windStrength)
+      .mul(float(0.18).add(this.windStrength.mul(0.32)))
+      .add(this.gust.mul(0.22));
     const sandColor = mix(color('#806247'), color('#b99a72'), seed)
       .mul(this.light)
       .mul(float(0.72).add(seed.mul(0.24)));
@@ -444,7 +462,11 @@ export class WindsweptSand {
         const acrossDirection = vec2(this.windDirection.y.negate(), this.windDirection.x);
         const along = positionWorld.xz.dot(this.windDirection);
         const across = positionWorld.xz.dot(acrossDirection);
-        const travel = this.elapsed.mul(float(1.8).add(this.windStrength.mul(8.2)));
+        const travel = this.elapsed.mul(
+          float(0.18)
+            .add(this.windStrength.mul(2.7))
+            .add(this.gust.mul(0.8)),
+        );
         const flowPosition = vec3(
           along.sub(travel).mul(0.009),
           across.mul(0.044).add(this.elapsed.mul(0.012)),
@@ -458,23 +480,29 @@ export class WindsweptSand {
         const filament = across
           .mul(0.19)
           .add(along.mul(0.018))
-          .sub(this.elapsed.mul(float(0.8).add(this.windStrength.mul(2.4))))
+          .sub(
+            this.elapsed.mul(
+              float(0.12)
+                .add(this.windStrength.mul(0.85))
+                .add(this.gust.mul(0.25)),
+            ),
+          )
           .sin()
           .mul(0.055);
         const wisps = smoothstep(0.18, 0.55, volumeNoise.add(filament));
         const heightFalloff = smoothstep(
-          float(3.6).add(this.gust.mul(1.2)),
+          float(2.3).add(this.gust.mul(1)),
           0,
           altitude,
         );
         const opticalDepth = densityFogFactor(
-          float(0.007)
-            .add(this.windStrength.mul(0.0085))
-            .add(this.gust.mul(0.006)),
+          float(0.004)
+            .add(this.windStrength.mul(0.0055))
+            .add(this.gust.mul(0.0035)),
         );
-        const windGate = smoothstep(0.18, 0.62, this.windStrength)
-          .mul(0.72)
-          .add(this.gust.mul(0.28));
+        const windGate = smoothstep(0.16, 0.58, this.windStrength)
+          .mul(0.62)
+          .add(this.gust.mul(0.25));
 
         sandFactor.assign(
           opticalDepth
