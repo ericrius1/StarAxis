@@ -117,11 +117,12 @@ derived from reference-photo PBR extraction (see `sculpt/`).
 
 The terrain is an 8×8 chunk grid with analytic (seam-free) normals so the
 frustum culls most of the ground. Entry-wall segments, coping and the layered
-horizon mesas are merged into single draws. Rubble and gravel each use one
-multi-geometry `BatchedMesh`, giving varied silhouettes with per-stone frustum
-culling but no extra draw calls; grass and stair repetition remain instanced.
-The sun's shadow map redraws only while the sun is moving. Typical ground-level
-frames run ~30–75 draw calls / 0.2–0.5M triangles at 60 fps. `/` shows live
+horizon mesas are merged into single draws. Rubble and gravel are grouped into
+eight fixed `InstancedMesh` shape variants, replacing a WebGPU `BatchedMesh`
+path that submitted thousands of visible sub-draws. Physically large boulders
+select denser smooth variants while ordinary scatter stays cheaper. The sun's
+shadow map redraws only while the sun is moving. The pyramid-front review runs
+about 95 total scene draws / 0.93M triangles and targets 60 fps. `/` shows live
 stats.
 
 ## Source layout

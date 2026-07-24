@@ -1,0 +1,88 @@
+{
+  "sourceImage": "/Users/eric/Library/Application Support/CleanShot/media/media_TT4VyP40N0/CleanShot 2026-07-23 at 19.16.55@2x.png",
+  "zonesDir": "/Users/eric/codeprojects/StarAxis/sculpt/near-rock-v2/zones",
+  "detailInventory": {
+    "scanMethod": "grid-3x3",
+    "targetMinDetails": 6,
+    "details": [
+      {
+        "id": "hero-rounded-silhouette",
+        "kind": "contour",
+        "description": "Dominant boulder requires a continuously curved asymmetric outline with no readable radial side count.",
+        "region": { "x": 0.34, "y": 0.29, "width": 0.43, "height": 0.57, "units": "normalized" },
+        "scale": "macro",
+        "affects": "silhouette and projected polygon visibility",
+        "mapsTo": { "type": "component.localFeatures", "ref": "rock-body.localFeatures.silhouette-rounding" },
+        "evidenceRef": "/Users/eric/codeprojects/StarAxis/sculpt/near-rock-v2/zones/zone-r1c1.png",
+        "confidence": 0.99
+      },
+      {
+        "id": "eroded-shoulder",
+        "kind": "ridge",
+        "description": "Broad worn shoulder must transition gradually into the upper crown rather than forming one horizontal polygon band.",
+        "region": { "x": 0.36, "y": 0.42, "width": 0.34, "height": 0.21, "units": "normalized" },
+        "scale": "meso",
+        "affects": "profile curvature and normal continuity",
+        "mapsTo": { "type": "component.localFeatures", "ref": "rock-body.localFeatures.eroded-shoulder" },
+        "evidenceRef": "/Users/eric/codeprojects/StarAxis/sculpt/near-rock-v2/zones/zone-r1c1.png",
+        "confidence": 0.98
+      },
+      {
+        "id": "chipped-crown",
+        "kind": "chip",
+        "description": "Off-center crown needs sparse localized chips without collapsing into a pyramidal tip.",
+        "region": { "x": 0.48, "y": 0.29, "width": 0.16, "height": 0.18, "units": "normalized" },
+        "scale": "meso",
+        "affects": "top silhouette",
+        "mapsTo": { "type": "component.localFeatures", "ref": "rock-body.localFeatures.chipped-crown" },
+        "evidenceRef": "/Users/eric/codeprojects/StarAxis/sculpt/near-rock-v2/zones/zone-r0c1.png",
+        "confidence": 0.92
+      },
+      {
+        "id": "embedded-contact",
+        "kind": "stain",
+        "description": "Base needs a narrow cavity-darkened dusty contact band and sufficient burial to avoid a floating black wedge.",
+        "region": { "x": 0.42, "y": 0.76, "width": 0.34, "height": 0.11, "units": "normalized" },
+        "scale": "meso",
+        "affects": "contact shading and base color",
+        "mapsTo": { "type": "material.localOverrides", "ref": "stone-material.localOverrides.contact-dust" },
+        "evidenceRef": "/Users/eric/codeprojects/StarAxis/sculpt/near-rock-v2/zones/zone-r2c1.png",
+        "confidence": 0.96
+      },
+      {
+        "id": "meso-mottle",
+        "kind": "stain",
+        "description": "Subtle broad warm/cool mottling should break up the surface without creating triangle-sized color blocks.",
+        "region": { "x": 0.39, "y": 0.35, "width": 0.35, "height": 0.43, "units": "normalized" },
+        "scale": "meso",
+        "affects": "albedo variation",
+        "mapsTo": { "type": "material.localOverrides", "ref": "stone-material.localOverrides.meso-mottle" },
+        "evidenceRef": "/Users/eric/codeprojects/StarAxis/sculpt/near-rock-v2/zones/zone-r1c1.png",
+        "confidence": 0.88
+      },
+      {
+        "id": "pebble-rounding",
+        "kind": "contour",
+        "description": "Nearby compressed pebbles need rounded silhouettes and smooth normals rather than pentagonal outlines.",
+        "region": { "x": 0.65, "y": 0.45, "width": 0.32, "height": 0.39, "units": "normalized" },
+        "scale": "meso",
+        "affects": "gravel silhouette and shading",
+        "mapsTo": { "type": "component.localFeatures", "ref": "stone-scatter.localFeatures.pebble-rounding" },
+        "evidenceRef": "/Users/eric/codeprojects/StarAxis/sculpt/near-rock-v2/zones/zone-r1c2.png",
+        "confidence": 0.94
+      },
+      {
+        "id": "variant-diversity",
+        "kind": "contour",
+        "description": "Repeated stones require rounded, slabby, and shouldered profiles with deterministic nonuniform distribution.",
+        "region": { "x": 0.0, "y": 0.33, "width": 1.0, "height": 0.34, "units": "normalized" },
+        "scale": "macro",
+        "affects": "scatter repetition readability",
+        "mapsTo": { "type": "component.localFeatures", "ref": "stone-scatter.localFeatures.variant-diversity" },
+        "evidenceRef": "/Users/eric/codeprojects/StarAxis/sculpt/near-rock-v2/zones/zone-r1c0.png",
+        "confidence": 0.9
+      }
+    ]
+  },
+  "authoringInstruction": "All observed defects and required corrections are mapped to component or material implementation fields."
+}
