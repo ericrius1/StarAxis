@@ -411,6 +411,8 @@ export function createPathTracer({
                 (1.0 - metalness) *
                 sunColor *
                 sunIntensity *
+                // Lambertian BRDF normalization, matching Three's raster lights.
+                0.31830988618 *
                 sunCosine;
             }
           }

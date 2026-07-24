@@ -584,6 +584,8 @@ import{$t as e,An as t,At as n,Bn as r,Bt as i,Dt as a,It as o,Kt as s,Lt as c,N
                 (1.0 - metalness) *
                 sunColor *
                 sunIntensity *
+                // Lambertian BRDF normalization, matching Three's raster lights.
+                0.31830988618 *
                 sunCosine;
             }
           }
