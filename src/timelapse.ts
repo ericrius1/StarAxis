@@ -37,6 +37,19 @@ export interface Clip {
   /** Solar phase at the first and last frame. 0.25 sunrise, 0.75 sunset. */
   solarFrom: number;
   solarTo: number;
+  /**
+   * Total sky rotation across the clip, radians. Normally the rotation is
+   * implied by the elapsed solar time; a clip that holds still at night has no
+   * elapsed time to imply it, so it states the turn directly.
+   */
+  skyTurn?: number;
+  /**
+   * Shutter, in radians of sky rotation per frame. Left unset, a frame
+   * integrates exactly one frame's worth of rotation — enough to keep motion
+   * smooth, far too little to draw a trail. Set it long and every frame
+   * becomes a star-trail exposure in its own right.
+   */
+  exposureArc?: number;
   samples: number;
   bounces?: number;
 }
@@ -112,6 +125,30 @@ export const CLIPS: Clip[] = [
     solarTo: 0.862,
     samples: 224,
   },
+  {
+    id: 'D-star-trails-over-the-bowl',
+    title: 'Star trails over the excavation, holding at night',
+    note: 'Raised above the Avenue looking north down the whole axis, and staying there. The sun never moves; only the sky turns. Each frame is a long exposure, so the stars are drawn as arcs rather than points, and the arcs themselves rotate slowly about Polaris over the five seconds.',
+    from: {
+      position: new Vector3(0, 19, 24),
+      target: new Vector3(0, 36, -46),
+      fov: 72,
+    },
+    to: {
+      position: new Vector3(0, 19, 24),
+      target: new Vector3(0, 36, -46),
+      fov: 72,
+    },
+    // Held at deep night: the moon is high in the south, behind the camera.
+    solarFrom: 0.0,
+    solarTo: 0.0,
+    // A third of a radian of turn across the clip — slow enough to read as
+    // meditation rather than time lapse.
+    skyTurn: 0.34,
+    // Each frame holds about 70 minutes of sky, which is the trail length.
+    exposureArc: 0.3,
+    samples: 192,
+  },
 ];
 
 function lerp(a: number, b: number, t: number): number {
@@ -137,10 +174,16 @@ export function clipFrame(clipIndex: number, frameIndex: number): ClipFrame {
 
   const solarSpan = clip.solarTo - clip.solarFrom;
   const solarTime = clip.solarFrom + solarSpan * t;
-  // One solar day is one turn of the sky, so the rotation is just the elapsed
-  // phase. Sign: the sky turns the opposite way to the observer.
-  const celestialRotation = -Math.PI * 2 * (solarTime - clip.solarFrom);
-  const perFrame = (Math.PI * 2 * solarSpan) / span;
+  // One solar day is one turn of the sky, so the rotation is normally just the
+  // elapsed phase. Sign: the sky turns the opposite way to the observer.
+  const celestialRotation =
+    clip.skyTurn !== undefined
+      ? -clip.skyTurn * t
+      : -Math.PI * 2 * (solarTime - clip.solarFrom);
+  const perFrame =
+    clip.skyTurn !== undefined
+      ? clip.skyTurn / span
+      : (Math.PI * 2 * solarSpan) / span;
 
   return {
     position: _position,
@@ -148,9 +191,8 @@ export function clipFrame(clipIndex: number, frameIndex: number): ClipFrame {
     fov: lerp(clip.from.fov, clip.to.fov, move),
     solarTime,
     celestialRotation,
-    // Blur by one frame's rotation; the axis tilt means stars near the pole
-    // move less, which the rotation itself already accounts for.
-    trailArc: Math.abs(perFrame),
+    // Blur by one frame's rotation unless the clip asks for a real shutter.
+    trailArc: clip.exposureArc ?? Math.abs(perFrame),
     samples: clip.samples,
     bounces: clip.bounces ?? 4,
   };
