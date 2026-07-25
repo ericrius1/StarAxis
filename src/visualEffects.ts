@@ -250,7 +250,7 @@ export function createVisualEffects({
   let lastReportedSamples = -1;
 
   const pane = new Pane({
-    title: 'RENDER LAB  ·  N / P',
+    title: 'RENDER LAB',
     expanded: false,
   });
   pane.element.classList.add('effects-pane');
