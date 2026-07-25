@@ -185,7 +185,7 @@ const CINEMATIC_DEFAULTS = {
   vignette: 0.16,
   sharpening: true,
   detail: 0.62,
-  exposure: 1,
+  exposure: 1.65,
 } as const;
 
 /**
