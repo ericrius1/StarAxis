@@ -51,6 +51,7 @@
       }
       /* Immersive mode (I): hide every HUD chrome; canvas stays. */
       body.immersive #console,
+      body.immersive #hints,
       body.immersive #crosshair,
       body.immersive #caption,
       body.immersive #debug,
@@ -168,6 +169,120 @@
       #gate-quiet:focus-visible {
         color: rgba(242, 234, 220, 0.82);
         outline: none;
+      }
+
+      /* ----------------------------------------------------------- hints */
+      /* The five things a visitor needs in the first ten seconds, top left,
+         quiet enough to ignore and collapsible to a single word. Everything
+         beyond this lives behind "?" on the console. */
+      #hints {
+        position: fixed;
+        top: 18px;
+        left: 18px;
+        z-index: 18;
+        width: max-content;
+        max-width: min(300px, calc(100vw - 36px));
+        padding: 8px 10px;
+        border: 1px solid rgba(225, 213, 193, 0.12);
+        border-radius: 13px;
+        background: rgba(13, 14, 16, 0.5);
+        color: rgba(242, 234, 220, 0.44);
+        box-shadow: 0 12px 38px rgba(0, 0, 0, 0.24);
+        backdrop-filter: blur(14px);
+        opacity: 0;
+        user-select: none;
+        transition:
+          opacity 0.9s ease,
+          border-color 0.35s ease,
+          background 0.35s ease,
+          color 0.35s ease;
+      }
+      /* Held back until the door closes, so the gate stays a clean threshold. */
+      body.entered #hints {
+        opacity: 1;
+      }
+      #hints:hover {
+        border-color: rgba(225, 213, 193, 0.24);
+        background: rgba(15, 16, 18, 0.66);
+        color: rgba(242, 234, 220, 0.66);
+      }
+      #hints-toggle {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        padding: 0;
+        border: 0;
+        background: none;
+        color: rgba(242, 234, 220, 0.6);
+        font: 600 9.5px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        cursor: pointer;
+      }
+      #hints-toggle:hover,
+      #hints-toggle:focus-visible {
+        color: #f4e2c4;
+        outline: none;
+      }
+      .hints__mark {
+        width: 7px;
+        height: 7px;
+        border: 1px solid currentColor;
+        border-radius: 2px;
+        transition: transform 0.3s ease;
+      }
+      #hints[data-open='false'] .hints__mark {
+        transform: rotate(45deg);
+      }
+      #hints-body {
+        margin-top: 9px;
+        padding-top: 8px;
+        border-top: 1px solid rgba(232, 214, 182, 0.1);
+        font: 10.5px/1.7 ui-monospace, SFMono-Regular, Menlo, monospace;
+      }
+      #hints[data-open='false'] #hints-body {
+        display: none;
+      }
+      #hints-body div {
+        display: grid;
+        grid-template-columns: 44px 1fr;
+        gap: 0 10px;
+      }
+      #hints-body b {
+        color: rgba(242, 234, 220, 0.78);
+        font-weight: 600;
+      }
+      /* Immersive hides every panel, so the way out has to say itself once. */
+      #immersive-hint {
+        display: none;
+        position: fixed;
+        left: 50%;
+        bottom: 40px;
+        transform: translateX(-50%);
+        z-index: 19;
+        color: rgba(242, 234, 220, 0.7);
+        font: 10.5px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        text-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
+        pointer-events: none;
+        user-select: none;
+      }
+      #immersive-hint[data-show='true'] {
+        display: block;
+        animation: immersive-hint 4.4s ease forwards;
+      }
+      @keyframes immersive-hint {
+        0% {
+          opacity: 0;
+        }
+        14%,
+        66% {
+          opacity: 1;
+        }
+        100% {
+          opacity: 0;
+        }
       }
 
       /* --------------------------------------------------------- console */
@@ -711,6 +826,14 @@
         letter-spacing: 0.105em;
       }
       @media (max-width: 680px) {
+        #hints {
+          top: 12px;
+          left: 12px;
+          max-width: calc(100vw - 130px);
+        }
+        #hints-body {
+          font-size: 10px;
+        }
         #tour-toggle {
           top: 12px;
           right: 12px;
@@ -779,6 +902,20 @@
     <div id="crosshair"></div>
     <div id="caption"></div>
     <div id="debug"></div>
+    <aside id="hints" data-open="true" aria-label="Basic controls">
+      <button id="hints-toggle" type="button" aria-expanded="true" aria-controls="hints-body">
+        <span class="hints__mark" aria-hidden="true"></span>
+        Controls
+      </button>
+      <div id="hints-body">
+        <div><b>Click</b><span>walk · mouse looks · Esc frees</span></div>
+        <div><b>WASD</b><span>move · Shift to run</span></div>
+        <div><b>F · C</b><span>fly · orbit the site</span></div>
+        <div><b>I</b><span>immersive · I again to return</span></div>
+        <div><b>Z</b><span>hold, drag to move the sun</span></div>
+      </div>
+    </aside>
+    <div id="immersive-hint" aria-hidden="true">Immersive · press I to bring the interface back</div>
     <section id="console" data-help="false" aria-label="Star Axis controls">
       <h1 class="console__title">Star Axis — Charles Ross</h1>
       <div id="console-status">Click to walk</div>

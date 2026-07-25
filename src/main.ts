@@ -99,6 +99,9 @@ const gate = document.getElementById('gate') as HTMLDivElement | null;
 const gateStart = document.getElementById('gate-start') as HTMLButtonElement | null;
 const gateQuiet = document.getElementById('gate-quiet') as HTMLButtonElement | null;
 const crosshair = document.getElementById('crosshair') as HTMLDivElement | null;
+const hints = document.getElementById('hints') as HTMLElement | null;
+const hintsToggle = document.getElementById('hints-toggle') as HTMLButtonElement | null;
+const immersiveHint = document.getElementById('immersive-hint') as HTMLDivElement | null;
 const tourToggle = document.getElementById('tour-toggle') as HTMLButtonElement | null;
 const tourPanel = document.getElementById('tour-panel') as HTMLElement | null;
 const tourClose = document.getElementById('tour-close') as HTMLButtonElement | null;
@@ -561,10 +564,11 @@ if (modeParam === 'day' || modeParam === 'goldenHour' || modeParam === 'night') 
   setLight(modeParam);
 }
 
-// A normal arrival begins just after sunset, with the sun about five degrees
-// below the western horizon. Explicit views, cameras, tours, and capture modes
-// keep their authored lighting so review and rendering URLs remain repeatable.
-const DEFAULT_ENTRY_SOLAR_TIME = 0.764;
+// A normal arrival begins at sunset, with the sun a few degrees above the
+// western horizon: the site still reads in warm light instead of opening in
+// the dark. Explicit views, cameras, tours, and capture modes keep their
+// authored lighting so review and rendering URLs remain repeatable.
+const DEFAULT_ENTRY_SOLAR_TIME = 0.7355;
 const defaultArrival =
   !params.has('view') &&
   !params.has('mode') &&
@@ -575,7 +579,7 @@ const defaultArrival =
   params.get('cinema') !== '1';
 if (defaultArrival) {
   sky.setSolarTime(DEFAULT_ENTRY_SOLAR_TIME);
-  showLightState(sky.getMode(), 'Late twilight');
+  showLightState(sky.getMode(), 'Sunset');
 }
 
 /**
@@ -610,9 +614,15 @@ if (tourParam !== null) {
 
 let immersive = false;
 
-function setImmersive(on: boolean): void {
+/**
+ * Immersive hides every panel including the hints, so a keyboard toggle also
+ * announces the way back for a few seconds. Scripted boots pass announce=false
+ * so no text can drift into a capture.
+ */
+function setImmersive(on: boolean, announce = false): void {
   immersive = on;
   document.body.classList.toggle('immersive', immersive);
+  if (immersiveHint) immersiveHint.dataset.show = String(on && announce);
 }
 
 // ?cinema=1 is how build/capture-shot.mjs opens the page: hide the chrome and
@@ -642,6 +652,7 @@ function closeGate(withSound: boolean): void {
   if (!gate || gate.dataset.open === 'false') return;
   gate.dataset.open = 'false';
   gate.setAttribute('aria-hidden', 'true');
+  document.body.classList.add('entered'); // fades the hints card in behind it
   window.setTimeout(() => gate.remove(), 1000);
   if (withSound) void soundscape.start();
   updateConsole();
@@ -702,7 +713,7 @@ window.addEventListener('keydown', (e) => {
   } else if (k === 'l' && !e.repeat) {
     visualEffects.togglePane();
   } else if (k === 'i' && !e.repeat) {
-    setImmersive(!immersive);
+    setImmersive(!immersive, true);
   } else if (k === '/') {
     debugOn = !debugOn;
     if (debugEl) debugEl.style.display = debugOn ? 'block' : 'none';
@@ -755,6 +766,14 @@ soundscape.onChange((state) => {
 });
 soundToggle?.addEventListener('click', () => void soundscape.toggle());
 soundVolume?.addEventListener('input', () => soundscape.setVolume(Number(soundVolume.value)));
+
+// The hints card collapses to its one-word header and back.
+hintsToggle?.addEventListener('click', () => {
+  if (!hints) return;
+  const open = hints.dataset.open !== 'true';
+  hints.dataset.open = String(open);
+  hintsToggle.setAttribute('aria-expanded', String(open));
+});
 
 consoleKeys?.addEventListener('click', () => {
   if (!consoleEl) return;
