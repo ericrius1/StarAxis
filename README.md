@@ -61,6 +61,8 @@ Earth's rotation.
 
 Presets `1`–`5` work in both modes; in first person they are spawn points,
 and a vantage well off the ground (the aerial view) spawns you flying.
+The unparameterized visitor entrance opens at late twilight; explicit view,
+mode, tour, and capture URLs retain their authored lighting.
 
 Walking casts directly against a static `three-mesh-bvh` built from the
 rendered terrain, architectural meshes, and every instanced stair tread.

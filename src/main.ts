@@ -196,9 +196,16 @@ const LIGHT_CYCLE: Array<'day' | 'goldenHour' | 'night'> = ['day', 'goldenHour',
 
 function setLight(mode: 'day' | 'goldenHour' | 'night'): void {
   sky.setMode(mode);
+  showLightState(mode);
+}
+
+function showLightState(
+  mode: 'day' | 'goldenHour' | 'night',
+  label = LIGHT_LABELS[mode],
+): void {
   if (lightToggle) lightToggle.dataset.mode = mode;
-  if (lightLabel) lightLabel.textContent = LIGHT_LABELS[mode];
-  lightToggle?.setAttribute('aria-label', `Light: ${LIGHT_LABELS[mode]}. Click for the next.`);
+  if (lightLabel) lightLabel.textContent = label;
+  lightToggle?.setAttribute('aria-label', `Light: ${label}. Click for the next.`);
 }
 
 lightToggle?.addEventListener('click', () => {
@@ -552,6 +559,23 @@ if (camParam && lookParam) {
 const modeParam = params.get('mode');
 if (modeParam === 'day' || modeParam === 'goldenHour' || modeParam === 'night') {
   setLight(modeParam);
+}
+
+// A normal arrival begins just after sunset, with the sun about five degrees
+// below the western horizon. Explicit views, cameras, tours, and capture modes
+// keep their authored lighting so review and rendering URLs remain repeatable.
+const DEFAULT_ENTRY_SOLAR_TIME = 0.764;
+const defaultArrival =
+  !params.has('view') &&
+  !params.has('mode') &&
+  !params.has('cam') &&
+  !params.has('look') &&
+  !params.has('tour') &&
+  params.get('blockout') !== '1' &&
+  params.get('cinema') !== '1';
+if (defaultArrival) {
+  sky.setSolarTime(DEFAULT_ENTRY_SOLAR_TIME);
+  showLightState(sky.getMode(), 'Late twilight');
 }
 
 /**
