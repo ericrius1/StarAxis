@@ -848,6 +848,59 @@ interface CinemaOptions {
   bounces?: number;
 }
 
+export interface CapturedFrame {
+  /** PNG data URL. */
+  png: string;
+  /** Mean luma and alpha of the PNG, 0-255, from a 32x32 downsample. */
+  luma: number;
+  alpha: number;
+}
+
+/**
+ * Read the canvas and measure what was read.
+ *
+ * A capture that silently produced an empty drawing buffer encodes to a
+ * perfectly valid blank PNG, so nothing downstream notices. The measurement
+ * has to come from the encoded image rather than from the canvas afterwards:
+ * reading a WebGPU canvas invalidates it, so a probe taken after toDataURL
+ * always sees an empty surface and reports every frame as blank.
+ */
+async function presentAndProbe(): Promise<CapturedFrame> {
+  // Wait for the GPU to finish before reading the canvas. Without the
+  // animation loop there is nothing else driving presentation, and reading
+  // while work is still queued yields the *previous* frame — which in a
+  // sequence of stills shows up as two identical plates, and in a video as a
+  // duplicated frame nobody notices.
+  const queue = (renderer as unknown as {
+    backend?: { device?: { queue?: { onSubmittedWorkDone?: () => Promise<void> } } };
+  }).backend?.device?.queue;
+  await queue?.onSubmittedWorkDone?.();
+
+  const png = renderer.domElement.toDataURL('image/png');
+  const image = new Image();
+  image.src = png;
+  await image.decode();
+  const probe = document.createElement('canvas');
+  probe.width = 32;
+  probe.height = 32;
+  const context = probe.getContext('2d', { willReadFrequently: true });
+  if (!context) return { png, luma: -1, alpha: -1 };
+  context.drawImage(image, 0, 0, 32, 32);
+  const { data } = context.getImageData(0, 0, 32, 32);
+  let luma = 0;
+  let alpha = 0;
+  for (let i = 0; i < data.length; i += 4) {
+    luma += 0.2126 * data[i] + 0.7152 * data[i + 1] + 0.0722 * data[i + 2];
+    alpha += data[i + 3];
+  }
+  const pixels = data.length / 4;
+  return {
+    png,
+    luma: Number((luma / pixels).toFixed(3)),
+    alpha: Number((alpha / pixels).toFixed(3)),
+  };
+}
+
 const cinema = {
   fps: SHOT_FPS,
   frames: SHOT_FRAMES,
@@ -870,7 +923,7 @@ const cinema = {
   },
 
   /** Place the camera and the sun for `index`, then trace and return a PNG. */
-  async frame(index: number): Promise<string> {
+  async frame(index: number): Promise<CapturedFrame> {
     const shot = shotAtFrame(index);
     camera.position.copy(shot.position);
     camera.up.set(0, 1, 0);
@@ -885,11 +938,11 @@ const cinema = {
     sky.sunLight.updateMatrixWorld(true);
     sky.moonLight.updateMatrixWorld(true);
     visualEffects.renderPathTracedFrame(cinema.samples, cinema.bounces);
-    return renderer.domElement.toDataURL('image/png');
+    return presentAndProbe();
   },
 
   /** Render still plate `index` from plates.ts and return it as a PNG. */
-  async plate(index: number): Promise<string> {
+  async plate(index: number): Promise<CapturedFrame> {
     const plate = PLATES[Math.min(PLATES.length - 1, Math.max(0, index))];
     camera.position.copy(plate.position);
     camera.up.set(0, 1, 0);
@@ -904,7 +957,7 @@ const cinema = {
     sky.moonLight.updateMatrixWorld(true);
     visualEffects.setStarTrail(plate.trailArc ?? 0);
     visualEffects.renderPathTracedFrame(plate.samples, plate.bounces ?? cinema.bounces);
-    return renderer.domElement.toDataURL('image/png');
+    return presentAndProbe();
   },
 
   plateInfo(index: number) {
@@ -928,7 +981,7 @@ const cinema = {
   clipFrames: CLIP_FRAMES,
 
   /** Render one frame of time-lapse clip `clipIndex` and return it as a PNG. */
-  async clip(clipIndex: number, frameIndex: number): Promise<string> {
+  async clip(clipIndex: number, frameIndex: number): Promise<CapturedFrame> {
     const frame = clipFrame(clipIndex, frameIndex);
     camera.position.copy(frame.position);
     camera.up.set(0, 1, 0);
@@ -944,7 +997,7 @@ const cinema = {
     visualEffects.setCelestialRotation(frame.celestialRotation);
     visualEffects.setStarTrail(frame.trailArc);
     visualEffects.renderPathTracedFrame(frame.samples, frame.bounces);
-    return renderer.domElement.toDataURL('image/png');
+    return presentAndProbe();
   },
 
   clipInfo(clipIndex: number) {

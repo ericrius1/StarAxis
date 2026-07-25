@@ -10,6 +10,17 @@
  *   node build/capture-shot.mjs --url http://localhost:5183 --out out/frames \
  *        --samples 160 --bounces 4 --width 1920 --height 1080 [--frames N]
  *
+ * --scale N multiplies the device pixel ratio, so --width 1920 --scale 2
+ * would render at 3840x2160.
+ *
+ * NOTE: on this machine nothing above a 1920x1080 drawing buffer works. Larger
+ * buffers present as fully transparent with no WebGPU error raised, whether
+ * the size comes from the viewport, the device pixel ratio, --window-size or
+ * --screen-info; the compute pass still reports its full sample count. The
+ * blank-frame guard below exists because of it. Clearing the limit properly
+ * means rendering the display quad into an offscreen render target and reading
+ * that back, rather than going through the canvas swapchain at all.
+ *
  * Pass --still N to render a single frame (useful for reviewing lighting
  * changes without paying for the whole shot).
  *
@@ -42,6 +53,9 @@ function parseArgs(argv) {
     plates: 0,
     plate: -1,
     clip: -1,
+    scale: 1,
+    from: 0,
+    to: -1,
     port: 9333,
   };
   for (let i = 2; i < argv.length; i += 2) {
@@ -134,7 +148,7 @@ class Devtools {
 async function main() {
   const args = parseArgs(process.argv);
   const outDir = path.resolve(args.out);
-  await rm(outDir, { recursive: true, force: true });
+  if (args.from === 0) await rm(outDir, { recursive: true, force: true });
   await mkdir(outDir, { recursive: true });
 
   const profile = path.join(outDir, '.chrome-profile');
@@ -144,8 +158,12 @@ async function main() {
       '--headless=new',
       `--remote-debugging-port=${args.port}`,
       `--user-data-dir=${profile}`,
-      `--window-size=${args.width},${args.height}`,
-      '--force-device-scale-factor=1',
+      // The virtual screen has to be sized in *device* pixels: the compositor
+      // surface is clamped to it, so a scaled-up pixel ratio against a
+      // viewport-sized screen silently yields an unallocated drawing buffer.
+      `--window-size=${Math.round(args.width * args.scale)},${Math.round(
+        args.height * args.scale,
+      )}`,
       '--hide-scrollbars',
       '--mute-audio',
       '--no-first-run',
@@ -166,10 +184,15 @@ async function main() {
     // Pin the layout viewport before the app boots: the window size Chrome was
     // launched with includes browser chrome, so the canvas would come out a
     // few dozen pixels short of the requested frame height.
+    // Headless Chrome's virtual screen caps the compositor surface, so asking
+    // for a 3840-wide *viewport* yields a drawing buffer the device never
+    // allocates and every frame comes back blank. Raising the device pixel
+    // ratio instead keeps the CSS viewport small while the backing store —
+    // which is what the renderer sizes itself to — goes up by the same factor.
     await client.send('Emulation.setDeviceMetricsOverride', {
       width: args.width,
       height: args.height,
-      deviceScaleFactor: 1,
+      deviceScaleFactor: args.scale,
       mobile: false,
     });
     await client.send('Page.navigate', { url: `${args.url}/?cinema=1` });
@@ -216,9 +239,17 @@ async function main() {
       indices = args.still >= 0 ? [args.still] : [...Array(total).keys()];
     }
 
+    // --from/--to resume a partial run. A capture can wedge (the GPU process
+    // survives but stops producing frames), and re-rendering an hour of good
+    // frames to recover the tail is pure waste.
+    if (args.from > 0 || args.to >= 0) {
+      const last = args.to >= 0 ? args.to : Infinity;
+      indices = indices.filter((i) => i >= args.from && i <= last);
+    }
+
     console.log(
       `capturing ${indices.length} ${plateMode ? 'plate' : 'frame'}(s) at ` +
-        `${args.width}x${args.height}` +
+        `${args.width * args.scale}x${args.height * args.scale}` +
         (plateMode ? ' (per-plate sample budgets)' : `, ${args.samples} spp, ${args.bounces} bounces`),
     );
 
@@ -226,13 +257,33 @@ async function main() {
     for (let i = 0; i < indices.length; i++) {
       const index = indices[i];
       const frameStart = Date.now();
-      const dataUrl = await client.evaluate(
+      const FRAME_TIMEOUT_MS = 300000;
+      const captured = await Promise.race([
+        client.evaluate(
         clipMode
           ? `window.__cinema.clip(${args.clip}, ${index})`
           : plateMode
             ? `window.__cinema.plate(${index})`
             : `window.__cinema.frame(${index})`,
-      );
+        ),
+        new Promise((_, reject) =>
+          setTimeout(
+            () => reject(new Error(`frame ${index} exceeded ${FRAME_TIMEOUT_MS}ms — the page or GPU has wedged`)),
+            FRAME_TIMEOUT_MS,
+          ),
+        ),
+      ]);
+      // A blank drawing buffer encodes to a valid PNG, so nothing downstream
+      // would notice. The page measures the image it just encoded.
+      if (captured.alpha <= 0 || captured.luma < 0) {
+        throw new Error(
+          `frame ${index} came back blank (mean luma ${captured.luma}, alpha ` +
+            `${captured.alpha}) at ${args.width * args.scale}x` +
+            `${args.height * args.scale} — the drawing buffer is probably ` +
+            `beyond what this device will allocate`,
+        );
+      }
+      const dataUrl = captured.png;
       const base64 = dataUrl.slice(dataUrl.indexOf(',') + 1);
       let name = `frame_${String(index).padStart(4, '0')}.png`;
       if (plateMode) {

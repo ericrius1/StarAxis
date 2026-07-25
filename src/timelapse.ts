@@ -74,7 +74,7 @@ export const CLIPS: Clip[] = [
     },
     solarFrom: 0.05,
     solarTo: 0.27,
-    samples: 288,
+    samples: 224,
   },
   {
     id: 'B-milky-way-into-morning',
@@ -92,7 +92,7 @@ export const CLIPS: Clip[] = [
     },
     solarFrom: 0.09,
     solarTo: 0.285,
-    samples: 288,
+    samples: 224,
   },
   {
     id: 'C-west-face-into-night',
@@ -110,7 +110,7 @@ export const CLIPS: Clip[] = [
     },
     solarFrom: 0.735,
     solarTo: 0.862,
-    samples: 288,
+    samples: 224,
   },
 ];
 
