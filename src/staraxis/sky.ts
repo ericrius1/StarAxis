@@ -96,6 +96,26 @@ const TRAIL_ARC = 0.45;
 const MOON_PEAK_INTENSITY = 0.19;
 const MOON_COLOR = new Color('#a9c2e8');
 
+/**
+ * Raster stand-in for the night sky's own irradiance and the sand's bounce.
+ *
+ * The path tracer gets both for free: every ray that escapes comes back
+ * carrying the night dome, so after dusk the monument's shadow side is still
+ * lit by roughly pi times that radiance, plus whatever the desert returns
+ * upward. The raster path has no such term, and `hemi` cannot supply it —
+ * the tracer reads `hemi` as the *colour* of its dome, so raising it would
+ * move the traced result too. This second hemisphere light is that missing
+ * integral, and it is deliberately invisible to the tracer, which only ever
+ * sees the sun, the moon and `hemi`.
+ *
+ * The sky tint carries the tracer's night dome ratio (about 1 : 1.5 : 3.2 in
+ * linear red-green-blue) so the fill reads as skylight rather than as a grey
+ * lift; the ground tint is the warm return off the sand.
+ */
+const NIGHT_FILL_SKY = new Color('#94b5ff');
+const NIGHT_FILL_GROUND = new Color('#6b5a45');
+const NIGHT_FILL_INTENSITY = 0.25;
+
 function hash01(i: number, salt: number): number {
   const s = Math.sin(i * 12.9898 + salt * 78.233 + 0.5) * 43758.5453123;
   return s - Math.floor(s);
@@ -485,6 +505,10 @@ export function createSky(): SkyRig {
   hemi.name = 'hemi';
   group.add(hemi);
 
+  const nightFill = new HemisphereLight(NIGHT_FILL_SKY, NIGHT_FILL_GROUND, 0);
+  nightFill.name = 'night-fill';
+  group.add(nightFill);
+
   // ------------------------------------------------------------- state
   let mode: SkyMode = 'day';
   let solarTime = MODE_SOLAR_TIME.day;
@@ -507,6 +531,13 @@ export function createSky(): SkyRig {
     hemi.color.copy(s.hemiSky);
     hemi.groundColor.copy(s.hemiGround);
     hemi.intensity = s.hemiIntensity;
+
+    // Fade the fill on the same curve the tracer reaches its night dome on
+    // (`nightMix`), which keys off the sun's height rather than the raster
+    // `dayNight` ramp. Matching that curve is what keeps the two paths
+    // together through dusk instead of only at full dark.
+    nightFill.intensity =
+      NIGHT_FILL_INTENSITY * (1 - smoothstep01(-0.2, 0.02, s.sunDir.y));
 
     const moonIntensity = moonStateFrom(s, _moonDir);
     moonLight.intensity = moonIntensity;
