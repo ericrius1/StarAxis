@@ -1,0 +1,57 @@
+{
+  "referenceScreenshot": "/Users/eric/Library/Application Support/CleanShot/media/media_AVJvOPrgS3/CleanShot 2026-07-23 at 14.47.02@2x.png",
+  "cameraView": "ground-level rock drift toward distant mesas",
+  "decision": "continue",
+  "aiVisionScore": 0.84,
+  "layerScores": {
+    "silhouetteProportion": 0.88,
+    "componentStructure": 0.86,
+    "formDetail": 0.82,
+    "materialSurface": 0.78,
+    "lightingCamera": 0.83,
+    "performanceTradeoff": 0.92
+  },
+  "featureReviews": [
+    {
+      "id": "horizon-geology-system",
+      "tier": "critical",
+      "score": 0.89,
+      "visible": true,
+      "notes": "Broad overlapping erosion remnants now have broken rims, caprock ledges, recessed cliff bands, talus shoulders, varied profiles, and distance fade. No mass reads as a primitive cylinder or clean trapezoid."
+    },
+    {
+      "id": "rock-variant-system",
+      "tier": "critical",
+      "score": 0.82,
+      "visible": true,
+      "notes": "Three batched continuous-sculpt shapes provide distinct slab, wedge, and high-crown silhouettes with per-instance scale, tilt, and rust/tan/gray tint."
+    },
+    {
+      "id": "rock-ground-contact",
+      "tier": "critical",
+      "score": 0.85,
+      "visible": true,
+      "notes": "Transforms follow the analytic terrain normal and bury the darker base ring; no point-balanced or floating rocks are visible in the review view."
+    },
+    {
+      "id": "scatter-distribution",
+      "tier": "important",
+      "score": 0.79,
+      "visible": true,
+      "notes": "Wave-interference masks create drifts and open sand. The result is intentionally less uniformly dense than the reference screenshot."
+    },
+    {
+      "id": "draw-call-budget",
+      "tier": "critical",
+      "score": 0.95,
+      "visible": false,
+      "notes": "Horizon remains one merged draw; rubble and gravel remain one draw each despite multiple stored geometries. Opaque sorting is disabled and per-object frustum culling is enabled."
+    }
+  ],
+  "knownLimitations": [
+    "Distant geology is a regionally grounded procedural approximation, not a survey reconstruction of the private site.",
+    "The supplied screenshot and final review use similar but not identical free-camera positions.",
+    "Headless browser FPS is not treated as representative hardware performance; draw calls, visible triangles, batch structure, and build output are the reliable checks."
+  ],
+  "summary": "The refinement clears the 0.7 acceptance threshold on every critical feature. The remaining camera and density differences do not undermine the requested quality/performance goal."
+}

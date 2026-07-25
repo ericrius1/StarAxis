@@ -1,0 +1,321 @@
+{
+  "targetName": "Star Axis",
+  "sourceImage": "/private/tmp/claude-501/-Users-eric-codeprojects-StarAxis/54c681ab-15f2-4874-8191-49e321ee9b8a/scratchpad/refs/site_aerial.jpg",
+  "secondaryImages": [
+    "/private/tmp/claude-501/-Users-eric-codeprojects-StarAxis/54c681ab-15f2-4874-8191-49e321ee9b8a/scratchpad/refs/pyramid_hero.jpg",
+    "/private/tmp/claude-501/-Users-eric-codeprojects-StarAxis/54c681ab-15f2-4874-8191-49e321ee9b8a/scratchpad/refs/tunnel_2.jpg",
+    "/private/tmp/claude-501/-Users-eric-codeprojects-StarAxis/54c681ab-15f2-4874-8191-49e321ee9b8a/scratchpad/refs/tunnel_4.jpg",
+    "/private/tmp/claude-501/-Users-eric-codeprojects-StarAxis/54c681ab-15f2-4874-8191-49e321ee9b8a/scratchpad/refs/home_bg.jpg",
+    "/private/tmp/claude-501/-Users-eric-codeprojects-StarAxis/54c681ab-15f2-4874-8191-49e321ee9b8a/scratchpad/refs/upper_chamber.jpg",
+    "/private/tmp/claude-501/-Users-eric-codeprojects-StarAxis/54c681ab-15f2-4874-8191-49e321ee9b8a/scratchpad/refs/hour_2.jpg",
+    "/private/tmp/claude-501/-Users-eric-codeprojects-StarAxis/54c681ab-15f2-4874-8191-49e321ee9b8a/scratchpad/refs/shadow_2.jpg",
+    "/private/tmp/claude-501/-Users-eric-codeprojects-StarAxis/54c681ab-15f2-4874-8191-49e321ee9b8a/scratchpad/refs/equatorial_1.jpg"
+  ],
+  "preSpecAssessment": {
+    "objectClass": {
+      "primaryType": "monumental-land-art-observatory",
+      "primaryDomain": "object",
+      "formLanguage": ["planar-monolithic", "inclined-prismatic", "radial-crescent", "stepped-linear"],
+      "structureKind": ["earthwork-excavation", "masonry-wall-systems", "stair-run", "tetrahedral-pyramid", "cylindrical-aperture"],
+      "motionPotential": ["none-static-architecture", "sun-light-sweep", "sky-rotation-about-polaris"],
+      "materialFamilies": ["sandstone-flagstone-cladding", "fieldstone-rubble-masonry", "granite-ashlar-and-coping", "brushed-stainless-steel", "cast-concrete", "desert-soil-gravel"],
+      "notes": "Eleven-story naked-eye observatory carved into a mesa edge: V-shaped entry channel with outward-leaning flagstone walls leads to a circular excavated bowl rimmed by a crescent fieldstone wall with two bastion pylons; a 147-step granite stairway (Star Tunnel) rises at the site latitude angle (~34.5 deg) aligned to Polaris, passing a freestanding triangular (A-frame) portal, ending in a stainless-steel cylinder aperture; a ~55 ft sandstone-clad Solar Pyramid with a granite edge-stair sits at the top of the mound beside the bowl; Hour Chamber wedge (15 deg) inside pyramid base; flat Shadow Field terrain beyond."
+    },
+    "complexity": {
+      "tier": "complex",
+      "scores": {
+        "silhouetteComplexity": 4,
+        "componentCount": 5,
+        "hierarchyDepth": 3,
+        "repetitionDensity": 5,
+        "materialLayerCount": 5,
+        "localDetailDensity": 4,
+        "occlusionRisk": 2,
+        "actionReadinessNeed": 3
+      },
+      "estimatedCounts": {
+        "macroComponents": 6,
+        "mesoComponents": 16,
+        "microFeatureGroups": 8,
+        "materialLayers": 6,
+        "repetitionSystems": 4
+      },
+      "reasoning": [
+        "Six macro assemblies visible across references: terrain/mesa, entry channel, crescent bowl wall, star tunnel stair system, solar pyramid, sky/light rig.",
+        "Heavy repetition systems: 147 stair treads, flagstone slab cladding, fieldstone rubble courses, ashlar block courses.",
+        "Occlusion risk is low because eight reference photos cover entry, interior, apex, night and aerial views.",
+        "Materials split into six distinct PBR families with strong roughness/albedo separation (rubble vs ashlar vs brushed steel)."
+      ]
+    },
+    "specDepthDecision": {
+      "requiredDepth": "complex",
+      "minimumComponentLevels": ["macro", "meso", "micro"],
+      "needsRepetitionSystems": true,
+      "needsMaterialLocalOverrides": true,
+      "needsMultipleReviewViews": true,
+      "needsActionReadyHierarchy": true,
+      "rationale": "Architectural monument with four repetition systems and six material families; identity depends on precise angular relationships (34.5 deg stair axis, 15 deg hour wedge, solstice-angled pyramid faces), so component-level pivots and named sockets (sun rig, polaris axis, camera stations) are required."
+    },
+    "unknownsToResolveBeforeImplementation": [
+      "Exact plan-view footprint dimensions are approximated from '11 stories tall, 1/10 mile across' and photo proportions; stated as approximate.",
+      "South/rear elevation of the pyramid mound is inferred from aerial and apex shots; stylization stated.",
+      "Interior equatorial chamber geometry simplified to the visible triangular-notch room."
+    ],
+    "detailInventory": {
+      "scanMethod": "component-zones",
+      "targetMinDetails": 10,
+      "note": "Filled from direct inspection of 8 reference photos plus 3x3 grid crops of the primary aerial reference.",
+      "details": [
+        {
+          "id": "det-fieldstone-rubble",
+          "kind": "masonry-pattern",
+          "description": "Crescent bowl wall lower band: irregular tan/buff fieldstone rubble, stone sizes 0.2-1.2 m, deep recessed mortar joints, strong per-stone albedo variation (buff, gray, rust).",
+          "region": {"x": 0.25, "y": 0.3, "width": 0.5, "height": 0.25, "units": "normalized"},
+          "scale": "meso",
+          "affects": "albedo, normal, ao",
+          "mapsTo": {"type": "material.localOverrides", "ref": "mat-fieldstone.rubbleCourses"},
+          "evidenceRef": "/private/tmp/claude-501/-Users-eric-codeprojects-StarAxis/54c681ab-15f2-4874-8191-49e321ee9b8a/scratchpad/pipeline/di_crops/zone-r1c1.png",
+          "confidence": 0.9
+        },
+        {
+          "id": "det-ashlar-band-coping",
+          "kind": "masonry-pattern",
+          "description": "Upper band of crescent wall: coursed cut-block ashlar, lighter warm gray, topped by a smooth pale granite coping strip that traces the full crescent rim ellipse.",
+          "region": {"x": 0.2, "y": 0.18, "width": 0.6, "height": 0.12, "units": "normalized"},
+          "scale": "meso",
+          "affects": "albedo, roughness, geometry",
+          "mapsTo": {"type": "component.localFeatures", "ref": "crescent-wall.copingCap"},
+          "evidenceRef": "/private/tmp/claude-501/-Users-eric-codeprojects-StarAxis/54c681ab-15f2-4874-8191-49e321ee9b8a/scratchpad/pipeline/di_crops/zone-r1c1.png",
+          "confidence": 0.85
+        },
+        {
+          "id": "det-bastion-pylons",
+          "kind": "structural-mass",
+          "description": "Two truncated sloped-face bastion pylons terminate the crescent wall ends, block masonry, battered faces, flat tops slightly above rim.",
+          "region": {"x": 0.1, "y": 0.15, "width": 0.8, "height": 0.2, "units": "normalized"},
+          "scale": "macro",
+          "affects": "silhouette",
+          "mapsTo": {"type": "component.localFeatures", "ref": "crescent-wall.bastions"},
+          "evidenceRef": "/private/tmp/claude-501/-Users-eric-codeprojects-StarAxis/54c681ab-15f2-4874-8191-49e321ee9b8a/scratchpad/refs/site_aerial.jpg",
+          "confidence": 0.9
+        },
+        {
+          "id": "det-stair-treads",
+          "kind": "repetition-system",
+          "description": "147 uniform granite stair treads rise between two smooth granite stringer rails at ~34.5 deg; treads read as light warm gray with crisp nosing shadows.",
+          "region": {"x": 0.42, "y": 0.25, "width": 0.16, "height": 0.45, "units": "normalized"},
+          "scale": "meso",
+          "affects": "geometry, ao",
+          "mapsTo": {"type": "component.localFeatures", "ref": "star-tunnel.stairRun"},
+          "evidenceRef": "/private/tmp/claude-501/-Users-eric-codeprojects-StarAxis/54c681ab-15f2-4874-8191-49e321ee9b8a/scratchpad/pipeline/di_crops/zone-r1c1.png",
+          "confidence": 0.95
+        },
+        {
+          "id": "det-tunnel-mouth",
+          "kind": "aperture",
+          "description": "Dark trapezoid-section tunnel overhang midway up the stair; interior walls lean inward, benches/ledges flank the stair (interior photo).",
+          "region": {"x": 0.45, "y": 0.22, "width": 0.1, "height": 0.12, "units": "normalized"},
+          "scale": "meso",
+          "affects": "silhouette, interior-shadow",
+          "mapsTo": {"type": "component.localFeatures", "ref": "star-tunnel.tunnelHood"},
+          "evidenceRef": "/private/tmp/claude-501/-Users-eric-codeprojects-StarAxis/54c681ab-15f2-4874-8191-49e321ee9b8a/scratchpad/refs/tunnel_4.jpg",
+          "confidence": 0.85
+        },
+        {
+          "id": "det-steel-aperture",
+          "kind": "material-accent",
+          "description": "Top-of-tunnel oculus: brushed stainless-steel cylinder, low roughness anisotropic sheen, framing a perfect sky circle; mounted in a concrete/steel headwall slab above the crescent rim.",
+          "region": {"x": 0.46, "y": 0.02, "width": 0.08, "height": 0.18, "units": "normalized"},
+          "scale": "micro",
+          "affects": "albedo, roughness, metalness",
+          "mapsTo": {"type": "material.localOverrides", "ref": "mat-stainless.aperture"},
+          "evidenceRef": "/private/tmp/claude-501/-Users-eric-codeprojects-StarAxis/54c681ab-15f2-4874-8191-49e321ee9b8a/scratchpad/refs/tunnel_2.jpg",
+          "confidence": 0.9
+        },
+        {
+          "id": "det-triangular-portal",
+          "kind": "structural-mass",
+          "description": "Freestanding A-frame (triangular) portal on a masonry terrace at stair base; sandstone block sides, dark interior with visible steps, apex centered on tunnel axis.",
+          "region": {"x": 0.44, "y": 0.62, "width": 0.12, "height": 0.22, "units": "normalized"},
+          "scale": "meso",
+          "affects": "silhouette, negative-space",
+          "mapsTo": {"type": "component.localFeatures", "ref": "entry-terrace.trianglePortal"},
+          "evidenceRef": "/private/tmp/claude-501/-Users-eric-codeprojects-StarAxis/54c681ab-15f2-4874-8191-49e321ee9b8a/scratchpad/pipeline/di_crops/zone-r1c1.png",
+          "confidence": 0.9
+        },
+        {
+          "id": "det-flagstone-cladding",
+          "kind": "masonry-pattern",
+          "description": "Entry channel walls lean outward ~30 deg from vertical, clad in large irregular polygonal sandstone flags (0.5-2 m), colors pink/tan/rust with thin mortar lines; pale concrete coping strip on top edge.",
+          "region": {"x": 0.0, "y": 0.45, "width": 1.0, "height": 0.35, "units": "normalized"},
+          "scale": "meso",
+          "affects": "albedo, normal, roughness",
+          "mapsTo": {"type": "material.localOverrides", "ref": "mat-flagstone.entryWalls"},
+          "evidenceRef": "/private/tmp/claude-501/-Users-eric-codeprojects-StarAxis/54c681ab-15f2-4874-8191-49e321ee9b8a/scratchpad/refs/site_aerial.jpg",
+          "confidence": 0.9
+        },
+        {
+          "id": "det-pyramid-faces",
+          "kind": "surface-cladding",
+          "description": "Solar Pyramid faces clad in smooth pink/salmon sandstone slabs with faint rectangular panel seams; face angles set by solstice sun altitudes; thin crisp apex ridge.",
+          "region": {"x": 0.2, "y": 0.1, "width": 0.4, "height": 0.5, "units": "normalized"},
+          "scale": "macro",
+          "affects": "albedo, silhouette",
+          "mapsTo": {"type": "material.localOverrides", "ref": "mat-pyramid-sandstone.faces"},
+          "evidenceRef": "/private/tmp/claude-501/-Users-eric-codeprojects-StarAxis/54c681ab-15f2-4874-8191-49e321ee9b8a/scratchpad/refs/pyramid_hero.jpg",
+          "confidence": 0.9
+        },
+        {
+          "id": "det-pyramid-edge-stair",
+          "kind": "repetition-system",
+          "description": "Granite stair with parallel stringers climbing the pyramid's north edge to the apex; reads as a zipper of light treads against the salmon face.",
+          "region": {"x": 0.4, "y": 0.15, "width": 0.15, "height": 0.4, "units": "normalized"},
+          "scale": "meso",
+          "affects": "geometry, silhouette",
+          "mapsTo": {"type": "component.localFeatures", "ref": "solar-pyramid.edgeStair"},
+          "evidenceRef": "/private/tmp/claude-501/-Users-eric-codeprojects-StarAxis/54c681ab-15f2-4874-8191-49e321ee9b8a/scratchpad/refs/pyramid_hero.jpg",
+          "confidence": 0.9
+        },
+        {
+          "id": "det-hour-wedge",
+          "kind": "aperture",
+          "description": "Hour Chamber: 29-ft tall, 15-degree wedge aperture; from inside, a knife-thin triangle of sky and desert horizon between two dark converging planes.",
+          "region": {"x": 0.3, "y": 0.05, "width": 0.4, "height": 0.9, "units": "normalized"},
+          "scale": "meso",
+          "affects": "negative-space, interior-shadow",
+          "mapsTo": {"type": "component.localFeatures", "ref": "solar-pyramid.hourChamberWedge"},
+          "evidenceRef": "/private/tmp/claude-501/-Users-eric-codeprojects-StarAxis/54c681ab-15f2-4874-8191-49e321ee9b8a/scratchpad/refs/hour_2.jpg",
+          "confidence": 0.85
+        },
+        {
+          "id": "det-desert-ground",
+          "kind": "terrain-surface",
+          "description": "Pale packed caliche sand path with scattered gravel drifts; surrounding mesa slopes strewn with rust/tan rock rubble and dry grass tufts; distant flat-topped mesas on horizon.",
+          "region": {"x": 0.0, "y": 0.6, "width": 1.0, "height": 0.4, "units": "normalized"},
+          "scale": "macro",
+          "affects": "albedo, roughness, displacement",
+          "mapsTo": {"type": "material.localOverrides", "ref": "mat-desert.groundBlend"},
+          "evidenceRef": "/private/tmp/claude-501/-Users-eric-codeprojects-StarAxis/54c681ab-15f2-4874-8191-49e321ee9b8a/scratchpad/pipeline/di_crops/zone-r2c1.png",
+          "confidence": 0.9
+        },
+        {
+          "id": "det-star-trails",
+          "kind": "sky-phenomenon",
+          "description": "Night mode: concentric star-trail arcs centered on Polaris low in the north (~34.5 deg altitude), blue-white-amber trail colors, monument in silhouette.",
+          "region": {"x": 0.0, "y": 0.0, "width": 1.0, "height": 0.7, "units": "normalized"},
+          "scale": "macro",
+          "affects": "sky-shader, emissive",
+          "mapsTo": {"type": "material.localOverrides", "ref": "mat-sky.starTrails"},
+          "evidenceRef": "/private/tmp/claude-501/-Users-eric-codeprojects-StarAxis/54c681ab-15f2-4874-8191-49e321ee9b8a/scratchpad/refs/home_bg.jpg",
+          "confidence": 0.9
+        }
+      ]
+    },
+    "anatomy": {
+      "applies": false,
+      "styleHeads": 0.0,
+      "proportions": {"headUnit": 0.0, "torso": 0.0, "legs": 0.0, "shoulderWidth": 0.0, "hipWidth": 0.0},
+      "pose": {"type": "not-applicable", "jointAngles": {}},
+      "faceLandmarks": {"eyeLine": 0.0, "eyeSpacing": 0.0, "noseBase": 0.0, "mouthLine": 0.0, "hairline": 0.0},
+      "features": [],
+      "confidence": 0.0,
+      "note": "Architectural object; anatomy track not applicable."
+    },
+    "sourceImage": "/private/tmp/claude-501/-Users-eric-codeprojects-StarAxis/54c681ab-15f2-4874-8191-49e321ee9b8a/scratchpad/refs/site_aerial.jpg"
+  },
+  "qualityContract": {
+    "qualityBar": "complex",
+    "definitionOfDone": [
+      "The rendered scene matches the reference silhouette, primary proportions, visible component hierarchy, material response, and most recognizable local features for the selected fidelity tier.",
+      "The entry-channel view reads as the site_aerial reference: leaning flagstone walls, crescent rubble wall with coping, centered stair channel, A-frame portal.",
+      "The tunnel-interior view up shows a circular brushed-steel aperture framing sky.",
+      "Night mode shows concentric star trails centered on Polaris at ~34.5 deg altitude aligned with the tunnel axis.",
+      "The pyramid view reads as pyramid_hero: salmon sandstone faces, granite edge stair, curved granite parapet in foreground, high-desert horizon."
+    ],
+    "minimumSpecDepth": {
+      "macroComponents": 3,
+      "mesoComponents": 8,
+      "microFeatureGroups": 5,
+      "materialLayers": 3,
+      "repetitionSystems": 1,
+      "reviewViewpoints": 4
+    },
+    "featureGroups": [
+      {
+        "id": "overall-silhouette",
+        "name": "Overall silhouette and proportions",
+        "required": true,
+        "qualityCriteria": [
+          "Crescent bowl diameter vs tunnel channel width vs portal height match the aerial reference proportions; stair axis inclined at the latitude angle (~34.5 deg) pointing due north."
+        ],
+        "evidenceRefs": ["full-object", "det-bastion-pylons"],
+        "failureModes": [
+          "model reads as a generic ziggurat instead of Star Axis",
+          "stair angle or crescent curvature guessed wrong"
+        ]
+      },
+      {
+        "id": "primary-structure",
+        "name": "Primary structure and hierarchy",
+        "required": true,
+        "qualityCriteria": [
+          "Six macro assemblies present and correctly placed: terrain, entry channel, crescent bowl, star tunnel system, solar pyramid with hour chamber, sky/sun/star rig."
+        ],
+        "evidenceRefs": ["full-object"],
+        "failureModes": ["large visible parts merged into one mesh", "hierarchy too shallow"]
+      },
+      {
+        "id": "attachment-joint-correctness",
+        "name": "Attachment and joint correctness",
+        "required": true,
+        "qualityCriteria": [
+          "Stair run seats into the excavated channel with no floating gaps; portal sits on the terrace platform; steel aperture cylinder embeds into the headwall slab; pyramid edge-stair contacts the face along its full run."
+        ],
+        "evidenceRefs": ["det-stair-treads", "det-triangular-portal", "det-steel-aperture", "det-pyramid-edge-stair"],
+        "failureModes": ["stair floats above channel", "portal hovers off terrace", "aperture tube detached from headwall"]
+      },
+      {
+        "id": "surface-material-response",
+        "name": "Surface material response",
+        "required": true,
+        "qualityCriteria": [
+          "Six material families with independent albedo/roughness/normal/AO: flagstone cladding, fieldstone rubble, granite ashlar/treads, brushed stainless, cast concrete, desert soil.",
+          "Macro (wall bands), meso (stone joints), micro (grain speckle) frequency bands present in TSL procedural materials."
+        ],
+        "evidenceRefs": ["det-fieldstone-rubble", "det-flagstone-cladding", "det-ashlar-band-coping", "det-steel-aperture", "det-desert-ground"],
+        "failureModes": ["surface looks like flat plastic", "one noise texture reused across all channels"]
+      },
+      {
+        "id": "reference-lookdev",
+        "name": "Reference color, material, and lighting response",
+        "required": true,
+        "qualityCriteria": [
+          "Day mode: low warm sun, physically plausible sky gradient, pyramid casts long triangular shadow onto shadow field.",
+          "Night mode: star field rotating about Polaris with optional trail accumulation matching home_bg reference.",
+          "Tone mapping and exposure produce the pale-sand / deep-blue-sky value range of the references."
+        ],
+        "evidenceRefs": ["det-star-trails", "det-desert-ground", "det-pyramid-faces"],
+        "failureModes": ["evenly ambient lighting", "sky reads as flat gradient", "night mode missing polaris alignment"]
+      }
+    ],
+    "visualDeltaChecks": [
+      "silhouette and negative-space delta (crescent rim ellipse, A-frame portal triangle, hour wedge)",
+      "component hierarchy depth delta",
+      "repetition density and distribution delta (stair treads, flagstone slabs, rubble courses)",
+      "material albedo/roughness/normal response delta (salmon sandstone vs buff rubble vs steel)",
+      "local feature placement and scale delta (aperture over rim, portal on axis, bastion positions)"
+    ],
+    "antiShallowSpecRules": [
+      "Do not proceed to code if qualityContract.qualityBar is unassessed.",
+      "Do not proceed to code if the spec only contains a root component for a moderate or complex object.",
+      "Do not proceed to code if required featureGroups are not represented by componentTree, materials, or repetitionSystems.",
+      "Do not proceed to code if visible local features are described only in prose and not attached to components/materials/evidenceRefs.",
+      "Do not proceed past structural-pass if attached child parts lack attachment.parentSocket, localStart, localEnd, embedDepth/overlap, and gapTolerance.",
+      "Do not pass material look-dev when albedo is reused as roughness, height, normal, or AO.",
+      "Do not pass material look-dev without macro, meso, and micro surface frequency bands for close-up materials.",
+      "Do not pass reference-fidelity material look-dev from a source image without usable referencePbr maps or an explicit documented limitation.",
+      "Do not patch a spec with extracted PBR maps when extraction confidence is below the target threshold unless the user explicitly accepts lower fidelity."
+    ]
+  },
+  "authoringInstruction": "Assessment filled from direct visual inspection of 8 reference photographs and 3x3 grid crops. Dimensions derived from published facts (11 stories tall, 1/10 mile across, 147 steps, 15-degree hour wedge, ~34.5 deg latitude alignment) and photo proportions; approximations are stated in unknownsToResolveBeforeImplementation."
+}

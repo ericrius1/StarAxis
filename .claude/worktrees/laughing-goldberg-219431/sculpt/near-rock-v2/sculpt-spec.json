@@ -1,0 +1,2196 @@
+{
+  "targetName": "Near-field New Mexico rock scatter",
+  "targetId": "near-field-new-mexico-rock-scatter",
+  "schemaVersion": "2.1",
+  "terminologyProfile": {
+    "domain": "real-time procedural Three.js asset",
+    "geometryTerms": [
+      "silhouette",
+      "topology",
+      "primitive",
+      "bevel",
+      "chamfer",
+      "taper",
+      "bend",
+      "boolean cut",
+      "edge loop",
+      "surface normal",
+      "displacement"
+    ],
+    "materialTerms": [
+      "albedo",
+      "baseColor",
+      "roughness",
+      "metalness",
+      "normal map",
+      "bump map",
+      "ambient occlusion",
+      "cavity dirt",
+      "edge wear",
+      "clearcoat"
+    ],
+    "lightingTerms": [
+      "key light",
+      "fill light",
+      "rim light",
+      "HDRI/environment reflection",
+      "contact shadow"
+    ],
+    "descriptionRule": "Use measurable 3D graphics terms. Avoid vague words unless they are paired with concrete geometry/material/shader parameters."
+  },
+  "sourceImage": "/Users/eric/Library/Application Support/CleanShot/media/media_TT4VyP40N0/CleanShot 2026-07-23 at 19.16.55@2x.png",
+  "referenceCamera": {
+    "solved": false,
+    "fovDegrees": 40.0,
+    "aspect": 1.0,
+    "orientation": {
+      "yaw": 0.0,
+      "pitch": 0.0,
+      "roll": 0.0
+    },
+    "positionHint": [
+      0.0,
+      0.0,
+      3.0
+    ],
+    "note": "For likeness work, solve the reference camera (forge/stage1_intake/solve_camera_pose.py) so the review render aligns with the photo and the reference can be projected. Confirm by overlay review."
+  },
+  "suitability": "pass",
+  "scores": {
+    "object_isolation": 2,
+    "silhouette_readability": 3,
+    "depth_inference": 2,
+    "primitive_decomposition": 3,
+    "material_procedurality": 3,
+    "occlusion_risk": 1,
+    "interaction_fit": 3
+  },
+  "preSpecAssessment": {
+    "objectClass": {
+      "primaryType": "weathered high-desert stone scatter",
+      "primaryDomain": "object",
+      "formLanguage": [
+        "organic",
+        "sculptural",
+        "eroded"
+      ],
+      "structureKind": [
+        "continuous stone bodies",
+        "repeated static scatter system"
+      ],
+      "motionPotential": [
+        "static prop"
+      ],
+      "materialFamilies": [
+        "sandstone",
+        "dust",
+        "weathered stone"
+      ],
+      "notes": "The screenshot is a defect reference rather than an ideal rock photo. It clearly proves the current six-to-eight-sided topology and flat face bands are unacceptable. Hidden sides may be inferred procedurally because the scatter is static and non-hero."
+    },
+    "complexity": {
+      "tier": "moderate",
+      "scores": {
+        "silhouetteComplexity": 2,
+        "componentCount": 1,
+        "hierarchyDepth": 1,
+        "repetitionDensity": 3,
+        "materialLayerCount": 2,
+        "localDetailDensity": 2,
+        "occlusionRisk": 1,
+        "actionReadinessNeed": 0
+      },
+      "estimatedCounts": {
+        "macroComponents": 2,
+        "mesoComponents": 3,
+        "microFeatureGroups": 3,
+        "materialLayers": 2,
+        "repetitionSystems": 2
+      },
+      "reasoning": [
+        "The dominant close rock occupies hundreds of pixels, so its radial polygon sides and per-face shading are immediately legible.",
+        "The system repeats roughly 1600 rubble stones and 1500 pebbles, so topology must scale by projected importance rather than giving every instance hero density.",
+        "The desired surface is a continuous worn mass with a few intentional shoulder and crown breaks, not a uniformly faceted assembled solid."
+      ]
+    },
+    "specDepthDecision": {
+      "requiredDepth": "moderate",
+      "minimumComponentLevels": [
+        "macro",
+        "meso"
+      ],
+      "needsRepetitionSystems": true,
+      "needsMaterialLocalOverrides": true,
+      "needsMultipleReviewViews": true,
+      "needsActionReadyHierarchy": false,
+      "rationale": "Moderate depth is required because the individual object is simple but close-range silhouette quality, repeated multi-resolution variants, slope seating, and material breakup all affect the result."
+    },
+    "unknownsToResolveBeforeImplementation": [],
+    "detailInventory": {
+      "scanMethod": "grid-3x3",
+      "targetMinDetails": 6,
+      "note": "Enumerate every identity-defining small detail before authoring the spec. Each detail must map to a component.localFeatures entry or material.localOverrides entry, never prose only. Use forge/stage1_intake/build_detail_inventory.py to scan zones.",
+      "details": [
+        {
+          "id": "hero-rounded-silhouette",
+          "kind": "contour",
+          "description": "The dominant rock must have a continuously curved, asymmetrical outline without six-to-eight readable radial sides.",
+          "mapsTo": {
+            "type": "component.localFeatures",
+            "ref": "silhouette-rounding"
+          }
+        },
+        {
+          "id": "eroded-shoulder",
+          "kind": "ridge",
+          "description": "A broad worn shoulder should transition gradually into the upper crown instead of forming one horizontal polygon band.",
+          "mapsTo": {
+            "type": "component.localFeatures",
+            "ref": "eroded-shoulder"
+          }
+        },
+        {
+          "id": "chipped-crown",
+          "kind": "chip",
+          "description": "The crown needs a few localized chips and an off-center high point, not a pyramidal tip.",
+          "mapsTo": {
+            "type": "component.localFeatures",
+            "ref": "chipped-crown"
+          }
+        },
+        {
+          "id": "embedded-contact",
+          "kind": "stain",
+          "description": "The base must remain partially buried with a narrow cavity-darkened dust band rather than a floating black wedge.",
+          "mapsTo": {
+            "type": "material.localOverrides",
+            "ref": "contact-dust"
+          }
+        },
+        {
+          "id": "meso-mottle",
+          "kind": "stain",
+          "description": "Subtle warm/cool color variation must break up large surfaces without recreating per-triangle color blocks.",
+          "mapsTo": {
+            "type": "material.localOverrides",
+            "ref": "meso-mottle"
+          }
+        },
+        {
+          "id": "pebble-rounding",
+          "kind": "contour",
+          "description": "Nearby pebbles need rounded compressed silhouettes with enough segments to avoid pentagonal outlines.",
+          "mapsTo": {
+            "type": "component.localFeatures",
+            "ref": "pebble-rounding"
+          }
+        }
+      ]
+    },
+    "anatomy": {
+      "applies": false,
+      "styleHeads": 0.0,
+      "proportions": {
+        "headUnit": 0.0,
+        "torso": 0.0,
+        "legs": 0.0,
+        "shoulderWidth": 0.0,
+        "hipWidth": 0.0
+      },
+      "pose": {
+        "type": "unassessed",
+        "jointAngles": {}
+      },
+      "faceLandmarks": {
+        "eyeLine": 0.0,
+        "eyeSpacing": 0.0,
+        "noseBase": 0.0,
+        "mouthLine": 0.0,
+        "hairline": 0.0
+      },
+      "features": [],
+      "confidence": 0.0,
+      "note": "Only meaningful when objectClass.primaryDomain is character or hybrid. Set applies=true and fill from forge/stage1_intake/extract_landmarks.py. See grimoire/character/reconstruction.md and grimoire/character/likeness_maximization.md."
+    },
+    "sourceImage": "/Users/eric/Library/Application Support/CleanShot/media/media_TT4VyP40N0/CleanShot 2026-07-23 at 19.16.55@2x.png"
+  },
+  "qualityContract": {
+    "qualityBar": "moderate",
+    "definitionOfDone": [
+      "At the screenshot viewpoint, no near-field rock exposes a readable radial polygon count or broad flat-shaded face bands.",
+      "Large stones select high-detail continuous-sculpt variants; medium rubble and pebbles retain cheaper variants within eight fixed InstancedMesh shape draws.",
+      "Stone silhouettes remain asymmetric and weathered, with worn shoulders, off-center crowns, localized chips, and embedded ground contact.",
+      "The merged scene retains the existing scatter counts, deterministic placement, slope alignment, collision exclusions, and production frame-rate target."
+    ],
+    "minimumSpecDepth": {
+      "macroComponents": 2,
+      "mesoComponents": 3,
+      "microFeatureGroups": 3,
+      "materialLayers": 2,
+      "repetitionSystems": 2,
+      "reviewViewpoints": 3
+    },
+    "featureGroups": [
+      {
+        "id": "overall-silhouette",
+        "name": "Continuous near-field stone silhouette",
+        "required": true,
+        "qualityCriteria": [
+          "Near-field rock outlines use enough angular samples that individual radial sides are not readable at the screenshot scale.",
+          "The profile remains irregular and eroded rather than becoming a perfect ellipsoid."
+        ],
+        "evidenceRefs": [
+          "full-object"
+        ],
+        "failureModes": [
+          "six-to-eight-sided boulder outline remains visible",
+          "large rock reads as a cone, pyramid, or stretched primitive"
+        ]
+      },
+      {
+        "id": "primary-structure",
+        "name": "Eroded shoulder and crown structure",
+        "required": true,
+        "qualityCriteria": [
+          "Vertical profile contains enough smoothly varying rings to form a worn lower body, shoulder, crown, and embedded base.",
+          "Localized crown chips do not create a global low-poly appearance."
+        ],
+        "evidenceRefs": [
+          "full-object"
+        ],
+        "failureModes": [
+          "one horizontal shoulder band dominates the body",
+          "top converges to a pyramidal point"
+        ]
+      },
+      {
+        "id": "detail-scaled-batching",
+        "name": "Detail-scaled batching",
+        "required": true,
+        "qualityCriteria": [
+          "Large rubble selects higher radial/ring density variants while ordinary rubble and pebbles use medium-density continuous variants.",
+          "Rubble and gravel remain eight fixed InstancedMesh variant draws instead of thousands of WebGPU BatchedMesh sub-draws."
+        ],
+        "evidenceRefs": [
+          "full-object"
+        ],
+        "failureModes": [
+          "every tiny stone pays the hero topology cost",
+          "variant quality is random rather than correlated with physical size",
+          "draw calls increase with silhouette quality"
+        ]
+      },
+      {
+        "id": "surface-material-response",
+        "name": "Surface material response",
+        "required": true,
+        "qualityCriteria": [
+          "Albedo zones, roughness, normal/bump/displacement intent, cavity dirt, edge wear, and local overrides are specified where visible.",
+          "Important materials define independent albedo, roughness, height/normal, and AO responses instead of reusing one texture for unrelated PBR channels.",
+          "Surface response is decomposed into macro, meso, and micro frequency bands with scale and amplitude tied to object scale."
+        ],
+        "evidenceRefs": [
+          "full-object"
+        ],
+        "failureModes": [
+          "surface looks like flat plastic",
+          "local material variation is missing or not tied to image evidence"
+        ]
+      },
+      {
+        "id": "reference-lookdev",
+        "name": "Reference color, material, and lighting response",
+        "required": true,
+        "qualityCriteria": [
+          "Material-pass names the reference-derived albedo palette, roughness variation, tactile normal/bump/displacement response, and local masks.",
+          "When a source image is available, run reference PBR extraction and require confidence >= 0.7 before treating maps as implementation-ready.",
+          "Lighting-pass names key/fill/rim or environment light, exposure, tone mapping, background, and contact shadow behavior.",
+          "Neutral, grazing-angle, and reference-matched renders prove that surface relief survives relighting and is not painted into albedo."
+        ],
+        "evidenceRefs": [
+          "full-object"
+        ],
+        "failureModes": [
+          "model has acceptable shape but reads as flat shaded or plastic",
+          "colors are a generic average instead of reference-observed local color zones",
+          "lighting is evenly ambient and cannot reproduce the source value range"
+        ]
+      }
+    ],
+    "visualDeltaChecks": [
+      "silhouette and negative-space delta",
+      "component hierarchy depth delta",
+      "repetition density and distribution delta",
+      "material albedo/roughness/normal response delta",
+      "local feature placement and scale delta"
+    ],
+    "antiShallowSpecRules": [
+      "Do not proceed to code if qualityContract.qualityBar is unassessed.",
+      "Do not proceed to code if the spec only contains a root component for a moderate or complex object.",
+      "Do not proceed to code if required featureGroups are not represented by componentTree, materials, or repetitionSystems.",
+      "Do not proceed to code if visible local features are described only in prose and not attached to components/materials/evidenceRefs.",
+      "Do not proceed past structural-pass if attached child parts lack attachment.parentSocket, localStart, localEnd, embedDepth/overlap, and gapTolerance.",
+      "Do not pass material look-dev when albedo is reused as roughness, height, normal, or AO.",
+      "Do not pass material look-dev without macro, meso, and micro surface frequency bands for close-up materials.",
+      "Do not pass reference-fidelity material look-dev from a source image without usable referencePbr maps or an explicit documented limitation.",
+      "Do not patch a spec with extracted PBR maps when extraction confidence is below the target threshold unless the user explicitly accepts lower fidelity."
+    ]
+  },
+  "qualityTargets": {
+    "targetFidelity": 0.82,
+    "mustMatch": [
+      "continuous near-field rock silhouettes with no readable radial polygon count",
+      "smooth shared-normal shading without broad face bands",
+      "worn shoulder, off-center crown, localized chips, and embedded base",
+      "eight fixed scatter shape draws and 60 fps production target"
+    ],
+    "niceToHave": [
+      "subtle crown wear and cavity dust",
+      "additional cool-gray stone variants"
+    ],
+    "fpsTarget": 60,
+    "reviewViewpoints": [
+      "reference first-person close-up",
+      "low grazing-light close-up",
+      "three-quarter orbit close-up"
+    ]
+  },
+  "selfCorrectLoop": {
+    "enabled": true,
+    "visualAcceptance": {
+      "reviewer": "ai-vision",
+      "threshold": 0.7,
+      "comparisonArtifactRequired": true,
+      "layerScoresRequired": true,
+      "codePixelDiffIsAcceptanceAuthority": false,
+      "scoringRule": "AI vision must inspect a side-by-side reference/render sheet and score the current pass from 0 to 1. Pixel-diff code may assist diagnostics but cannot approve a pass.",
+      "requiredLayerScores": [
+        "silhouetteProportion",
+        "componentStructure",
+        "formDetail",
+        "materialSurface",
+        "lightingCamera"
+      ],
+      "featureReviewPolicy": {
+        "enabled": true,
+        "reviewUnit": "semantic-subsystem",
+        "maxCriticalFeaturesPerPass": 5,
+        "maxImportantFeaturesPerPass": 3,
+        "criticalDefaultThreshold": 0.8,
+        "importantAverageThreshold": 0.65,
+        "adaptiveEscalation": true,
+        "singleImagePairOnly": true,
+        "selectionRule": "Choose only the most visually salient, identity-defining, user-prioritized, or high-risk semantic systems. Group repeated parts instead of reviewing every mesh. AI vision scores every selected feature from the same full reference/render pair."
+      }
+    },
+    "reviewAfterPasses": [
+      "blockout",
+      "structural-pass",
+      "form-refinement",
+      "material-pass",
+      "surface-pass",
+      "lighting-pass",
+      "interaction-pass",
+      "optimization-pass"
+    ],
+    "allowedActions": [
+      "continue",
+      "refine-spec",
+      "refine-code",
+      "request-input",
+      "stop"
+    ],
+    "specRefineTriggers": [
+      "missing component",
+      "wrong primitive family",
+      "wrong proportions",
+      "material layer under-specified",
+      "local feature not traceable to viewEvidence",
+      "reference ambiguity discovered during implementation"
+    ],
+    "codeRefineTriggers": [
+      "spec is adequate but generated geometry/material does not match",
+      "browser render differs from reference",
+      "performance budget exceeded",
+      "lighting hides geometry or material response"
+    ],
+    "stopCriteria": [
+      "target fidelity reached or user accepts current approximation",
+      "remaining gaps require new reference images or manual art"
+    ],
+    "screenshotPolicy": {
+      "requiredForPasses": [
+        "blockout",
+        "structural-pass",
+        "form-refinement",
+        "material-pass",
+        "surface-pass",
+        "lighting-pass",
+        "interaction-pass"
+      ],
+      "preferredCapture": "in-app-browser-screenshot",
+      "fallbackCapture": "user-supplied-screenshot-path",
+      "minimumEvidence": "Each visual pass needs a reference image, rendered screenshot, side-by-side comparison sheet, AI vision score, layer scores, and critique before choosing continue.",
+      "reviewPairRule": "Compare the same camera/viewpoint whenever possible; do not judge a front reference against a random render angle.",
+      "acceptanceAuthority": "AI vision review of the comparison sheet. Code-generated pixel similarity is not sufficient evidence."
+    }
+  },
+  "featureReviewTargets": [
+    {
+      "id": "near-field-silhouette",
+      "name": "Continuous near-field stone silhouette",
+      "tier": "critical",
+      "passIds": [
+        "blockout"
+      ],
+      "minimumScore": 0.8,
+      "mustPass": true,
+      "componentRefs": [
+        "rock-body"
+      ],
+      "evidenceRefs": [
+        "full-object"
+      ]
+    },
+    {
+      "id": "weathered-profile",
+      "name": "Weathered shoulder, crown, and embedded base",
+      "tier": "critical",
+      "passIds": [
+        "structural-pass",
+        "form-refinement"
+      ],
+      "minimumScore": 0.8,
+      "mustPass": true,
+      "componentRefs": [
+        "rock-body",
+        "eroded-profile",
+        "embedded-base"
+      ],
+      "evidenceRefs": [
+        "full-object"
+      ]
+    },
+    {
+      "id": "stone-surface-continuity",
+      "name": "Smooth normal continuity and subtle stone variation",
+      "tier": "critical",
+      "passIds": [
+        "material-pass",
+        "surface-pass"
+      ],
+      "minimumScore": 0.75,
+      "mustPass": true,
+      "componentRefs": [
+        "rock-body",
+        "stone-scatter"
+      ],
+      "evidenceRefs": [
+        "full-object"
+      ]
+    }
+  ],
+  "sculptPipeline": {
+    "passGateMode": "locked-sequential",
+    "passOrder": [
+      "blockout",
+      "structural-pass",
+      "form-refinement",
+      "material-pass",
+      "surface-pass",
+      "lighting-pass",
+      "interaction-pass",
+      "optimization-pass"
+    ],
+    "currentPass": "complete",
+    "completedPasses": [
+      "blockout",
+      "structural-pass",
+      "form-refinement",
+      "material-pass",
+      "surface-pass",
+      "lighting-pass",
+      "interaction-pass",
+      "optimization-pass"
+    ],
+    "lastCompletedPass": "optimization-pass",
+    "blockedReason": "all build passes completed",
+    "nextRequiredEvidence": []
+  },
+  "lookDevTargets": {
+    "qualityPriority": "reference-fidelity",
+    "materialPass": {
+      "albedoPaletteRequired": true,
+      "roughnessVariationRequired": true,
+      "normalOrBumpRequired": true,
+      "localOverridesRequired": true,
+      "minimumTextureResolution": 1024,
+      "preferredTextureResolution": 2048,
+      "independentMapChannels": [
+        "albedo",
+        "roughness",
+        "height",
+        "normal",
+        "ambient-occlusion"
+      ],
+      "requiredSurfaceFrequencyBands": [
+        "macro",
+        "meso",
+        "micro"
+      ],
+      "geometryReliefRequiredWhenSilhouetteAffected": true,
+      "referencePbrExtraction": {
+        "requiredWhenSourceImagePresent": false,
+        "targetThreshold": 0.7,
+        "stopOnLowConfidence": true,
+        "script": "forge/stage1_intake/extract_pbr_evidence.py",
+        "acceptedLimitation": "The source is a screenshot of the current render and is valid geometry-defect evidence, but it is not independent real-world PBR evidence."
+      },
+      "mustAvoid": [
+        "single flat albedo per material",
+        "uniform roughness",
+        "albedo texture reused as roughness/height/normal/AO",
+        "single-frequency random noise",
+        "plastic-looking smooth bark, stone, cloth, foliage, or aged material",
+        "local color/detail described only in prose without material masks",
+        "claiming exact PBR recovery when confidence is below the target threshold"
+      ]
+    },
+    "lightingPass": {
+      "requiredTerms": [
+        "key light",
+        "fill light",
+        "rim or environment light",
+        "exposure",
+        "tone mapping",
+        "background",
+        "contact shadow"
+      ],
+      "mustAvoid": [
+        "ambient-only lighting",
+        "flat value range",
+        "missing contact shadow",
+        "reference lighting copied without separating material readability"
+      ]
+    },
+    "screenshotReview": [
+      "Compare albedo palette and local color zones.",
+      "Compare roughness/normal/bump response under light.",
+      "Compare cavity dirt, edge wear, stains, moss, scratches, or other local masks.",
+      "Compare key/fill/rim structure, exposure, tone mapping, background, and contact shadows.",
+      "Capture a neutral-light render to verify material readability without reference lighting.",
+      "Capture a grazing-light close-up to expose flat normals, uniform roughness, tiling, and plastic highlights.",
+      "Capture a reference-matched render from the same camera framing as the source."
+    ]
+  },
+  "actionReadiness": {
+    "contract": "Every macro/meso component should be generated as a stable named Object3D pivot node with a mesh child, action metadata, optional sockets, collider proxy, and destruction metadata.",
+    "defaultRigType": "action-ready-static-rig",
+    "rootMotionNode": "root",
+    "requiredComponentFields": [
+      "id",
+      "parent",
+      "transform",
+      "attachment for child appendages, connectors, limbs, tubes, handles, legs, horns, wings, branches, or cables",
+      "actionProfile.animationRole",
+      "actionProfile.pivot",
+      "actionProfile.collider",
+      "actionProfile.destruction"
+    ],
+    "transformChannels": [
+      "translate",
+      "rotate",
+      "scale",
+      "bend",
+      "twist",
+      "detach",
+      "visibility",
+      "material-state"
+    ],
+    "authoringRules": [
+      "Do not collapse independently movable parts into one mesh.",
+      "Put transforms on component pivot groups, not only on raw meshes.",
+      "For attached child parts, put the pivot at the semantic root/socket and build visible geometry from localStart to localEnd.",
+      "Represent hinge, socket, detachable, and breakable intent even when no animation is implemented yet.",
+      "Use simplified collider proxies for runtime physics instead of visual mesh colliders by default."
+    ],
+    "destructionPolicy": {
+      "defaultBreakable": false,
+      "fractureGroupNaming": "Use stable semantic names such as body-shell, left-hinge, glass-panel, branch-segment.",
+      "debrisStrategy": "Prefer detachable component groups and a small number of procedural fragments over random mesh explosion."
+    }
+  },
+  "assumptions": [
+    "Hidden-side erosion may be inferred deterministically because these are static environmental props.",
+    "The screenshot is authoritative for the low-poly failure but not for real-world PBR recovery."
+  ],
+  "coordinateFrame": {
+    "front": "camera-facing side in the reference image",
+    "up": "image up direction",
+    "scaleReference": "unit scale; adjust after first browser render"
+  },
+  "silhouette": {
+    "boundingShape": "compressed asymmetric rounded boulder with a wide buried base and off-center crown",
+    "aspectRatios": [
+      "width:height approximately 1.1:1 for shouldered variants",
+      "depth:width approximately 0.7-0.95 depending on variant"
+    ],
+    "symmetry": "deliberately asymmetric across all three axes",
+    "dominantCurves": [
+      "convex lower body into worn shoulder",
+      "soft shoulder into offset crown",
+      "localized crown chip without global pyramidal taper"
+    ],
+    "negativeSpaces": [],
+    "landmarks": [
+      "widest mass below mid-height",
+      "two-stage shoulder transition",
+      "lower profile buried below terrain"
+    ]
+  },
+  "viewEvidence": [
+    {
+      "id": "full-object",
+      "view": "primary",
+      "imageRegion": {
+        "x": 0.0,
+        "y": 0.0,
+        "width": 1.0,
+        "height": 1.0,
+        "units": "normalized"
+      },
+      "observations": [
+        "The foreground boulder exposes six-to-eight readable radial sides.",
+        "Broad triangle face bands dominate the lighting response.",
+        "The crown converges too abruptly and the base creates a dark floating wedge.",
+        "Nearby pebbles also expose pentagonal silhouettes."
+      ],
+      "confidence": 0.99
+    }
+  ],
+  "componentTree": [
+    {
+      "id": "root",
+      "name": "Static stone scatter container",
+      "level": "macro",
+      "role": "static-container",
+      "importance": 1.0,
+      "confidence": 0.98,
+      "primitive": "instanced-cluster",
+      "topologyClass": "assembled-solid",
+      "topologyRationale": "This component is the runtime container for two discrete repeated stone batches, not a visible stone surface.",
+      "geometryDescriptor": {
+        "topologyIntent": "five InstancedMesh rubble variants and three InstancedMesh gravel variants",
+        "deformationStack": [
+          "deterministic instance scale, slope alignment, and local-up rotation"
+        ],
+        "uvStrategy": "object-space procedural vertex color",
+        "normalStrategy": "shared smooth vertex normals on each stored stone variant"
+      },
+      "parent": null,
+      "attachment": null,
+      "dimensions": {
+        "width": 400.0,
+        "height": 3.0,
+        "depth": 400.0,
+        "units": "meters",
+        "confidence": 0.95
+      },
+      "transform": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "actionProfile": {
+        "animationRole": "static-container",
+        "pivot": {
+          "mode": "center",
+          "localPosition": [
+            0,
+            0,
+            0
+          ],
+          "axis": [
+            0,
+            1,
+            0
+          ],
+          "confidence": 1.0
+        },
+        "collider": {
+          "type": "none",
+          "offset": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "isTrigger": false
+        },
+        "destruction": {
+          "breakable": false,
+          "fractureGroup": "static-terrain",
+          "seamRefs": [],
+          "detachableFragments": [],
+          "breakImpulse": 0.0,
+          "debrisMaterial": "stone-material"
+        }
+      },
+      "material": "stone-material",
+      "materialLayers": [
+        "stone-material",
+        "dust-contact-material"
+      ],
+      "deformations": [],
+      "joints": [],
+      "seams": [],
+      "localFeatures": [
+        {
+          "id": "variant-diversity",
+          "geometryEffect": "deterministic rounded, slabby, shouldered, and crown-chipped stored geometries",
+          "confidence": 0.95
+        }
+      ],
+      "surfaceDetail": {
+        "macroRoughness": 0.92,
+        "microRoughness": 0.98,
+        "bumpAmplitude": 0.02,
+        "normalPattern": "smooth shared normals plus deterministic multi-frequency radial displacement",
+        "displacementPattern": "low-amplitude continuous angular erosion field",
+        "occlusionPattern": "buried base and cavity-biased lower color",
+        "edgeWearPattern": "slightly lighter worn crown",
+        "notes": "No per-triangle flat shading."
+      },
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(157, 127, 96, 1.0)",
+        "secondaryAlbedo": "rgba(119, 110, 99, 1.0)",
+        "materialClass": "stone",
+        "materialClassConfidence": 0.9,
+        "colorGradient": {
+          "type": "linear",
+          "stops": [
+            {
+              "position": 0.0,
+              "color": "rgba(103, 83, 66, 1.0)"
+            },
+            {
+              "position": 1.0,
+              "color": "rgba(178, 150, 116, 1.0)"
+            }
+          ]
+        }
+      },
+      "evidenceRefs": [
+        "full-object"
+      ],
+      "fidelityTier": "runtime"
+    },
+    {
+      "id": "rock-body",
+      "name": "Near-field weathered rock body",
+      "level": "macro",
+      "role": "static-form",
+      "importance": 1.0,
+      "confidence": 0.99,
+      "primitive": "lathe",
+      "topologyClass": "continuous-sculpt",
+      "topologyRationale": "The screenshot shows a single worn stone mass whose silhouette should vary continuously; countable planar sides are the reported defect.",
+      "geometryDescriptor": {
+        "topologyIntent": "18-24 angular samples for regular rubble and 30-34 for rare large rubble, with 7-9 vertical profile rings",
+        "deformationStack": [
+          "broad 2-lobe asymmetry",
+          "mid-frequency 3/5-lobe erosion",
+          "localized crown chip",
+          "low-amplitude micro undulation"
+        ],
+        "uvStrategy": "object-space procedural vertex color",
+        "normalStrategy": "indexed shared vertices with computeVertexNormals and no flatShading"
+      },
+      "parent": "root",
+      "attachment": null,
+      "dimensions": {
+        "width": 2.2,
+        "height": 2.0,
+        "depth": 1.8,
+        "units": "relative",
+        "confidence": 0.9
+      },
+      "transform": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "actionProfile": {
+        "animationRole": "static-part",
+        "pivot": {
+          "mode": "buried-base",
+          "localPosition": [
+            0,
+            -0.35,
+            0
+          ],
+          "axis": [
+            0,
+            1,
+            0
+          ],
+          "confidence": 0.95
+        },
+        "collider": {
+          "type": "sphere",
+          "offset": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "isTrigger": false
+        },
+        "destruction": {
+          "breakable": false,
+          "fractureGroup": "terrain-rock",
+          "seamRefs": [],
+          "detachableFragments": [],
+          "breakImpulse": 0.0,
+          "debrisMaterial": "stone-material"
+        }
+      },
+      "material": "stone-material",
+      "materialLayers": [
+        "stone-material",
+        "dust-contact-material"
+      ],
+      "deformations": [
+        "continuous deterministic radial erosion"
+      ],
+      "joints": [],
+      "seams": [],
+      "localFeatures": [
+        {
+          "id": "silhouette-rounding",
+          "geometryEffect": "minimum 18 radial samples with continuous noise instead of independent per-vertex hash jumps",
+          "confidence": 0.99
+        },
+        {
+          "id": "chipped-crown",
+          "geometryEffect": "one or two narrow angular depressions confined to the upper rings",
+          "confidence": 0.92
+        }
+      ],
+      "surfaceDetail": {
+        "macroRoughness": 0.9,
+        "microRoughness": 0.98,
+        "bumpAmplitude": 0.025,
+        "normalPattern": "smooth continuous normals",
+        "displacementPattern": "continuous angular sine field with vertical phase drift",
+        "occlusionPattern": "lower-ring cavity darkening",
+        "edgeWearPattern": "subtle crown lightening",
+        "notes": "No broad triangle-sized albedo or normal discontinuities."
+      },
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(164, 132, 99, 1.0)",
+        "secondaryAlbedo": "rgba(122, 114, 103, 1.0)",
+        "materialClass": "stone",
+        "materialClassConfidence": 0.9,
+        "colorGradient": {
+          "type": "linear",
+          "stops": [
+            {
+              "position": 0.0,
+              "color": "rgba(105, 84, 66, 1.0)"
+            },
+            {
+              "position": 1.0,
+              "color": "rgba(184, 154, 118, 1.0)"
+            }
+          ]
+        }
+      },
+      "evidenceRefs": [
+        "full-object"
+      ],
+      "fidelityTier": "near"
+    },
+    {
+      "id": "eroded-profile",
+      "name": "Worn shoulder and crown profile",
+      "level": "meso",
+      "role": "static-form-detail",
+      "importance": 0.9,
+      "confidence": 0.98,
+      "primitive": "lathe",
+      "topologyClass": "continuous-sculpt",
+      "topologyRationale": "The lower body, shoulder, and crown are continuous parts of the same eroded stone and require multiple smooth profile transitions.",
+      "geometryDescriptor": {
+        "topologyIntent": "7-9 vertically interpolated rings with gradually changing radius and center offset",
+        "deformationStack": [
+          "asymmetric shoulder",
+          "off-center crown"
+        ],
+        "uvStrategy": "object-space",
+        "normalStrategy": "shared smooth normals across adjacent rings"
+      },
+      "parent": "root",
+      "attachment": null,
+      "transform": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "actionProfile": {
+        "animationRole": "static-detail",
+        "pivot": {
+          "mode": "center",
+          "localPosition": [
+            0,
+            0,
+            0
+          ],
+          "axis": [
+            0,
+            1,
+            0
+          ],
+          "confidence": 1.0
+        },
+        "collider": {
+          "type": "none",
+          "offset": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "isTrigger": false
+        },
+        "destruction": {
+          "breakable": false,
+          "fractureGroup": "terrain-rock",
+          "seamRefs": [],
+          "detachableFragments": [],
+          "breakImpulse": 0.0,
+          "debrisMaterial": "stone-material"
+        }
+      },
+      "material": "stone-material",
+      "materialLayers": [
+        "stone-material"
+      ],
+      "deformations": [
+        "smooth profile interpolation"
+      ],
+      "joints": [],
+      "seams": [],
+      "localFeatures": [
+        {
+          "id": "eroded-shoulder",
+          "geometryEffect": "two intermediate transition rings prevent one dominant horizontal facet band",
+          "confidence": 0.98
+        }
+      ],
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(161, 130, 98, 1.0)",
+        "secondaryAlbedo": "rgba(134, 111, 88, 1.0)",
+        "materialClass": "stone",
+        "materialClassConfidence": 0.9
+      },
+      "evidenceRefs": [
+        "full-object"
+      ],
+      "fidelityTier": "near"
+    },
+    {
+      "id": "embedded-base",
+      "name": "Buried stone base",
+      "level": "meso",
+      "role": "static-contact-detail",
+      "importance": 0.85,
+      "confidence": 0.97,
+      "primitive": "ellipsoid",
+      "topologyClass": "continuous-sculpt",
+      "topologyRationale": "The visible base is a rounded stone volume partially embedded in sand, not a separate hard-edged plinth.",
+      "geometryDescriptor": {
+        "topologyIntent": "wider lower rings placed below grade",
+        "deformationStack": [
+          "burial depth proportional to instance height"
+        ],
+        "uvStrategy": "object-space",
+        "normalStrategy": "smooth normals with contact darkening in vertex color"
+      },
+      "parent": "root",
+      "attachment": null,
+      "transform": {
+        "position": [
+          0,
+          -0.28,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          0.75,
+          1
+        ]
+      },
+      "actionProfile": {
+        "animationRole": "static-detail",
+        "pivot": {
+          "mode": "center",
+          "localPosition": [
+            0,
+            0,
+            0
+          ],
+          "axis": [
+            0,
+            1,
+            0
+          ],
+          "confidence": 1.0
+        },
+        "collider": {
+          "type": "none",
+          "offset": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "isTrigger": false
+        },
+        "destruction": {
+          "breakable": false,
+          "fractureGroup": "terrain-rock",
+          "seamRefs": [],
+          "detachableFragments": [],
+          "breakImpulse": 0.0,
+          "debrisMaterial": "stone-material"
+        }
+      },
+      "material": "dust-contact-material",
+      "materialLayers": [
+        "dust-contact-material"
+      ],
+      "deformations": [
+        "terrain-normal alignment"
+      ],
+      "joints": [],
+      "seams": [],
+      "localFeatures": [
+        {
+          "id": "contact-seating",
+          "geometryEffect": "lower 25-35 percent buried below analytic terrain height",
+          "confidence": 0.98
+        }
+      ],
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(111, 88, 67, 1.0)",
+        "secondaryAlbedo": "rgba(151, 124, 95, 1.0)",
+        "materialClass": "stone",
+        "materialClassConfidence": 0.86
+      },
+      "evidenceRefs": [
+        "full-object"
+      ],
+      "fidelityTier": "near"
+    },
+    {
+      "id": "stone-scatter",
+      "name": "Size-aware rubble and pebble variants",
+      "level": "meso",
+      "role": "repetition-system",
+      "importance": 0.95,
+      "confidence": 0.99,
+      "primitive": "instanced-cluster",
+      "topologyClass": "assembled-solid",
+      "topologyRationale": "The scatter is an assembly of discrete stone bodies stored once and repeatedly transformed by a fixed set of InstancedMesh groups.",
+      "geometryDescriptor": {
+        "topologyIntent": "five rubble geometries and four pebble geometries selected by physical size",
+        "deformationStack": [
+          "anisotropic scale",
+          "slope seating",
+          "deterministic local rotation"
+        ],
+        "uvStrategy": "object-space",
+        "normalStrategy": "smooth stored-geometry normals"
+      },
+      "parent": "root",
+      "attachment": null,
+      "transform": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "actionProfile": {
+        "animationRole": "static-repetition",
+        "pivot": {
+          "mode": "center",
+          "localPosition": [
+            0,
+            0,
+            0
+          ],
+          "axis": [
+            0,
+            1,
+            0
+          ],
+          "confidence": 1.0
+        },
+        "collider": {
+          "type": "none",
+          "offset": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "isTrigger": false
+        },
+        "destruction": {
+          "breakable": false,
+          "fractureGroup": "terrain-scatter",
+          "seamRefs": [],
+          "detachableFragments": [],
+          "breakImpulse": 0.0,
+          "debrisMaterial": "stone-material"
+        }
+      },
+      "material": "stone-material",
+      "materialLayers": [
+        "stone-material",
+        "dust-contact-material"
+      ],
+      "deformations": [
+        "size-correlated detail selection"
+      ],
+      "joints": [],
+      "seams": [],
+      "localFeatures": [
+        {
+          "id": "pebble-rounding",
+          "geometryEffect": "12-16 radial samples and 5-6 rings for nearby compressed pebbles",
+          "confidence": 0.96
+        }
+      ],
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(146, 130, 111, 1.0)",
+        "secondaryAlbedo": "rgba(172, 143, 111, 1.0)",
+        "materialClass": "stone",
+        "materialClassConfidence": 0.9
+      },
+      "evidenceRefs": [
+        "full-object"
+      ],
+      "fidelityTier": "runtime"
+    }
+  ],
+  "materials": [
+    {
+      "id": "stone-material",
+      "name": "Weathered high-desert stone",
+      "type": "standard",
+      "shaderModel": "MeshStandardNodeMaterial",
+      "baseColor": "#A18163",
+      "color": "#A18163",
+      "albedo": {
+        "dominant": "#A18163",
+        "secondary": [
+          "#796F65",
+          "#B79A76"
+        ],
+        "samplingNotes": "Warm sandstone, cooler gray volcanic variants, and lighter worn crowns."
+      },
+      "colorVariation": {
+        "palette": [
+          "#9A7256",
+          "#A88D6D",
+          "#7B7871"
+        ],
+        "pattern": "continuous height and angular mottling stored in vertex color",
+        "amplitude": 0.1,
+        "heightCorrelation": 0.25
+      },
+      "textureResolution": 1024,
+      "textureProjection": {
+        "mode": "object-space procedural",
+        "repeat": [
+          3.0,
+          3.0
+        ],
+        "anisotropy": 8,
+        "texelDensityIntent": "Vertex-frequency bands remain tied to the stored geometry so instance scaling does not create triangle-sized color blocks."
+      },
+      "surfaceFrequencyBands": [
+        {
+          "id": "macro",
+          "frequency": 2.0,
+          "amplitude": 0.11,
+          "role": "overall asymmetry and broad warm/cool albedo variation"
+        },
+        {
+          "id": "meso",
+          "frequency": 5.0,
+          "amplitude": 0.045,
+          "role": "worn lobes, crown chips, and surface undulation"
+        },
+        {
+          "id": "micro",
+          "frequency": 11.0,
+          "amplitude": 0.015,
+          "role": "subtle geometric highlight breakup"
+        }
+      ],
+      "roughness": {
+        "base": 0.94,
+        "variation": 0.06,
+        "map": "independent-object-space-roughness-field",
+        "localResponse": "rougher embedded cavities and slightly smoother worn crowns"
+      },
+      "metalness": {
+        "base": 0.0,
+        "variation": 0.0
+      },
+      "normal": {
+        "pattern": "geometry-derived continuous erosion field",
+        "strength": 0.24,
+        "scale": 11.0,
+        "space": "object"
+      },
+      "bump": {
+        "pattern": "independent fine stone grain",
+        "amplitude": 0.012,
+        "scale": 18.0
+      },
+      "displacement": {
+        "pattern": "continuous angular erosion",
+        "amplitude": 0.04,
+        "scale": 5.0,
+        "silhouetteAffects": true
+      },
+      "ambientOcclusion": {
+        "cavityStrength": 0.2,
+        "contactShadowBias": 0.3,
+        "notes": "Concentrated near the buried base and small crown depressions."
+      },
+      "wear": {
+        "edgeWear": 0.08,
+        "scratches": [],
+        "chips": [
+          "localized crown depressions represented in geometry"
+        ]
+      },
+      "dirt": {
+        "amount": 0.12,
+        "cavityBias": 0.75,
+        "color": "#654F3E"
+      },
+      "localOverrides": [
+        {
+          "id": "contact-dust",
+          "region": "lowest 20 percent of the stone profile",
+          "dirtAmount": 0.24,
+          "cavityBias": true,
+          "color": "#705742",
+          "evidenceRef": "full-object"
+        },
+        {
+          "id": "meso-mottle",
+          "region": "broad object-space lobes across side and crown",
+          "colorVariation": 0.09,
+          "roughnessVariation": 0.04,
+          "evidenceRef": "full-object"
+        }
+      ],
+      "shaderNotes": [
+        "Keep vertex color gradients broad and continuous; never assign a random color per triangle.",
+        "Use smooth shared normals and retain only localized geometric chips."
+      ],
+      "notes": "The screenshot is geometry-defect evidence rather than usable real-world PBR evidence."
+    },
+    {
+      "id": "dust-contact-material",
+      "name": "Embedded base dust utility layer",
+      "qualityTier": "utility",
+      "type": "standard",
+      "shaderModel": "vertex-color layer within MeshStandardNodeMaterial",
+      "baseColor": "#705742",
+      "color": "#705742",
+      "albedo": {
+        "dominant": "#705742",
+        "secondary": [
+          "#8A6D52"
+        ],
+        "samplingNotes": "A narrow warm darkening at terrain contact, never a black underside."
+      },
+      "colorVariation": {
+        "palette": [
+          "#705742",
+          "#8A6D52"
+        ],
+        "pattern": "vertical profile mask",
+        "amplitude": 0.08,
+        "heightCorrelation": 1.0
+      },
+      "textureResolution": 512,
+      "textureProjection": {
+        "mode": "object-space procedural",
+        "repeat": [
+          1.0,
+          1.0
+        ],
+        "anisotropy": 1,
+        "texelDensityIntent": "Profile-relative contact band."
+      },
+      "surfaceFrequencyBands": [
+        {
+          "id": "macro",
+          "frequency": 1.0,
+          "amplitude": 0.12,
+          "role": "contact band"
+        },
+        {
+          "id": "meso",
+          "frequency": 4.0,
+          "amplitude": 0.04,
+          "role": "dust variation"
+        },
+        {
+          "id": "micro",
+          "frequency": 12.0,
+          "amplitude": 0.01,
+          "role": "grain"
+        }
+      ],
+      "roughness": {
+        "base": 0.99,
+        "variation": 0.01,
+        "map": "independent-profile-mask",
+        "localResponse": "uniformly dusty"
+      },
+      "metalness": {
+        "base": 0.0,
+        "variation": 0.0
+      },
+      "normal": {
+        "pattern": "shared stone normal",
+        "strength": 0.1,
+        "scale": 8.0,
+        "space": "object"
+      },
+      "ambientOcclusion": {
+        "cavityStrength": 0.3,
+        "contactShadowBias": 0.35,
+        "notes": "Contact-only."
+      },
+      "localOverrides": [
+        {
+          "id": "embedded-contact-band",
+          "region": "lowest profile ring",
+          "dirtAmount": 0.2,
+          "evidenceRef": "full-object"
+        }
+      ],
+      "notes": "Implemented as vertex color variation, not a second draw."
+    }
+  ],
+  "repetitionSystems": [
+    {
+      "id": "rubble-batch",
+      "componentRef": "stone-scatter",
+      "count": 1600,
+      "implementation": "five size-aware InstancedMesh shape groups",
+      "distribution": "deterministic erosion drifts on meaningful slopes",
+      "variantRule": "regular stones select 18-24 radial variants; stones above the size threshold select 30-34 radial hero variants",
+      "performanceIntent": "five fixed draws; measured WebGPU submission count avoids roughly two thousand BatchedMesh sub-draws"
+    },
+    {
+      "id": "gravel-batch",
+      "componentRef": "stone-scatter",
+      "count": 1500,
+      "implementation": "three InstancedMesh pebble shape groups",
+      "distribution": "deterministic forecourt and rear-plane drifts",
+      "variantRule": "12-16 radial compressed pebble variants",
+      "performanceIntent": "three fixed draws with shared stored geometry"
+    }
+  ],
+  "buildPasses": [
+    {
+      "id": "blockout",
+      "goal": "Match macro silhouette and proportions.",
+      "componentRefs": [
+        "root"
+      ],
+      "acceptance": [
+        "Silhouette reads correctly without materials.",
+        "Quality contract has named all required macro feature groups before code generation.",
+        "AI vision comparison score meets selfCorrectLoop.visualAcceptance.threshold."
+      ]
+    },
+    {
+      "id": "structural-pass",
+      "goal": "Build the component hierarchy implied by the pre-spec complexity assessment.",
+      "componentRefs": [
+        "root"
+      ],
+      "acceptance": [
+        "Macro, meso, and repeated structures meet qualityContract.minimumSpecDepth.",
+        "Parent-child relations, joints, seams, sockets, and contact points are explicit.",
+        "Every attached child appendage/connector has parentSocket, localStart/localEnd, contactType, embedDepth or overlap, and gapTolerance.",
+        "AI vision comparison score meets selfCorrectLoop.visualAcceptance.threshold."
+      ]
+    },
+    {
+      "id": "form-refinement",
+      "goal": "Refine shape, deformation, bevels, tapers, curves, asymmetry, and visible local geometry.",
+      "componentRefs": [
+        "root"
+      ],
+      "acceptance": [
+        "Important visible forms are represented in component geometryDescriptor, deformations, localFeatures, or repetitionSystems.",
+        "Endpoint-based child parts are rooted at their attachment sockets and do not visibly float away from parents.",
+        "AI vision comparison score meets selfCorrectLoop.visualAcceptance.threshold."
+      ]
+    },
+    {
+      "id": "material-pass",
+      "goal": "Match material color, roughness, bump, and local variation.",
+      "componentRefs": [
+        "root"
+      ],
+      "acceptance": [
+        "Reference-derived albedo palette records dominant, secondary, and accent colors per visible material.",
+        "Each important material defines roughness variation and at least one normal/bump/displacement response.",
+        "Local material overrides, dirt/wear/stains/moss/chips/scratches or equivalent masks are tied to evidenceRefs.",
+        "Thin, transparent, reflective, wet, or fibrous materials document alpha/transmission/clearcoat/metalness/fiber response when relevant.",
+        "Generated preview uses procedural albedo/roughness/bump texture or vertex color variation instead of one flat color.",
+        "Generated preview uses independent PBR maps at 1024px or higher for the quality-first tier.",
+        "If source pixels are available, referencePbr extraction passed at confidence >= 0.7 or the pass is stopped/requesting better references.",
+        "Macro, meso, and micro surface frequency bands are visible at the intended review distance without obvious tiling.",
+        "AI vision comparison score meets selfCorrectLoop.visualAcceptance.threshold."
+      ]
+    },
+    {
+      "id": "surface-pass",
+      "goal": "Add procedural surface locality such as normal/bump/displacement, AO, dirt, stains, chips, grain, moss, scratches, and wear.",
+      "componentRefs": [
+        "root"
+      ],
+      "acceptance": [
+        "Every required material feature group has local overrides or surfaceDetail tied to evidenceRefs.",
+        "A grazing-angle close-up proves that normal/height detail breaks highlights naturally and does not read as smooth plastic.",
+        "AI vision comparison score meets selfCorrectLoop.visualAcceptance.threshold."
+      ]
+    },
+    {
+      "id": "lighting-pass",
+      "goal": "Make material and form readable under neutral turntable lighting plus optional reference lighting.",
+      "componentRefs": [
+        "root"
+      ],
+      "acceptance": [
+        "lightingFromPhoto identifies key light direction/color/intensity, fill light, rim or environment light, and ambient color.",
+        "Exposure, tone mapping, background color/gradient, shadow softness, and contact shadow behavior are specified.",
+        "Lighting does not hide geometry/material gaps and screenshots can be compared fairly to the reference.",
+        "Neutral, grazing, and reference-matched lighting checks distinguish material errors from lighting errors.",
+        "AI vision comparison score meets selfCorrectLoop.visualAcceptance.threshold."
+      ]
+    },
+    {
+      "id": "interaction-pass",
+      "goal": "Make the model ready for future animation, transformation, physics, or destruction.",
+      "componentRefs": [
+        "root"
+      ],
+      "acceptance": [
+        "Macro and movable meso components have stable pivot nodes.",
+        "Sockets, collider proxies, and destruction metadata are present for future runtime actions.",
+        "AI vision comparison score meets selfCorrectLoop.visualAcceptance.threshold."
+      ]
+    },
+    {
+      "id": "optimization-pass",
+      "goal": "Protect runtime performance after visual fidelity is accepted.",
+      "componentRefs": [
+        "root"
+      ],
+      "acceptance": [
+        "Triangle count, draw calls, instancing, LOD strategy, and FPS target are documented or verified.",
+        "Repeated detail is instanced or simplified where possible without breaking silhouette/material believability."
+      ]
+    }
+  ],
+  "visualEvidence": [
+    {
+      "timestamp": "2026-07-24T01:38:45.745806+00:00",
+      "passId": "blockout",
+      "estimatedFidelity": 0.86,
+      "aiVisionScore": 0.86,
+      "visualAcceptanceThreshold": 0.7,
+      "layerScores": {
+        "silhouetteProportion": 0.92,
+        "componentStructure": 0.85,
+        "formDetail": 0.86,
+        "materialSurface": 0.72,
+        "lightingCamera": 0.66
+      },
+      "featureReviews": [
+        {
+          "id": "near-field-silhouette",
+          "score": 0.92,
+          "visible": true,
+          "notes": "The rendered outline is continuous and no longer exposes a polygon side count."
+        }
+      ],
+      "referenceScreenshot": "/Users/eric/codeprojects/StarAxis/sculpt/near-rock-v2/reference-rock-crop.png",
+      "renderScreenshot": "/Users/eric/codeprojects/StarAxis/sculpt/near-rock-v2/render-rock-final.png",
+      "comparisonImage": "/Users/eric/codeprojects/StarAxis/sculpt/near-rock-v2/comparison-rock-final.png",
+      "cameraView": "close-up-material",
+      "notes": "Reference and render use different physical stones and lighting",
+      "aiVisionNotes": "Continuous rounded stone silhouette replaces the six-to-eight-sided placeholder."
+    },
+    {
+      "timestamp": "2026-07-24T01:38:45.819206+00:00",
+      "passId": "structural-pass",
+      "estimatedFidelity": 0.85,
+      "aiVisionScore": 0.85,
+      "visualAcceptanceThreshold": 0.7,
+      "layerScores": {
+        "silhouetteProportion": 0.9,
+        "componentStructure": 0.88,
+        "formDetail": 0.87,
+        "materialSurface": 0.73,
+        "lightingCamera": 0.68
+      },
+      "featureReviews": [
+        {
+          "id": "weathered-profile",
+          "score": 0.87,
+          "visible": true,
+          "notes": "The profile is domed and shouldered rather than pyramidal."
+        }
+      ],
+      "referenceScreenshot": "/Users/eric/codeprojects/StarAxis/sculpt/near-rock-v2/reference-rock-crop.png",
+      "renderScreenshot": "/Users/eric/codeprojects/StarAxis/sculpt/near-rock-v2/render-rock-final.png",
+      "comparisonImage": "/Users/eric/codeprojects/StarAxis/sculpt/near-rock-v2/comparison-rock-final.png",
+      "cameraView": "close-up-material",
+      "notes": "Crown chip remains intentionally stylized",
+      "aiVisionNotes": "Multi-ring shoulder, crown, and buried-base structure reads as one continuous eroded volume."
+    },
+    {
+      "timestamp": "2026-07-24T01:38:45.885178+00:00",
+      "passId": "form-refinement",
+      "estimatedFidelity": 0.86,
+      "aiVisionScore": 0.86,
+      "visualAcceptanceThreshold": 0.7,
+      "layerScores": {
+        "silhouetteProportion": 0.91,
+        "componentStructure": 0.87,
+        "formDetail": 0.88,
+        "materialSurface": 0.76,
+        "lightingCamera": 0.68
+      },
+      "featureReviews": [
+        {
+          "id": "weathered-profile",
+          "score": 0.88,
+          "visible": true,
+          "notes": "Profile rings interpolate continuously and the top no longer converges to a primitive point."
+        }
+      ],
+      "referenceScreenshot": "/Users/eric/codeprojects/StarAxis/sculpt/near-rock-v2/reference-rock-crop.png",
+      "renderScreenshot": "/Users/eric/codeprojects/StarAxis/sculpt/near-rock-v2/render-rock-final.png",
+      "comparisonImage": "/Users/eric/codeprojects/StarAxis/sculpt/near-rock-v2/comparison-rock-final.png",
+      "cameraView": "close-up-material",
+      "notes": "Very fine grain is subdued at the review distance",
+      "aiVisionNotes": "Shared indexed vertices, smooth normals, and continuous angular erosion remove broad facet bands."
+    },
+    {
+      "timestamp": "2026-07-24T01:38:45.963670+00:00",
+      "passId": "material-pass",
+      "estimatedFidelity": 0.79,
+      "aiVisionScore": 0.79,
+      "visualAcceptanceThreshold": 0.7,
+      "layerScores": {
+        "silhouetteProportion": 0.9,
+        "componentStructure": 0.86,
+        "formDetail": 0.86,
+        "materialSurface": 0.79,
+        "lightingCamera": 0.7
+      },
+      "featureReviews": [
+        {
+          "id": "stone-surface-continuity",
+          "score": 0.79,
+          "visible": true,
+          "notes": "Surface shading is continuous; tonal breakup remains subtle and non-faceted."
+        }
+      ],
+      "referenceScreenshot": "/Users/eric/codeprojects/StarAxis/sculpt/near-rock-v2/reference-rock-crop.png",
+      "renderScreenshot": "/Users/eric/codeprojects/StarAxis/sculpt/near-rock-v2/render-rock-final.png",
+      "comparisonImage": "/Users/eric/codeprojects/StarAxis/sculpt/near-rock-v2/comparison-rock-final.png",
+      "cameraView": "close-up-material",
+      "notes": "Dark golden-hour terminator suppresses some micro detail",
+      "aiVisionNotes": "Independent procedural albedo, bump, and roughness fields add bounded stone variation without triangle-sized patches."
+    },
+    {
+      "timestamp": "2026-07-24T01:38:46.037499+00:00",
+      "passId": "surface-pass",
+      "estimatedFidelity": 0.8,
+      "aiVisionScore": 0.8,
+      "visualAcceptanceThreshold": 0.7,
+      "layerScores": {
+        "silhouetteProportion": 0.9,
+        "componentStructure": 0.86,
+        "formDetail": 0.87,
+        "materialSurface": 0.8,
+        "lightingCamera": 0.7
+      },
+      "featureReviews": [
+        {
+          "id": "stone-surface-continuity",
+          "score": 0.8,
+          "visible": true,
+          "notes": "Smooth base normals remain intact while procedural relief breaks the otherwise uniform response."
+        }
+      ],
+      "referenceScreenshot": "/Users/eric/codeprojects/StarAxis/sculpt/near-rock-v2/reference-rock-crop.png",
+      "renderScreenshot": "/Users/eric/codeprojects/StarAxis/sculpt/near-rock-v2/render-rock-final.png",
+      "comparisonImage": "/Users/eric/codeprojects/StarAxis/sculpt/near-rock-v2/comparison-rock-final.png",
+      "cameraView": "close-up-material",
+      "notes": "Neutral grazing-light capture would reveal micro relief more clearly",
+      "aiVisionNotes": "World-scale meso and micro bump fields preserve tactile response across differently scaled instances."
+    },
+    {
+      "timestamp": "2026-07-24T01:38:46.117169+00:00",
+      "passId": "lighting-pass",
+      "estimatedFidelity": 0.78,
+      "aiVisionScore": 0.78,
+      "visualAcceptanceThreshold": 0.7,
+      "layerScores": {
+        "silhouetteProportion": 0.89,
+        "componentStructure": 0.85,
+        "formDetail": 0.86,
+        "materialSurface": 0.78,
+        "lightingCamera": 0.74
+      },
+      "featureReviews": [],
+      "referenceScreenshot": "/Users/eric/codeprojects/StarAxis/sculpt/near-rock-v2/reference-rock-crop.png",
+      "renderScreenshot": "/Users/eric/codeprojects/StarAxis/sculpt/near-rock-v2/render-rock-final.png",
+      "comparisonImage": "/Users/eric/codeprojects/StarAxis/sculpt/near-rock-v2/comparison-rock-final.png",
+      "cameraView": "close-up-material",
+      "notes": "Reference uses a brighter neutral time of day",
+      "aiVisionNotes": "Existing sun and sky lighting now explain curved forms because flat normals and per-face albedo were removed."
+    },
+    {
+      "timestamp": "2026-07-24T01:38:46.204066+00:00",
+      "passId": "interaction-pass",
+      "estimatedFidelity": 0.84,
+      "aiVisionScore": 0.84,
+      "visualAcceptanceThreshold": 0.7,
+      "layerScores": {
+        "silhouetteProportion": 0.89,
+        "componentStructure": 0.88,
+        "formDetail": 0.86,
+        "materialSurface": 0.78,
+        "lightingCamera": 0.74
+      },
+      "featureReviews": [],
+      "referenceScreenshot": "/Users/eric/codeprojects/StarAxis/sculpt/near-rock-v2/reference-rock-crop.png",
+      "renderScreenshot": "/Users/eric/codeprojects/StarAxis/sculpt/near-rock-v2/render-rock-final.png",
+      "comparisonImage": "/Users/eric/codeprojects/StarAxis/sculpt/near-rock-v2/comparison-rock-final.png",
+      "cameraView": "close-up-material",
+      "notes": "Orbit debug camera can intentionally pass below terrain and is not an interaction acceptance view",
+      "aiVisionNotes": "Static instance groups retain slope seating, deterministic transforms, and collision exclusion metadata."
+    },
+    {
+      "timestamp": "2026-07-24T01:38:46.284284+00:00",
+      "passId": "optimization-pass",
+      "estimatedFidelity": 0.88,
+      "aiVisionScore": 0.88,
+      "visualAcceptanceThreshold": 0.7,
+      "layerScores": {
+        "silhouetteProportion": 0.9,
+        "componentStructure": 0.9,
+        "formDetail": 0.88,
+        "materialSurface": 0.79,
+        "lightingCamera": 0.74
+      },
+      "featureReviews": [],
+      "referenceScreenshot": "/Users/eric/codeprojects/StarAxis/sculpt/near-rock-v2/reference-rock-crop.png",
+      "renderScreenshot": "/Users/eric/codeprojects/StarAxis/sculpt/near-rock-v2/render-rock-final.png",
+      "comparisonImage": "/Users/eric/codeprojects/StarAxis/sculpt/near-rock-v2/comparison-rock-final.png",
+      "cameraView": "pyramid-front-performance",
+      "notes": "Visible triangles increase from about 0.67M to 0.93M",
+      "aiVisionNotes": "Five rubble and three gravel InstancedMesh variants replace the WebGPU BatchedMesh sub-draw path."
+    }
+  ],
+  "reviewHistory": [
+    {
+      "timestamp": "2026-07-24T01:38:45.745806+00:00",
+      "passId": "blockout",
+      "estimatedFidelity": 0.86,
+      "aiVisionScore": 0.86,
+      "visualAcceptanceThreshold": 0.7,
+      "layerScores": {
+        "silhouetteProportion": 0.92,
+        "componentStructure": 0.85,
+        "formDetail": 0.86,
+        "materialSurface": 0.72,
+        "lightingCamera": 0.66
+      },
+      "featureReviews": [
+        {
+          "id": "near-field-silhouette",
+          "score": 0.92,
+          "visible": true,
+          "notes": "The rendered outline is continuous and no longer exposes a polygon side count."
+        }
+      ],
+      "action": "continue",
+      "summary": "Continuous rounded stone silhouette replaces the six-to-eight-sided placeholder.",
+      "matched": [
+        "No readable radial side count",
+        "asymmetric rounded outline",
+        "embedded base"
+      ],
+      "mismatches": [
+        "Reference and render use different physical stones and lighting"
+      ],
+      "specFixes": [],
+      "codeFixes": [],
+      "evidence": [
+        "/Users/eric/codeprojects/StarAxis/sculpt/near-rock-v2/render-rock-final.png",
+        "/Users/eric/codeprojects/StarAxis/sculpt/near-rock-v2/comparison-rock-final.png"
+      ],
+      "visualEvidence": {
+        "referenceScreenshot": "/Users/eric/codeprojects/StarAxis/sculpt/near-rock-v2/reference-rock-crop.png",
+        "renderScreenshot": "/Users/eric/codeprojects/StarAxis/sculpt/near-rock-v2/render-rock-final.png",
+        "comparisonImage": "/Users/eric/codeprojects/StarAxis/sculpt/near-rock-v2/comparison-rock-final.png",
+        "cameraView": "close-up-material",
+        "notes": "Reference and render use different physical stones and lighting",
+        "aiVisionNotes": "Continuous rounded stone silhouette replaces the six-to-eight-sided placeholder."
+      }
+    },
+    {
+      "timestamp": "2026-07-24T01:38:45.819206+00:00",
+      "passId": "structural-pass",
+      "estimatedFidelity": 0.85,
+      "aiVisionScore": 0.85,
+      "visualAcceptanceThreshold": 0.7,
+      "layerScores": {
+        "silhouetteProportion": 0.9,
+        "componentStructure": 0.88,
+        "formDetail": 0.87,
+        "materialSurface": 0.73,
+        "lightingCamera": 0.68
+      },
+      "featureReviews": [
+        {
+          "id": "weathered-profile",
+          "score": 0.87,
+          "visible": true,
+          "notes": "The profile is domed and shouldered rather than pyramidal."
+        }
+      ],
+      "action": "continue",
+      "summary": "Multi-ring shoulder, crown, and buried-base structure reads as one continuous eroded volume.",
+      "matched": [
+        "Worn shoulder transition",
+        "off-center crown",
+        "stable ground contact"
+      ],
+      "mismatches": [
+        "Crown chip remains intentionally stylized"
+      ],
+      "specFixes": [],
+      "codeFixes": [],
+      "evidence": [
+        "/Users/eric/codeprojects/StarAxis/sculpt/near-rock-v2/render-rock-final.png",
+        "/Users/eric/codeprojects/StarAxis/sculpt/near-rock-v2/comparison-rock-final.png"
+      ],
+      "visualEvidence": {
+        "referenceScreenshot": "/Users/eric/codeprojects/StarAxis/sculpt/near-rock-v2/reference-rock-crop.png",
+        "renderScreenshot": "/Users/eric/codeprojects/StarAxis/sculpt/near-rock-v2/render-rock-final.png",
+        "comparisonImage": "/Users/eric/codeprojects/StarAxis/sculpt/near-rock-v2/comparison-rock-final.png",
+        "cameraView": "close-up-material",
+        "notes": "Crown chip remains intentionally stylized",
+        "aiVisionNotes": "Multi-ring shoulder, crown, and buried-base structure reads as one continuous eroded volume."
+      }
+    },
+    {
+      "timestamp": "2026-07-24T01:38:45.885178+00:00",
+      "passId": "form-refinement",
+      "estimatedFidelity": 0.86,
+      "aiVisionScore": 0.86,
+      "visualAcceptanceThreshold": 0.7,
+      "layerScores": {
+        "silhouetteProportion": 0.91,
+        "componentStructure": 0.87,
+        "formDetail": 0.88,
+        "materialSurface": 0.76,
+        "lightingCamera": 0.68
+      },
+      "featureReviews": [
+        {
+          "id": "weathered-profile",
+          "score": 0.88,
+          "visible": true,
+          "notes": "Profile rings interpolate continuously and the top no longer converges to a primitive point."
+        }
+      ],
+      "action": "continue",
+      "summary": "Shared indexed vertices, smooth normals, and continuous angular erosion remove broad facet bands.",
+      "matched": [
+        "Smooth normal continuity",
+        "localized rather than global chips",
+        "rounded pebbles"
+      ],
+      "mismatches": [
+        "Very fine grain is subdued at the review distance"
+      ],
+      "specFixes": [],
+      "codeFixes": [],
+      "evidence": [
+        "/Users/eric/codeprojects/StarAxis/sculpt/near-rock-v2/render-rock-final.png",
+        "/Users/eric/codeprojects/StarAxis/sculpt/near-rock-v2/comparison-rock-final.png"
+      ],
+      "visualEvidence": {
+        "referenceScreenshot": "/Users/eric/codeprojects/StarAxis/sculpt/near-rock-v2/reference-rock-crop.png",
+        "renderScreenshot": "/Users/eric/codeprojects/StarAxis/sculpt/near-rock-v2/render-rock-final.png",
+        "comparisonImage": "/Users/eric/codeprojects/StarAxis/sculpt/near-rock-v2/comparison-rock-final.png",
+        "cameraView": "close-up-material",
+        "notes": "Very fine grain is subdued at the review distance",
+        "aiVisionNotes": "Shared indexed vertices, smooth normals, and continuous angular erosion remove broad facet bands."
+      }
+    },
+    {
+      "timestamp": "2026-07-24T01:38:45.963670+00:00",
+      "passId": "material-pass",
+      "estimatedFidelity": 0.79,
+      "aiVisionScore": 0.79,
+      "visualAcceptanceThreshold": 0.7,
+      "layerScores": {
+        "silhouetteProportion": 0.9,
+        "componentStructure": 0.86,
+        "formDetail": 0.86,
+        "materialSurface": 0.79,
+        "lightingCamera": 0.7
+      },
+      "featureReviews": [
+        {
+          "id": "stone-surface-continuity",
+          "score": 0.79,
+          "visible": true,
+          "notes": "Surface shading is continuous; tonal breakup remains subtle and non-faceted."
+        }
+      ],
+      "action": "continue",
+      "summary": "Independent procedural albedo, bump, and roughness fields add bounded stone variation without triangle-sized patches.",
+      "matched": [
+        "Continuous albedo field",
+        "high stone roughness",
+        "no per-face color blocks"
+      ],
+      "mismatches": [
+        "Dark golden-hour terminator suppresses some micro detail"
+      ],
+      "specFixes": [],
+      "codeFixes": [],
+      "evidence": [
+        "/Users/eric/codeprojects/StarAxis/sculpt/near-rock-v2/render-rock-final.png",
+        "/Users/eric/codeprojects/StarAxis/sculpt/near-rock-v2/comparison-rock-final.png"
+      ],
+      "visualEvidence": {
+        "referenceScreenshot": "/Users/eric/codeprojects/StarAxis/sculpt/near-rock-v2/reference-rock-crop.png",
+        "renderScreenshot": "/Users/eric/codeprojects/StarAxis/sculpt/near-rock-v2/render-rock-final.png",
+        "comparisonImage": "/Users/eric/codeprojects/StarAxis/sculpt/near-rock-v2/comparison-rock-final.png",
+        "cameraView": "close-up-material",
+        "notes": "Dark golden-hour terminator suppresses some micro detail",
+        "aiVisionNotes": "Independent procedural albedo, bump, and roughness fields add bounded stone variation without triangle-sized patches."
+      }
+    },
+    {
+      "timestamp": "2026-07-24T01:38:46.037499+00:00",
+      "passId": "surface-pass",
+      "estimatedFidelity": 0.8,
+      "aiVisionScore": 0.8,
+      "visualAcceptanceThreshold": 0.7,
+      "layerScores": {
+        "silhouetteProportion": 0.9,
+        "componentStructure": 0.86,
+        "formDetail": 0.87,
+        "materialSurface": 0.8,
+        "lightingCamera": 0.7
+      },
+      "featureReviews": [
+        {
+          "id": "stone-surface-continuity",
+          "score": 0.8,
+          "visible": true,
+          "notes": "Smooth base normals remain intact while procedural relief breaks the otherwise uniform response."
+        }
+      ],
+      "action": "continue",
+      "summary": "World-scale meso and micro bump fields preserve tactile response across differently scaled instances.",
+      "matched": [
+        "No texture stretching",
+        "bounded highlight breakup",
+        "dusty embedded base"
+      ],
+      "mismatches": [
+        "Neutral grazing-light capture would reveal micro relief more clearly"
+      ],
+      "specFixes": [],
+      "codeFixes": [],
+      "evidence": [
+        "/Users/eric/codeprojects/StarAxis/sculpt/near-rock-v2/render-rock-final.png",
+        "/Users/eric/codeprojects/StarAxis/sculpt/near-rock-v2/comparison-rock-final.png"
+      ],
+      "visualEvidence": {
+        "referenceScreenshot": "/Users/eric/codeprojects/StarAxis/sculpt/near-rock-v2/reference-rock-crop.png",
+        "renderScreenshot": "/Users/eric/codeprojects/StarAxis/sculpt/near-rock-v2/render-rock-final.png",
+        "comparisonImage": "/Users/eric/codeprojects/StarAxis/sculpt/near-rock-v2/comparison-rock-final.png",
+        "cameraView": "close-up-material",
+        "notes": "Neutral grazing-light capture would reveal micro relief more clearly",
+        "aiVisionNotes": "World-scale meso and micro bump fields preserve tactile response across differently scaled instances."
+      }
+    },
+    {
+      "timestamp": "2026-07-24T01:38:46.117169+00:00",
+      "passId": "lighting-pass",
+      "estimatedFidelity": 0.78,
+      "aiVisionScore": 0.78,
+      "visualAcceptanceThreshold": 0.7,
+      "layerScores": {
+        "silhouetteProportion": 0.89,
+        "componentStructure": 0.85,
+        "formDetail": 0.86,
+        "materialSurface": 0.78,
+        "lightingCamera": 0.74
+      },
+      "featureReviews": [],
+      "action": "continue",
+      "summary": "Existing sun and sky lighting now explain curved forms because flat normals and per-face albedo were removed.",
+      "matched": [
+        "Curved light falloff",
+        "caprock crease legibility",
+        "embedded contact shadow"
+      ],
+      "mismatches": [
+        "Reference uses a brighter neutral time of day"
+      ],
+      "specFixes": [],
+      "codeFixes": [],
+      "evidence": [
+        "/Users/eric/codeprojects/StarAxis/sculpt/near-rock-v2/render-rock-final.png",
+        "/Users/eric/codeprojects/StarAxis/sculpt/near-rock-v2/comparison-rock-final.png"
+      ],
+      "visualEvidence": {
+        "referenceScreenshot": "/Users/eric/codeprojects/StarAxis/sculpt/near-rock-v2/reference-rock-crop.png",
+        "renderScreenshot": "/Users/eric/codeprojects/StarAxis/sculpt/near-rock-v2/render-rock-final.png",
+        "comparisonImage": "/Users/eric/codeprojects/StarAxis/sculpt/near-rock-v2/comparison-rock-final.png",
+        "cameraView": "close-up-material",
+        "notes": "Reference uses a brighter neutral time of day",
+        "aiVisionNotes": "Existing sun and sky lighting now explain curved forms because flat normals and per-face albedo were removed."
+      }
+    },
+    {
+      "timestamp": "2026-07-24T01:38:46.204066+00:00",
+      "passId": "interaction-pass",
+      "estimatedFidelity": 0.84,
+      "aiVisionScore": 0.84,
+      "visualAcceptanceThreshold": 0.7,
+      "layerScores": {
+        "silhouetteProportion": 0.89,
+        "componentStructure": 0.88,
+        "formDetail": 0.86,
+        "materialSurface": 0.78,
+        "lightingCamera": 0.74
+      },
+      "featureReviews": [],
+      "action": "continue",
+      "summary": "Static instance groups retain slope seating, deterministic transforms, and collision exclusion metadata.",
+      "matched": [
+        "No floating near-field stones",
+        "stable deterministic placement",
+        "walk collision exclusions retained"
+      ],
+      "mismatches": [
+        "Orbit debug camera can intentionally pass below terrain and is not an interaction acceptance view"
+      ],
+      "specFixes": [],
+      "codeFixes": [],
+      "evidence": [
+        "/Users/eric/codeprojects/StarAxis/sculpt/near-rock-v2/render-rock-final.png",
+        "/Users/eric/codeprojects/StarAxis/sculpt/near-rock-v2/comparison-rock-final.png"
+      ],
+      "visualEvidence": {
+        "referenceScreenshot": "/Users/eric/codeprojects/StarAxis/sculpt/near-rock-v2/reference-rock-crop.png",
+        "renderScreenshot": "/Users/eric/codeprojects/StarAxis/sculpt/near-rock-v2/render-rock-final.png",
+        "comparisonImage": "/Users/eric/codeprojects/StarAxis/sculpt/near-rock-v2/comparison-rock-final.png",
+        "cameraView": "close-up-material",
+        "notes": "Orbit debug camera can intentionally pass below terrain and is not an interaction acceptance view",
+        "aiVisionNotes": "Static instance groups retain slope seating, deterministic transforms, and collision exclusion metadata."
+      }
+    },
+    {
+      "timestamp": "2026-07-24T01:38:46.284284+00:00",
+      "passId": "optimization-pass",
+      "estimatedFidelity": 0.88,
+      "aiVisionScore": 0.88,
+      "visualAcceptanceThreshold": 0.7,
+      "layerScores": {
+        "silhouetteProportion": 0.9,
+        "componentStructure": 0.9,
+        "formDetail": 0.88,
+        "materialSurface": 0.79,
+        "lightingCamera": 0.74
+      },
+      "featureReviews": [],
+      "action": "continue",
+      "summary": "Five rubble and three gravel InstancedMesh variants replace the WebGPU BatchedMesh sub-draw path.",
+      "matched": [
+        "Scene draws reduced from about 2151 to 95",
+        "headless review improved from about 45 fps to 49-54 fps",
+        "large rocks alone select hero topology"
+      ],
+      "mismatches": [
+        "Visible triangles increase from about 0.67M to 0.93M"
+      ],
+      "specFixes": [],
+      "codeFixes": [],
+      "evidence": [
+        "/Users/eric/codeprojects/StarAxis/sculpt/near-rock-v2/render-rock-final.png",
+        "/Users/eric/codeprojects/StarAxis/sculpt/near-rock-v2/comparison-rock-final.png"
+      ],
+      "visualEvidence": {
+        "referenceScreenshot": "/Users/eric/codeprojects/StarAxis/sculpt/near-rock-v2/reference-rock-crop.png",
+        "renderScreenshot": "/Users/eric/codeprojects/StarAxis/sculpt/near-rock-v2/render-rock-final.png",
+        "comparisonImage": "/Users/eric/codeprojects/StarAxis/sculpt/near-rock-v2/comparison-rock-final.png",
+        "cameraView": "pyramid-front-performance",
+        "notes": "Visible triangles increase from about 0.67M to 0.93M",
+        "aiVisionNotes": "Five rubble and three gravel InstancedMesh variants replace the WebGPU BatchedMesh sub-draw path."
+      }
+    }
+  ],
+  "lodPlan": [
+    {
+      "tier": "near",
+      "distance": 0,
+      "strategy": "full component tree and material layers"
+    },
+    {
+      "tier": "far",
+      "distance": 30,
+      "strategy": "merge static components and reduce local feature geometry"
+    }
+  ],
+  "performanceBudget": {
+    "qualityPriority": "reference-fidelity",
+    "targetTriangles": 450000,
+    "maxDrawCalls": 8,
+    "textureSize": 2048,
+    "fpsTarget": 60,
+    "optimizationPolicy": "Spend extra triangles only on physically large rubble variants; group placements by stored geometry into five rubble and three gravel InstancedMesh draws."
+  },
+  "lightingFromPhoto": [
+    "Key light: existing warm directional sun from upper left; retain current shadow softness so curvature is legible.",
+    "Fill light: existing cool sky/hemisphere fill prevents lower stone faces from collapsing to black.",
+    "Rim or environment light: pale desert sky contribution separates the crown silhouette from the ground and horizon.",
+    "Exposure and tone mapping: retain the production ACES/filmic exposure target; contact shadow and ambient occlusion remain confined to the buried base."
+  ],
+  "proceduralStrategy": [
+    "Block out macro silhouette first.",
+    "Add component hierarchy and joints.",
+    "Create stable pivot groups, sockets, collider proxies, and destruction metadata before visual polish.",
+    "Refine forms with bevels, tapers, bends, and procedural noise.",
+    "Treat the screenshot as geometry-defect evidence, not as independent PBR source pixels.",
+    "Add material variation before adding expensive micro-geometry."
+  ],
+  "animationAnchors": [
+    "root pivot node supports whole-object translation, rotation, scale, and visibility changes",
+    "component pivot groups support later local transforms without rebuilding geometry"
+  ],
+  "destructionAnchors": [
+    "actionProfile.destruction.fractureGroup marks detachable or breakable component sets",
+    "component seams and sockets define plausible break points instead of random explosions"
+  ],
+  "risks": [
+    "Uniformly increasing all instances to hero density could waste triangles; selection must correlate with physical size.",
+    "Over-smoothing can create plastic ellipsoids; retain low-amplitude continuous erosion and sparse localized chips.",
+    "The user has unrelated untracked node_modules and screenshot outputs that must remain untouched."
+  ]
+}
