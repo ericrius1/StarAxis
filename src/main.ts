@@ -584,11 +584,11 @@ if (Number.isFinite(solarParam)) {
   showLightState(sky.getMode());
 }
 
-// A normal arrival begins at sunset, with the sun a few degrees above the
-// western horizon: the site still reads in warm light instead of opening in
-// the dark. Explicit views, cameras, tours, and capture modes keep their
-// authored lighting so review and rendering URLs remain repeatable.
-const DEFAULT_ENTRY_SOLAR_TIME = 0.7355;
+// A normal arrival begins in late twilight: the sun a few degrees below the
+// western horizon, violet still in the sky, moonlight just starting to take
+// over. Explicit views, cameras, tours, and capture modes keep their authored
+// lighting so review and rendering URLs remain repeatable.
+const DEFAULT_ENTRY_SOLAR_TIME = 0.772;
 const defaultArrival =
   !params.has('view') &&
   !params.has('mode') &&
@@ -600,7 +600,7 @@ const defaultArrival =
   params.get('cinema') !== '1';
 if (defaultArrival) {
   sky.setSolarTime(DEFAULT_ENTRY_SOLAR_TIME);
-  showLightState(sky.getMode(), 'Sunset');
+  showLightState(sky.getMode(), 'Late twilight');
 }
 
 /**

@@ -93,7 +93,7 @@ const TRAIL_ARC = 0.45;
  * an exposed-for-night value that still leaves the monument darker than any
  * daylight state while giving it a readable, direction-bearing key light.
  */
-const MOON_PEAK_INTENSITY = 0.19;
+const MOON_PEAK_INTENSITY = 0.24;
 const MOON_COLOR = new Color('#a9c2e8');
 
 /**
