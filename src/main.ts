@@ -89,7 +89,15 @@ import { PLATES } from './plates';
 import { CLIPS, CLIP_FPS, CLIP_FRAMES, clipFrame } from './timelapse';
 
 const app = document.getElementById('app') as HTMLDivElement;
-const info = document.getElementById('info') as HTMLDivElement;
+const consoleEl = document.getElementById('console') as HTMLElement | null;
+const consoleStatus = document.getElementById('console-status') as HTMLDivElement | null;
+const consoleLive = document.getElementById('console-live') as HTMLSpanElement | null;
+const consoleKeys = document.getElementById('console-keys') as HTMLButtonElement | null;
+const lightToggle = document.getElementById('light-toggle') as HTMLButtonElement | null;
+const lightLabel = document.getElementById('light-label') as HTMLSpanElement | null;
+const gate = document.getElementById('gate') as HTMLDivElement | null;
+const gateStart = document.getElementById('gate-start') as HTMLButtonElement | null;
+const gateQuiet = document.getElementById('gate-quiet') as HTMLButtonElement | null;
 const crosshair = document.getElementById('crosshair') as HTMLDivElement | null;
 const tourToggle = document.getElementById('tour-toggle') as HTMLButtonElement | null;
 const tourPanel = document.getElementById('tour-panel') as HTMLElement | null;
@@ -103,34 +111,11 @@ const tourPrev = document.getElementById('tour-prev') as HTMLButtonElement | nul
 const tourNext = document.getElementById('tour-next') as HTMLButtonElement | null;
 const soundToggle = document.getElementById('sound-toggle') as HTMLButtonElement | null;
 const soundLabel = document.getElementById('sound-label') as HTMLSpanElement | null;
-const soundStatus = document.getElementById('sound-status') as HTMLSpanElement | null;
+const soundStatus = consoleLive;
 const soundVolume = document.getElementById('sound-volume') as HTMLInputElement | null;
 
 const soundscape = new StarAxisSoundscape();
-soundscape.onChange((state) => {
-  const soundRoot = document.getElementById('soundscape');
-  if (soundRoot) {
-    soundRoot.dataset.started = String(state.started);
-    soundRoot.dataset.audible = String(state.audible);
-  }
-  soundToggle?.setAttribute('aria-pressed', String(state.audible));
-  if (soundLabel) {
-    soundLabel.textContent = !state.started
-      ? 'Awaken sound'
-      : state.audible
-        ? `Sounding · ${state.place}`
-        : 'Sound paused';
-  }
-  if (soundStatus) {
-    soundStatus.textContent = !state.started
-      ? 'Generative soundscape is off'
-      : state.audible
-        ? `Generative soundscape active in ${state.place}`
-        : 'Generative soundscape paused';
-  }
-});
-soundToggle?.addEventListener('click', () => void soundscape.toggle());
-soundVolume?.addEventListener('input', () => soundscape.setVolume(Number(soundVolume.value)));
+let soundPlace = '';
 
 const renderer = new WebGPURenderer({ antialias: true });
 // Performance intentionally preserves the original half-resolution backing
@@ -198,6 +183,28 @@ scene.add(sky.group);
 scene.add(sky.sunLight);
 scene.add(sky.sunLight.target);
 scene.add(sky.hemi);
+
+// ---------------------------------------------------------------- light
+// Three states of light, one button. D/G/H still jump straight to one, but the
+// visible control is a single chip that walks day → golden hour → night.
+const LIGHT_LABELS: Record<'day' | 'goldenHour' | 'night', string> = {
+  day: 'Day',
+  goldenHour: 'Golden hour',
+  night: 'Night',
+};
+const LIGHT_CYCLE: Array<'day' | 'goldenHour' | 'night'> = ['day', 'goldenHour', 'night'];
+
+function setLight(mode: 'day' | 'goldenHour' | 'night'): void {
+  sky.setMode(mode);
+  if (lightToggle) lightToggle.dataset.mode = mode;
+  if (lightLabel) lightLabel.textContent = LIGHT_LABELS[mode];
+  lightToggle?.setAttribute('aria-label', `Light: ${LIGHT_LABELS[mode]}. Click for the next.`);
+}
+
+lightToggle?.addEventListener('click', () => {
+  setLight(LIGHT_CYCLE[(LIGHT_CYCLE.indexOf(sky.getMode()) + 1) % LIGHT_CYCLE.length]);
+});
+setLight(sky.getMode());
 
 const visualEffects = createVisualEffects({
   renderer,
@@ -391,7 +398,7 @@ function applyPreset(p: Preset, transition = false): void {
     camera.fov = p.fov;
     camera.updateProjectionMatrix();
   }
-  if (p.mode) sky.setMode(p.mode);
+  if (p.mode) setLight(p.mode);
   // In first person the same vantage becomes a spawn point: the rig decides
   // whether to stand there or hold it in flight.
   if (nav === 'fp') fp.placeAt(p.pos, p.target);
@@ -445,7 +452,7 @@ function setNav(next: Nav): void {
       );
     }
   }
-  updateInfo();
+  updateConsole();
 }
 
 let tourOpen = false;
@@ -485,7 +492,7 @@ function setTourOpen(open: boolean): void {
   } else {
     tourToggle?.focus({ preventScroll: true });
   }
-  updateInfo();
+  updateConsole();
 }
 
 if (tourStopsEl) {
@@ -512,7 +519,7 @@ renderer.domElement.addEventListener('click', () => {
 });
 fp.onLockChange((locked) => {
   if (crosshair) crosshair.style.opacity = locked ? '1' : '0';
-  updateInfo();
+  updateConsole();
 });
 
 // URL-driven view for automated captures: ?view=1..5&mode=day|goldenHour|night&trails=1&blockout=1
@@ -544,7 +551,7 @@ if (camParam && lookParam) {
 }
 const modeParam = params.get('mode');
 if (modeParam === 'day' || modeParam === 'goldenHour' || modeParam === 'night') {
-  sky.setMode(modeParam);
+  setLight(modeParam);
 }
 
 /**
@@ -594,6 +601,33 @@ if (cinemaBoot) {
   controls.enabled = false;
 }
 
+// ---------------------------------------------------------------- gate
+// A browser will not open an AudioContext without a gesture, so the entrance
+// has to be a click either way; making it a door rather than a dialog costs
+// nothing and gives the work a threshold. Any scripted URL — captures, plates,
+// direct camera framing — walks straight through it.
+const scriptedBoot =
+  cinemaBoot ||
+  params.has('cam') ||
+  params.has('look') ||
+  params.has('view') ||
+  params.has('tour') ||
+  params.get('blockout') === '1';
+
+function closeGate(withSound: boolean): void {
+  if (!gate || gate.dataset.open === 'false') return;
+  gate.dataset.open = 'false';
+  gate.setAttribute('aria-hidden', 'true');
+  window.setTimeout(() => gate.remove(), 1000);
+  if (withSound) void soundscape.start();
+  updateConsole();
+}
+
+gateStart?.addEventListener('click', () => closeGate(true));
+gateQuiet?.addEventListener('click', () => closeGate(false));
+if (scriptedBoot) closeGate(false);
+else gateStart?.focus({ preventScroll: true });
+
 window.addEventListener('keydown', (e) => {
   if (e.code === 'KeyZ' && !e.repeat) {
     setScrubbing(true);
@@ -626,16 +660,16 @@ window.addEventListener('keydown', (e) => {
   else if (k === 'c') setNav(nav === 'fp' ? 'orbit' : 'fp');
   else if (k === 'f' && nav === 'fp') {
     fp.toggleFly();
-    updateInfo();
-  } else if (k === 'd') sky.setMode('day');
-  else if (k === 'g') sky.setMode('goldenHour');
-  else if (k === 'h' || (k === 'n' && e.shiftKey)) sky.setMode('night');
+    updateConsole();
+  } else if (k === 'd') setLight('day');
+  else if (k === 'g') setLight('goldenHour');
+  else if (k === 'h' || (k === 'n' && e.shiftKey)) setLight('night');
   else if (k === 'n' && !e.repeat) {
     visualEffects.toggleCinematic();
-    updateInfo();
+    updateConsole();
   } else if (k === 'p' && !e.repeat) {
     visualEffects.togglePathTracing();
-    updateInfo();
+    updateConsole();
   } else if (k === 't') {
     trails = trails > 0 ? 0 : 1;
     applyTrails();
@@ -677,25 +711,45 @@ window.addEventListener(
   { passive: false },
 );
 
-function updateInfo(): void {
-  if (!info) return;
-  const views = '1 Avenue · 2 pyramid front · 3 Star Tunnel · 4 aerial · 5 aperture night · M tour';
-  const light =
-    'Z+drag time · D/G/H light · T trails · N cinematic · P path trace · L render lab · K sound · I immersive · / stats';
-  const line =
-    tourOpen
-      ? 'guided tour · drag orbit · scroll zoom · [ / ] previous / next · Esc close'
-      : nav === 'fp'
+// ---------------------------------------------------------------- console
+// One line of state, and only the state that changes: where you are, or what
+// the next click will do. Everything else lives behind "?".
+soundscape.onChange((state) => {
+  soundPlace = state.audible ? state.place : '';
+  soundToggle?.setAttribute('aria-pressed', String(state.audible));
+  if (soundLabel) soundLabel.textContent = state.audible ? 'Sound on' : 'Sound off';
+  soundToggle?.setAttribute(
+    'aria-label',
+    state.audible ? 'Mute the soundscape' : 'Unmute the soundscape',
+  );
+  if (soundStatus) {
+    soundStatus.textContent = state.audible
+      ? `Generative soundscape sounding in ${state.place}`
+      : 'Generative soundscape muted';
+  }
+  updateConsole();
+});
+soundToggle?.addEventListener('click', () => void soundscape.toggle());
+soundVolume?.addEventListener('input', () => soundscape.setVolume(Number(soundVolume.value)));
+
+consoleKeys?.addEventListener('click', () => {
+  if (!consoleEl) return;
+  const open = consoleEl.dataset.help !== 'true';
+  consoleEl.dataset.help = String(open);
+  consoleKeys.setAttribute('aria-expanded', String(open));
+});
+
+function updateConsole(): void {
+  if (!consoleStatus) return;
+  consoleStatus.textContent = tourOpen
+    ? 'Guided tour · drag to orbit · [ and ] to move through'
+    : nav === 'fp'
       ? fp.isLocked()
-        ? `WASD move · Shift sprint · F ${fp.fly ? 'walk' : 'fly'}${
-            fp.fly ? ' · Space/Q up/down' : ''
-          } · Esc release · C orbit`
-        : 'click to walk · C orbit'
-      : 'drag to orbit · scroll to zoom · C first person';
-  info.innerHTML =
-    '<h1>Star Axis — Charles Ross</h1>' +
-    `<div>${line}</div>` +
-    `<div style="opacity:.62">${views} · ${light}</div>`;
+        ? soundPlace
+          ? `Walking · ${soundPlace}`
+          : `Walking${fp.fly ? ' · flying' : ''} · Esc to release`
+        : 'Click to walk'
+      : 'Drag to orbit · scroll to zoom · C to walk';
 }
 
 // ---------------------------------------------------------------- zone captions
@@ -791,6 +845,7 @@ let frames = 0;
 let fpsWindowStart = performance.now();
 let lastFps = 0;
 const previousCameraPosition = new Vector3().copy(camera.position);
+const cameraFacing = new Vector3();
 
 await renderer.init();
 sand.initialize(renderer, camera.position);
@@ -813,6 +868,7 @@ renderer.setAnimationLoop(() => {
   if (visualEffects.getMode() !== 'path-traced') {
     sand.update(renderer, latestWind, camera.position, dt, sky.getMode());
   }
+  camera.getWorldDirection(cameraFacing);
   soundscape.update({
     x: camera.position.x,
     y: camera.position.y,
@@ -823,6 +879,11 @@ renderer.setAnimationLoop(() => {
     windStrength: latestWind.strength,
     windGust: latestWind.gust,
     windTurbulence: latestWind.turbulence,
+    windDirectionX: latestWind.directionX,
+    windDirectionZ: latestWind.directionZ,
+    forwardX: cameraFacing.x,
+    forwardY: cameraFacing.y,
+    forwardZ: cameraFacing.z,
   });
   previousCameraPosition.copy(camera.position);
   updateCaption();
@@ -1006,8 +1067,56 @@ declare global {
   interface Window {
     __runtime?: () => unknown;
     __pick?: (ndcX: number, ndcY: number) => unknown;
+    __audioProbe?: (
+      position: [number, number, number],
+      seconds?: number,
+    ) => Promise<unknown>;
   }
 }
+
+// Hold the listener at one point on the site and report the settled output
+// level there. Checking the mix by ear does not survive a code review; this
+// makes "is the Star Tunnel louder than the mesa, and does either clip?" a
+// measurement.
+window.__audioProbe = async ([x, y, z], seconds = 7) => {
+  const step = 1 / 60;
+  const frames = Math.round(seconds / step);
+  const settle = Math.round(frames * 0.7);
+  let peak = 0;
+  let rms = 0;
+  let samples = 0;
+  for (let i = 0; i < frames; i++) {
+    soundscape.update({
+      x,
+      y,
+      z,
+      dt: step,
+      mode: sky.getMode(),
+      moving: false,
+      windStrength: latestWind.strength,
+      windGust: latestWind.gust,
+      windTurbulence: latestWind.turbulence,
+      windDirectionX: latestWind.directionX,
+      windDirectionZ: latestWind.directionZ,
+      forwardX: 0,
+      forwardY: 0,
+      forwardZ: -1,
+    });
+    if (i > settle) {
+      const meter = soundscape.meter();
+      peak = Math.max(peak, meter.peak);
+      rms += meter.rms;
+      samples++;
+    }
+    await new Promise((resolve) => setTimeout(resolve, step * 1000));
+  }
+  return {
+    position: [x, y, z],
+    place: soundscape.snapshot().place,
+    peak: Number(peak.toFixed(4)),
+    rms: Number((rms / Math.max(1, samples)).toFixed(4)),
+  };
+};
 
 // Name whatever is under a normalized-device coordinate. Reviewing renders
 // means asking "what is that shape?" constantly, and guessing from a builder's
@@ -1052,7 +1161,7 @@ window.__runtime = () => ({
     ],
   },
   sand: sand.snapshot(),
-  soundscape: soundscape.snapshot(),
+  soundscape: { ...soundscape.snapshot(), meter: soundscape.meter() },
   visualEffects: visualEffects.snapshot(),
   sculptRuntime: monument.group.userData.sculptRuntime,
 });

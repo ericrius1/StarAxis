@@ -18,6 +18,13 @@ npm run dev        # http://localhost:5173 — needs a WebGPU browser (Chrome/Ed
 
 ## Controls
 
+It opens on a title panel; **Enter** starts the score (a browser will not open
+an audio context without a gesture) and **Enter without sound** skips it.
+Everything else lives in one small console at the bottom left: a single chip
+cycling day → golden hour → night, a sound mute toggle, and `?` for the key
+list. Any scripted URL — `?cinema=1`, `?cam=`, `?view=`, `?blockout=1` — walks
+straight through the title panel, so the capture pipeline is unaffected.
+
 It opens in **first person** — click to lock the pointer and walk the site.
 Climbing the 147-step stair carved into the rear of the pyramid and emerging
 at the aperture is the experience the piece is built around, so walk it. The
@@ -39,7 +46,7 @@ Earth's rotation.
 | **`C`** | **Switch first person ⇄ orbit** |
 | **`M`** | **Open the eight-stop guided tour** |
 | `[` / `]` | Previous / next guided-tour stop |
-| **`K`** | **Start or pause the generative soundscape** |
+| **`K`** | **Mute or unmute the generative soundscape** |
 | `1` | South/front slit |
 | `2` | North/rear stair and level apron |
 | `3` | On the Star Tunnel stair, sighting the aperture |
@@ -92,7 +99,12 @@ locked-off capture state (see **Rendering the film** below).
 - **Generative soundscape** — synthesized in the browser from mesa wind,
   near-subsonic earth tones, caliche and stone footsteps, chamber resonance,
   and solar harmonics. The mix changes continuously with position, movement,
-  elevation, and light.
+  elevation, and light. The field is spatial: the WebAudio listener tracks the
+  camera and the Pyramid, Hour Chamber, aperture and Avenue are placed at their
+  real coordinates, so they hold their bearing as you turn. Two convolution
+  reverbs — short bright mesa air and a long dark stone tail — crossfade with
+  enclosure, a bank of high-Q resonators lets a gust sing the slot, and sparse
+  struck tones fall further apart in the open than they do inside stone.
 - **Windswept sand** — a shared deterministic wind field drives both the
   soundscape and an animated, terrain-relative height volume. Wind-aligned
   density noise forms broad translucent veils with turbulent edges; only a

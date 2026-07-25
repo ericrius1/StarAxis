@@ -162,21 +162,33 @@ export function terrainHeight(x: number, z: number): number {
   const apronHalfX = PYRAMID_BASE_HALF + 6.5;
   const apronHalfZ = PYRAMID_BASE_HALF + 12;
   const pyramidApron = localX < apronHalfX && localZ < apronHalfZ;
-  const inTunnelSlot =
-    localX < 4.1 && z > STAIR_TOP.z - 3.5 && z < STAIR_BASE.z + 2.2;
+  const inSlotRun = z > STAIR_TOP.z - 3.5 && z < STAIR_BASE.z + 2.2;
   // Strictly inside the north wall — the base line itself must still seat.
   const inHourChamber =
     localX < FRONT_SLIT_HALF_WIDTH + 0.35 &&
     z > PYRAMID_FRONT_Z + 0.2 &&
     z <= PYRAMID_REAR_Z - 0.5;
-  if (pyramidApron && !inTunnelSlot && !inHourChamber) {
+  if (pyramidApron && !inHourChamber) {
     const edge = Math.max(localX / apronHalfX, localZ / apronHalfZ);
     // A true level platform, cut as well as filled. Only filling left the
     // mesa summit standing ~2.5 m proud of the Pyramid's base course, so the
     // shell rose out of a drift instead of standing on ground. The 0.4 m
     // over-height still stops low cameras seeing daylight under the shell.
     const padY = PYRAMID_BASE_Y + 0.4;
-    h = lerp(padY, h, smooth01((edge - 0.62) / 0.38));
+    const padded = lerp(padY, h, smooth01((edge - 0.62) / 0.38));
+    // The Star Tunnel slot used to opt out of the platform entirely, which is
+    // what made the Pyramid float: the mesa ran nearly a metre *below* the
+    // rear masonry for the whole width of the slot, and at the terrain's 3.6 m
+    // grid pitch that shortfall bled out past the notch returns until the
+    // whole shell read as hovering from any low southern angle. Fill to the
+    // platform here too, and let the stair bed cap the fill so the channel
+    // stays open where the stair is actually below the pad.
+    h = inSlotRun
+      ? Math.min(
+          padded,
+          stairSurfaceY(z) - 0.58 + Math.max(0, localX - 3.65) * 2.35,
+        )
+      : padded;
   }
 
   return h;
