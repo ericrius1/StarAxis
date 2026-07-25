@@ -24,6 +24,12 @@
       "runtimeExecutable": "/Users/eric/.local/node/bin/node",
       "runtimeArgs": ["node_modules/vite/bin/vite.js", "--port", "5203", "--strictPort"],
       "port": 5203
+    },
+    {
+      "name": "staraxis-perf",
+      "runtimeExecutable": "/Users/eric/.local/node/bin/node",
+      "runtimeArgs": ["node_modules/vite/bin/vite.js", "--port", "5213", "--strictPort"],
+      "port": 5213
     }
   ]
 }

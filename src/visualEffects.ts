@@ -35,8 +35,13 @@ import type { PathTracer } from './pathTracer';
 
 export type RenderMode = 'performance' | 'cinematic' | 'path-traced';
 
+export type GiQuality = 'low' | 'medium' | 'high';
+
 export interface VisualEffectsSettings {
   mode: RenderMode;
+  adaptiveResolution: boolean;
+  resolutionScale: number;
+  giQuality: GiQuality;
   globalIllumination: boolean;
   ambientOcclusion: boolean;
   sunShadows: boolean;
@@ -100,14 +105,72 @@ interface CreateVisualEffectsOptions {
   hemisphereLight: HemisphereLight;
   traceRoots: Object3D[];
   highQualityRequested?: boolean;
+  /**
+   * Pin Cinematic to its most expensive settings: full device DPR, no adaptive
+   * resolution, densest SSGI. For offline stills, not for walking around.
+   */
+  maxQuality?: boolean;
 }
 
-const CINEMATIC_SSGI = {
-  slices: 4,
-  steps: 24,
+/**
+ * SSGI costs `slices * steps * 2` samples per pixel and is by a wide margin the
+ * most expensive thing in Cinematic. Three's own guidance for temporally
+ * filtered SSGI puts "high" at 3 slices / 16 steps, so the former 4 / 24 was
+ * paying double the top preset. AO and GI are both low-frequency signals, so
+ * the pass also runs in a fraction-resolution target and is bilinearly
+ * upsampled by the composite — a further saving TRAA and the sharpen pass hide.
+ */
+const SSGI_QUALITY: Record<
+  GiQuality,
+  { slices: number; steps: number; scale: number }
+> = {
+  low: { slices: 1, steps: 10, scale: 0.5 },
+  medium: { slices: 2, steps: 12, scale: 0.5 },
+  high: { slices: 3, steps: 16, scale: 0.75 },
+};
+
+/**
+ * Cinematic rendered at the device's full DPR unconditionally, which on a
+ * Retina panel is four times the pixels of a 1x buffer pushed through the most
+ * expensive shading path in the app — and 22 fps on the machine this was
+ * measured on. It now renders at a rung of this ladder, clamped to the device
+ * DPR and moved at runtime to hold the frame budget: a GPU with the headroom
+ * still climbs all the way to native, one without it degrades gracefully
+ * instead of stuttering. Even the floor rung is above Performance's 0.5 and
+ * keeps everything Performance does not have: GI, AO, sun shadows, TRAA, bloom
+ * and the finishing chain.
+ */
+const RESOLUTION_LADDER = [0.6, 0.75, 0.9, 1.05, 1.25, 1.5, 1.75, 2];
+
+/**
+ * Where Cinematic starts before the adaptive controller has an opinion. A
+ * middle rung: high enough to read as the quality mode from the first frame,
+ * low enough that a modest GPU is not stuttering while the controller walks
+ * down to what it can hold.
+ */
+export const CINEMATIC_RESOLUTION_SCALE = 1.5;
+
+const ADAPTIVE = {
+  /** Frames averaged per decision. */
+  window: 32,
+  /** Average frame time that means 60 fps is being missed. */
+  slowMs: 20.5,
+  /** Average frame time that means there is headroom to spend. */
+  fastMs: 17.6,
+  /** Shader compiles, GC pauses and tab wake-ups are not a resolution problem. */
+  outlierMs: 120,
+  /** Wall clock enforced between two resolution changes. */
+  cooldownMs: 1500,
+  /** Comfortable windows required before probing one rung up. */
+  probeWindows: 6,
+  /** Ceiling for the probe interval once rungs start failing. */
+  maxProbeWindows: 48,
 };
 
 const CINEMATIC_DEFAULTS = {
+  adaptiveResolution: true,
+  resolutionScale: CINEMATIC_RESOLUTION_SCALE,
+  giQuality: 'medium' as GiQuality,
   globalIllumination: true,
   ambientOcclusion: true,
   sunShadows: true,
@@ -129,8 +192,9 @@ const CINEMATIC_DEFAULTS = {
  * Three deliberately separate WebGPU render paths:
  *
  * - Performance: the original low-DPR direct raster path for walking.
- * - Cinematic: full device DPR, HDR MRTs, high-sample SSGI, temporal AA,
- *   bloom, color finishing, vignette, and contrast-adaptive sharpening.
+ * - Cinematic: adaptive resolution above Performance's, HDR MRTs, SSGI in a
+ *   reduced-resolution target, temporal AA, bloom, color finishing, vignette,
+ *   and contrast-adaptive sharpening.
  * - Path Traced: an explicitly requested, lazy-built progressive WebGPU BVH
  *   path tracer intended for stills and locked-off capture.
  */
@@ -142,7 +206,8 @@ export function createVisualEffects({
   moonLight,
   hemisphereLight,
   traceRoots,
-  highQualityRequested = false,
+  highQualityRequested = true,
+  maxQuality = false,
 }: CreateVisualEffectsOptions): VisualEffects {
   const initialMode: RenderMode = highQualityRequested
     ? 'cinematic'
@@ -154,6 +219,11 @@ export function createVisualEffects({
     pathSamplesPerFrame: 1,
     pathStatus: 'Ready on demand',
   };
+  if (maxQuality) {
+    settings.adaptiveResolution = false;
+    settings.resolutionScale = window.devicePixelRatio;
+    settings.giQuality = 'high';
+  }
 
   const renderPipeline = new RenderPipeline(renderer);
   const scenePass = pass(scene, camera, { samples: 0 });
@@ -182,9 +252,24 @@ export function createVisualEffects({
   );
   const indirect = ssgi(sceneColor, sceneDepth, sceneNormal, camera);
   indirect.useTemporalFiltering = true;
-  indirect.sliceCount.value = CINEMATIC_SSGI.slices;
-  indirect.stepCount.value = CINEMATIC_SSGI.steps;
   indirect.thickness.value = 1.35;
+
+  // SSGINode re-sizes its target to the drawing buffer on every frame, so
+  // scaling the size it asks for is the only way to run the effect below
+  // native resolution. Its screen-space step radius is derived inside the same
+  // call, so the pass stays self-consistent; the depth, normal and beauty
+  // inputs it reads are sampled by UV and do not care about the mismatch.
+  const sizableIndirect = indirect as unknown as {
+    setSize(width: number, height: number): void;
+  };
+  const nativeSetSize = sizableIndirect.setSize.bind(sizableIndirect);
+  let ssgiScale = SSGI_QUALITY[settings.giQuality].scale;
+  sizableIndirect.setSize = (width: number, height: number) => {
+    nativeSetSize(
+      Math.max(1, Math.round(width * ssgiScale)),
+      Math.max(1, Math.round(height * ssgiScale)),
+    );
+  };
 
   const giMix = uniform(1);
   const aoMix = uniform(1);
@@ -270,6 +355,25 @@ export function createVisualEffects({
   const pathStatusBinding = pane.addBinding(settings, 'pathStatus', {
     label: 'Tracer',
     readonly: true,
+  });
+
+  const budgetFolder = pane.addFolder({ title: 'CINEMATIC BUDGET' });
+  budgetFolder.addBinding(settings, 'adaptiveResolution', {
+    label: 'Adaptive res',
+  });
+  const resolutionBinding = budgetFolder.addBinding(settings, 'resolutionScale', {
+    label: 'Resolution',
+    min: 0.6,
+    max: 2,
+    step: 0.05,
+  });
+  budgetFolder.addBinding(settings, 'giQuality', {
+    label: 'GI quality',
+    options: {
+      Low: 'low',
+      Medium: 'medium',
+      High: 'high',
+    },
   });
 
   const lightingFolder = pane.addFolder({ title: 'CINEMATIC LIGHTING' });
@@ -377,10 +481,15 @@ export function createVisualEffects({
     pathStatusBinding.refresh();
   };
 
-  const currentPixelRatio = () =>
-    settings.mode === 'performance'
-      ? Math.min(window.devicePixelRatio, 0.5)
-      : window.devicePixelRatio;
+  const currentPixelRatio = () => {
+    if (settings.mode === 'performance') {
+      return Math.min(window.devicePixelRatio, 0.5);
+    }
+    // Path tracing is an explicitly requested stills mode; it keeps the full
+    // device DPR and pays for it in accumulation time rather than frame rate.
+    if (settings.mode === 'path-traced') return window.devicePixelRatio;
+    return Math.min(window.devicePixelRatio, settings.resolutionScale);
+  };
 
   const applyResolution = (width = window.innerWidth, height = window.innerHeight) => {
     renderer.setPixelRatio(currentPixelRatio());
@@ -402,6 +511,10 @@ export function createVisualEffects({
   };
 
   const apply = (refreshPane = false) => {
+    const giQuality = SSGI_QUALITY[settings.giQuality];
+    indirect.sliceCount.value = giQuality.slices;
+    indirect.stepCount.value = giQuality.steps;
+    ssgiScale = giQuality.scale;
     indirect.giIntensity.value = settings.giIntensity;
     indirect.aoIntensity.value = settings.aoIntensity;
     indirect.radius.value = settings.radius;
@@ -446,6 +559,10 @@ export function createVisualEffects({
       cinematic && settings.sunShadows;
     sunLight.castShadow = renderer.shadowMap.enabled;
     if (renderer.shadowMap.enabled) sunLight.shadow.needsUpdate = true;
+
+    // The Resolution slider and the adaptive controller both land here, so
+    // reconcile the backing buffer whenever the requested ratio has moved.
+    if (renderer.getPixelRatio() !== currentPixelRatio()) applyResolution();
 
     refreshModeChrome();
     if (refreshPane) pane.refresh();
@@ -504,6 +621,7 @@ export function createVisualEffects({
   const setMode = (mode: RenderMode) => {
     if (mode !== 'path-traced') previousRasterMode = mode;
     settings.mode = mode;
+    resetAdaptive();
     applyResolution();
     apply(true);
     if (mode === 'path-traced') ensurePathTracer();
@@ -554,7 +672,105 @@ export function createVisualEffects({
     );
   });
 
+  // ------------------------------------------------------- adaptive resolution
+  // Cinematic is fill-bound: SSGI, TRAA, bloom and the finishing chain all cost
+  // in proportion to pixels. Rather than guess one ratio for every GPU this
+  // walks the ladder to whatever the machine can actually hold at 60 fps.
+  let frameStamp = 0;
+  let windowFrames = 0;
+  let windowMs = 0;
+  let comfortableWindows = 0;
+  let probeWindows = ADAPTIVE.probeWindows;
+  let lastResolutionChange = 0;
+
+  // Switching modes, resizing or resetting invalidates every frame time
+  // measured so far — the first frames afterwards are pipeline rebuilds.
+  function resetAdaptive(): void {
+    frameStamp = 0;
+    windowFrames = 0;
+    windowMs = 0;
+    comfortableWindows = 0;
+    probeWindows = ADAPTIVE.probeWindows;
+  }
+
+  const nearestRung = (scale: number) => {
+    let nearest = 0;
+    for (let i = 1; i < RESOLUTION_LADDER.length; i++) {
+      const closer =
+        Math.abs(RESOLUTION_LADDER[i] - scale) <
+        Math.abs(RESOLUTION_LADDER[nearest] - scale);
+      if (closer) nearest = i;
+    }
+    return nearest;
+  };
+
+  const stepResolution = (direction: 1 | -1, now: number) => {
+    const rung = nearestRung(settings.resolutionScale);
+    const next = Math.min(
+      RESOLUTION_LADDER.length - 1,
+      Math.max(0, rung + direction),
+    );
+    const effective = (scale: number) =>
+      Math.min(window.devicePixelRatio, scale);
+    // On a 1x display the upper rungs all clamp to the same buffer, so a step
+    // that changes nothing would still burn the cooldown and a reallocation.
+    if (effective(RESOLUTION_LADDER[next]) === effective(settings.resolutionScale)) {
+      return false;
+    }
+    settings.resolutionScale = RESOLUTION_LADDER[next];
+    lastResolutionChange = now;
+    applyResolution();
+    resolutionBinding.refresh();
+    return true;
+  };
+
+  const adaptResolution = (now: number) => {
+    if (!settings.adaptiveResolution || settings.mode !== 'cinematic') {
+      frameStamp = 0;
+      return;
+    }
+    const previous = frameStamp;
+    frameStamp = now;
+    if (previous === 0) return;
+
+    const elapsed = now - previous;
+    if (elapsed > ADAPTIVE.outlierMs) return;
+    windowMs += elapsed;
+    windowFrames++;
+    if (windowFrames < ADAPTIVE.window) return;
+
+    const average = windowMs / windowFrames;
+    windowFrames = 0;
+    windowMs = 0;
+    // Resizing costs a render-target reallocation and a TRAA history reset, so
+    // never react to two windows in a row.
+    if (now - lastResolutionChange < ADAPTIVE.cooldownMs) return;
+
+    if (average > ADAPTIVE.slowMs) {
+      comfortableWindows = 0;
+      // Each rung that fails buys a longer stretch of calm before it is tried
+      // again, so a scene the GPU cannot hold settles instead of oscillating.
+      if (stepResolution(-1, now)) {
+        probeWindows = Math.min(probeWindows * 2, ADAPTIVE.maxProbeWindows);
+      }
+      return;
+    }
+
+    if (average > ADAPTIVE.fastMs) {
+      comfortableWindows = 0;
+      return;
+    }
+
+    comfortableWindows++;
+    if (comfortableWindows >= probeWindows) {
+      comfortableWindows = 0;
+      stepResolution(1, now);
+    }
+  };
+
   const render = () => {
+    adaptResolution(performance.now());
+
     if (settings.mode === 'path-traced') {
       if (pathTracer) {
         pathTracer.render(
@@ -582,6 +798,7 @@ export function createVisualEffects({
   };
 
   const resize = (width: number, height: number) => {
+    resetAdaptive();
     applyResolution(width, height);
   };
 

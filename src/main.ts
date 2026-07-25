@@ -63,7 +63,10 @@ import { buildCollider } from './staraxis/collision';
 import { MesaWind, type MesaWindFrame } from './staraxis/wind';
 import { WindsweptSand } from './staraxis/windsweptSand';
 import { StarAxisSoundscape } from './soundscape';
-import { createVisualEffects } from './visualEffects';
+import {
+  CINEMATIC_RESOLUTION_SCALE,
+  createVisualEffects,
+} from './visualEffects';
 import {
   APERTURE_APPROACH_DISTANCE,
   APERTURE_CENTER_Y,
@@ -121,11 +124,18 @@ const soundscape = new StarAxisSoundscape();
 let soundPlace = '';
 
 const renderer = new WebGPURenderer({ antialias: true });
-// Performance intentionally preserves the original half-resolution backing
-// buffer. Cinematic and Path Traced switch to the device's full DPR inside
-// createVisualEffects(); ?quality=high starts directly in Cinematic.
+// createVisualEffects() owns the backing buffer from here on: Cinematic (the
+// default) runs an adaptive ratio around CINEMATIC_RESOLUTION_SCALE, Path
+// Traced takes the device's full DPR, Performance keeps its half-resolution
+// buffer. Matching that here only avoids allocating a buffer nobody renders.
+// ?quality=low starts in Performance; ?quality=high pins Cinematic wide open.
 const requestedQuality = new URLSearchParams(location.search).get('quality');
-const pixelRatioCap = requestedQuality === 'high' ? window.devicePixelRatio : 0.5;
+const pixelRatioCap =
+  requestedQuality === 'low'
+    ? 0.5
+    : requestedQuality === 'high'
+      ? window.devicePixelRatio
+      : CINEMATIC_RESOLUTION_SCALE;
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, pixelRatioCap));
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.toneMapping = ACESFilmicToneMapping;
@@ -224,7 +234,8 @@ const visualEffects = createVisualEffects({
   moonLight: sky.moonLight,
   hemisphereLight: sky.hemi,
   traceRoots: [monument.group, terrain.group],
-  highQualityRequested: requestedQuality === 'high',
+  highQualityRequested: requestedQuality !== 'low',
+  maxQuality: requestedQuality === 'high',
 });
 
 // The static monument, displaced terrain, and instanced stair treads are
@@ -882,7 +893,11 @@ function updateDebug(): void {
     `draws ${renderer.info.render.drawCalls} · tris ${(renderer.info.render.triangles / 1e6).toFixed(2)}M<br>` +
     `sand volume + ${(sand.totalCount / 1000).toFixed(1)}k micro · wind ${Math.round(latestWind.strength * 100)}%<br>` +
     `collider ${collider.triangleCount} tris<br>` +
-    `${nav}${fp.fly ? ' · fly' : ''} · ${sky.getMode()} · ${visualEffects.getMode()}<br>` +
+    // Cinematic moves its own pixel ratio to hold the frame budget, so the
+    // stats overlay reports where the adaptive controller has landed.
+    `${nav}${fp.fly ? ' · fly' : ''} · ${sky.getMode()} · ${visualEffects.getMode()} @ ${renderer
+      .getPixelRatio()
+      .toFixed(2)}x<br>` +
     `pos ${p.x.toFixed(1)}, ${p.y.toFixed(1)}, ${p.z.toFixed(1)}`;
 }
 setInterval(updateDebug, 500);
