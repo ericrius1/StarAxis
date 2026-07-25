@@ -12,6 +12,12 @@
       "runtimeExecutable": "/Users/eric/.local/node/bin/node",
       "runtimeArgs": ["node_modules/vite/bin/vite.js", "--port", "5183", "--strictPort"],
       "port": 5183
+    },
+    {
+      "name": "staraxis-pyramid",
+      "runtimeExecutable": "/Users/eric/.local/node/bin/node",
+      "runtimeArgs": ["node_modules/vite/bin/vite.js", "--port", "5193", "--strictPort"],
+      "port": 5193
     }
   ]
 }
