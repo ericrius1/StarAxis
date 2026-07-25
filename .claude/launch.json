@@ -18,6 +18,12 @@
       "runtimeExecutable": "/Users/eric/.local/node/bin/node",
       "runtimeArgs": ["node_modules/vite/bin/vite.js", "--port", "5193", "--strictPort"],
       "port": 5193
+    },
+    {
+      "name": "staraxis-chamber",
+      "runtimeExecutable": "/Users/eric/.local/node/bin/node",
+      "runtimeArgs": ["node_modules/vite/bin/vite.js", "--port", "5203", "--strictPort"],
+      "port": 5203
     }
   ]
 }

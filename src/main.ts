@@ -564,6 +564,15 @@ if (modeParam === 'day' || modeParam === 'goldenHour' || modeParam === 'night') 
   setLight(modeParam);
 }
 
+// ?solar=0.18 places the sun anywhere on the continuous day, which the three
+// discrete modes cannot express. Review and capture URLs need it to reach the
+// hours the plates are framed at — the moonlit ones especially.
+const solarParam = params.has('solar') ? Number(params.get('solar')) : NaN;
+if (Number.isFinite(solarParam)) {
+  sky.setSolarTime(solarParam);
+  showLightState(sky.getMode());
+}
+
 // A normal arrival begins at sunset, with the sun a few degrees above the
 // western horizon: the site still reads in warm light instead of opening in
 // the dark. Explicit views, cameras, tours, and capture modes keep their
@@ -572,6 +581,7 @@ const DEFAULT_ENTRY_SOLAR_TIME = 0.7355;
 const defaultArrival =
   !params.has('view') &&
   !params.has('mode') &&
+  !params.has('solar') &&
   !params.has('cam') &&
   !params.has('look') &&
   !params.has('tour') &&
@@ -646,6 +656,7 @@ const scriptedBoot =
   params.has('look') ||
   params.has('view') ||
   params.has('tour') ||
+  params.has('solar') ||
   params.get('blockout') === '1';
 
 function closeGate(withSound: boolean): void {

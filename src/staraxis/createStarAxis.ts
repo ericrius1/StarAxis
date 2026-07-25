@@ -980,36 +980,10 @@ function buildFrontChamber(mats: Mats): Group {
   floor.userData.collisionSurfaceOnly = true;
   chamber.add(floor);
 
-  // The north facet leans back as it rises, so a plain upright box for these
-  // walls stands flush at the base and then pushes straight out through the
-  // face higher up — it read as a black slab hanging off the east elevation.
-  // Sloping their front edge with the facet keeps them inside the shell.
-  const wallTopY = PYRAMID_BASE_Y + 7.4;
-  for (const side of [-1, 1]) {
-    const geometry = new BoxGeometry(0.16, wallTopY - PYRAMID_BASE_Y, 1);
-    geometry.translate(
-      side * (FRONT_SLIT_HALF_WIDTH - 0.04),
-      (PYRAMID_BASE_Y + wallTopY) / 2,
-      0,
-    );
-    const position = geometry.getAttribute('position') as BufferAttribute;
-    for (let i = 0; i < position.count; i++) {
-      // Front (-z) edge follows the facet; rear edge closes the chamber.
-      position.setZ(
-        i,
-        position.getZ(i) < 0
-          ? frontFacePoint(0, position.getY(i))[2] + 0.02
-          : chamberRearZ,
-      );
-    }
-    position.needsUpdate = true;
-    geometry.computeVertexNormals();
-    geometry.computeBoundingSphere();
-
-    const wall = shadowed(new Mesh(geometry, mats.darkStone));
-    wall.name = side < 0 ? 'hour-chamber-wall-west' : 'hour-chamber-wall-east';
-    chamber.add(wall);
-  }
+  // The chamber used to be flanked by two dark stone slabs. Standing inside
+  // the Pyramid they closed the room into a narrow box and blocked the view
+  // across to the Star Tunnel, so the interior is now the open shell and the
+  // slit alone carries the opening.
 
   // Bronze lines make the needle opening legible without broadening it.
   const zTop = frontFacePoint(0, FRONT_SLIT_TOP_Y)[2];
