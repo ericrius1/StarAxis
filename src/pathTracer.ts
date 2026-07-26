@@ -243,18 +243,21 @@ export function createPathTracer({
     }
   `;
 
-  const accumulation = [
-    new StorageTexture(1, 1),
-    new StorageTexture(1, 1),
-  ];
-  accumulation.forEach((target, index) => {
+  const makeAccumulationTarget = (index: number, width: number, height: number) => {
+    const target = new StorageTexture(width, height);
     target.name = `StarAxis.PathTrace.${index}`;
     target.type = HalfFloatType;
     target.generateMipmaps = false;
     (
       target as StorageTexture & { mipmapsAutoUpdate: boolean }
     ).mipmapsAutoUpdate = false;
-  });
+    return target;
+  };
+  // Start at 1×1; the first render replaces these with drawing-buffer-sized
+  // textures. Later resizes must also replace the objects — StorageTexture.setSize
+  // disposes the GPU resource in place and leaves cached WebGPU bind groups
+  // pointing at destroyed views (black frame + validation spam on the second P).
+  const accumulation = [makeAccumulationTarget(0, 1, 1), makeAccumulationTarget(1, 1, 1)];
 
   const inverseProjectionMatrix = uniform(new Matrix4());
   const cameraToWorldMatrix = uniform(new Matrix4());
@@ -998,7 +1001,14 @@ export function createPathTracer({
 
     targetWidth = width;
     targetHeight = height;
-    accumulation.forEach((target) => target.setSize(width, height, 1));
+    for (let index = 0; index < accumulation.length; index++) {
+      const previous = accumulation[index];
+      accumulation[index] = makeAccumulationTarget(index, width, height);
+      previous.dispose();
+    }
+    currentTarget = 0;
+    // Rebuild the display pass against the new texture identities.
+    displayMaterial.needsUpdate = true;
     reset();
   };
 

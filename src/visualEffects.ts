@@ -619,12 +619,22 @@ export function createVisualEffects({
   };
 
   const setMode = (mode: RenderMode) => {
+    const previousMode = settings.mode;
     if (mode !== 'path-traced') previousRasterMode = mode;
     settings.mode = mode;
     resetAdaptive();
     applyResolution();
+    // Leaving the tracer hands the canvas back to the TSL RenderPipeline. The
+    // compute/display passes share the same WebGPU device; without a rebuild the
+    // quad pipeline can stay bound to targets invalidated by the DPR change.
+    if (previousMode === 'path-traced' && mode !== 'path-traced') {
+      renderPipeline.needsUpdate = true;
+    }
     apply(true);
-    if (mode === 'path-traced') ensurePathTracer();
+    if (mode === 'path-traced') {
+      pathTracer?.reset();
+      ensurePathTracer();
+    }
   };
 
   const toggleCinematic = () => {
