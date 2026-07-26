@@ -28,7 +28,6 @@ import {
   MeshStandardNodeMaterial,
   Object3D,
   Path,
-  PlaneGeometry,
   PointLight,
   Quaternion,
   Shape,
@@ -1278,17 +1277,27 @@ function buildUpperRoom(mats: Mats): Group {
   upper.add(viewingLight);
 
   // A level viewing bay lets a six-foot visitor leave the last tread and move
-  // close enough for the aperture to fill their peripheral field.
+  // close enough for the aperture to fill their peripheral field. Build it as
+  // a real granite slab so the underside reads from the stair below — a single
+  // plane disappears under back-face culling.
   const landingRearZ = STAIR_TOP.z + 0.35;
   const landingFrontZ = UPPER_LANDING_FRONT_Z;
   const landingDepth = Math.abs(landingFrontZ - landingRearZ);
+  const landingThickness = 0.28;
+  const landingTopY = STAIR_TOP.y + 0.04;
   const landing = shadowed(
-    new Mesh(new PlaneGeometry(4.25, landingDepth), mats.stair),
+    new Mesh(
+      new BoxGeometry(4.25, landingThickness, landingDepth),
+      mats.stair,
+    ),
   );
   landing.name = 'upper-room-landing';
   landing.userData.collisionSurfaceOnly = true;
-  landing.rotation.x = -Math.PI / 2;
-  landing.position.set(0, STAIR_TOP.y + 0.04, (landingRearZ + landingFrontZ) / 2);
+  landing.position.set(
+    0,
+    landingTopY - landingThickness / 2,
+    (landingRearZ + landingFrontZ) / 2,
+  );
   upper.add(landing);
 
   return upper;
