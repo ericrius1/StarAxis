@@ -604,11 +604,11 @@ if (Number.isFinite(solarParam)) {
   showLightState(sky.getMode());
 }
 
-// A normal arrival begins in late twilight: the sun a few degrees below the
-// western horizon, violet still in the sky, moonlight just starting to take
-// over. Explicit views, cameras, tours, and capture modes keep their authored
-// lighting so review and rendering URLs remain repeatable.
-const DEFAULT_ENTRY_SOLAR_TIME = 0.772;
+// A normal arrival begins two hours after late twilight: full night sky,
+// moonlight on the stone, western glow gone. Explicit views, cameras, tours,
+// and capture modes keep their authored lighting so review and rendering URLs
+// remain repeatable.
+const DEFAULT_ENTRY_SOLAR_TIME = 0.772 + 2 / 24;
 const defaultArrival =
   !params.has('view') &&
   !params.has('mode') &&
@@ -620,7 +620,7 @@ const defaultArrival =
   params.get('cinema') !== '1';
 if (defaultArrival) {
   sky.setSolarTime(DEFAULT_ENTRY_SOLAR_TIME);
-  showLightState(sky.getMode(), 'Late twilight');
+  showLightState(sky.getMode(), 'Early night');
 }
 
 /**
