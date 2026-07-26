@@ -191,6 +191,36 @@ export function createFirstPerson(
   controls.addEventListener('lock', () => lockListeners.forEach((cb) => cb(true)));
   controls.addEventListener('unlock', () => lockListeners.forEach((cb) => cb(false)));
 
+  function pointerIsLocked(): boolean {
+    return document.pointerLockElement === domElement;
+  }
+
+  /**
+   * Ask the browser for pointer lock. Prefer the document's live lock element
+   * over Three's async `isLocked` flag — that flag lags `exitPointerLock()` and
+   * was skipping re-lock after orbit / Esc. Fall back without options when the
+   * browser rejects `unadjustedMovement`.
+   */
+  function requestLock(): void {
+    if (!enabled || pointerIsLocked()) return;
+    // Clear the stale Three flag so a delayed unlock event can't leave us
+    // thinking we're locked while the document is free.
+    controls.isLocked = false;
+    const req = domElement.requestPointerLock.bind(domElement) as (
+      options?: PointerLockOptions,
+    ) => Promise<void> | void;
+    try {
+      const result = req({ unadjustedMovement: false });
+      if (result && typeof result.catch === 'function') {
+        void result.catch(() => {
+          if (enabled && !pointerIsLocked()) domElement.requestPointerLock();
+        });
+      }
+    } catch {
+      if (enabled && !pointerIsLocked()) domElement.requestPointerLock();
+    }
+  }
+
   const rig: FirstPersonRig = {
     controls,
 
@@ -210,7 +240,7 @@ export function createFirstPerson(
       if (!fly) needsGroundSnap = true;
     },
 
-    isLocked: () => controls.isLocked,
+    isLocked: () => pointerIsLocked(),
 
     enable() {
       enabled = true;
@@ -222,11 +252,14 @@ export function createFirstPerson(
       enabled = false;
       controls.enabled = false;
       keys.clear();
-      if (controls.isLocked) controls.unlock();
+      if (pointerIsLocked()) controls.unlock();
+      // Synchronously clear so a same-gesture re-lock (C → orbit → C) is not
+      // blocked waiting for the deferred pointerlockchange event.
+      controls.isLocked = false;
     },
 
     lock() {
-      if (enabled && !controls.isLocked) controls.lock();
+      requestLock();
     },
 
     placeAt(pos, lookAt) {

@@ -457,7 +457,10 @@ function setNav(next: Nav): void {
   const prev = nav;
   nav = next;
   if (nav === 'fp') {
+    // Drop any in-flight orbit drag before the walker takes the canvas —
+    // leftover document pointer listeners can swallow the re-lock gesture.
     controls.enabled = false;
+    controls.cancel();
     fp.enable();
     // Scrubbing owns the pointer; keep look disabled until Z is released.
     if (scrubbing) fp.controls.enabled = false;
@@ -482,6 +485,12 @@ function setNav(next: Nav): void {
     }
   }
   updateConsole();
+}
+
+/** Enter first-person and request pointer lock while a user gesture is live. */
+function enterFirstPerson(): void {
+  setNav('fp');
+  if (!tourOpen && !scrubbing) fp.lock();
 }
 
 let tourOpen = false;
@@ -543,8 +552,11 @@ tourPrev?.addEventListener('click', () => goToTourStop(tourIndex - 1));
 tourNext?.addEventListener('click', () => goToTourStop(tourIndex + 1));
 renderTourStop();
 
-renderer.domElement.addEventListener('click', () => {
-  if (nav === 'fp' && !tourOpen) fp.lock();
+// pointerdown keeps the user-activation token that requestPointerLock needs;
+// `click` can lose it after orbit/Esc unlock races.
+renderer.domElement.addEventListener('pointerdown', (e) => {
+  if (e.button !== 0) return;
+  if (nav === 'fp' && !tourOpen && !scrubbing) fp.lock();
 });
 fp.onLockChange((locked) => {
   if (crosshair) crosshair.style.opacity = locked ? '1' : '0';
@@ -722,7 +734,10 @@ window.addEventListener('keydown', (e) => {
   }
   const k = e.key.toLowerCase();
   if (PRESETS[k]) applyPreset(PRESETS[k], nav === 'orbit');
-  else if (k === 'c') setNav(nav === 'fp' ? 'orbit' : 'fp');
+  else if (k === 'c') {
+    if (nav === 'fp') setNav('orbit');
+    else enterFirstPerson();
+  }
   else if (k === 'f' && nav === 'fp') {
     fp.toggleFly();
     updateConsole();
